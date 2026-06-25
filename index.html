@@ -299,12 +299,50 @@
     }
 
     .composer {
+      position: relative;
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: auto 1fr auto;
       gap: 10px;
       padding: 14px 18px 18px;
       border-top: 1px solid var(--line);
       background: var(--panel);
+    }
+
+    .emoji-wrap {
+      position: relative;
+    }
+
+    .emoji-panel {
+      position: absolute;
+      left: 0;
+      bottom: 56px;
+      width: min(320px, calc(100vw - 28px));
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 18px 44px rgba(23, 32, 51, 0.16);
+      z-index: 5;
+    }
+
+    .emoji-btn {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      background: transparent;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .emoji-btn:hover,
+    .emoji-btn:focus {
+      background: var(--panel-soft);
+      outline: none;
     }
 
     .hidden {
@@ -368,7 +406,14 @@
       }
 
       .composer {
+        grid-template-columns: auto 1fr auto;
         padding: 12px 14px 14px;
+      }
+
+      .emoji-panel {
+        left: -2px;
+        bottom: 54px;
+        grid-template-columns: repeat(6, 1fr);
       }
     }
   </style>
@@ -405,6 +450,10 @@
     <section id="messages" class="messages hidden" aria-live="polite"></section>
 
     <form id="chatForm" class="composer hidden" autocomplete="off">
+      <div class="emoji-wrap">
+        <button id="emojiToggle" class="icon-btn" type="button" title="Pilih emoticon" aria-label="Pilih emoticon">:)</button>
+        <div id="emojiPanel" class="emoji-panel hidden" aria-label="Daftar emoticon"></div>
+      </div>
       <textarea id="messageInput" class="message-input" name="message" rows="1" placeholder="Tulis pesan..." required></textarea>
       <button class="icon-btn" type="submit" title="Kirim pesan" aria-label="Kirim pesan">&gt;</button>
     </form>
@@ -450,8 +499,11 @@
     const messagesEl = document.getElementById("messages");
     const chatForm = document.getElementById("chatForm");
     const messageInput = document.getElementById("messageInput");
+    const emojiToggle = document.getElementById("emojiToggle");
+    const emojiPanel = document.getElementById("emojiPanel");
     const changeUserBtn = document.getElementById("changeUserBtn");
     const clearBtn = document.getElementById("clearBtn");
+    const emojis = ["😀", "😁", "😂", "🤣", "😊", "😍", "😘", "🥰", "😎", "😅", "😢", "😭", "😡", "😴", "🤔", "👍", "🙏", "🔥", "✨", "❤️", "💙", "💕", "💌", "🌹"];
 
     let username = localStorage.getItem(USER_KEY) || "";
     let messages = [];
@@ -482,6 +534,26 @@
     chatForm.addEventListener("submit", (event) => {
       event.preventDefault();
       sendMessage();
+    });
+
+    emojiPanel.innerHTML = emojis
+      .map((emoji) => `<button class="emoji-btn" type="button" data-emoji="${emoji}" aria-label="Emoticon ${emoji}">${emoji}</button>`)
+      .join("");
+
+    emojiToggle.addEventListener("click", () => {
+      emojiPanel.classList.toggle("hidden");
+    });
+
+    emojiPanel.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-emoji]");
+      if (!button) return;
+      insertAtCursor(button.dataset.emoji);
+      emojiPanel.classList.add("hidden");
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target === emojiToggle || emojiPanel.contains(event.target)) return;
+      emojiPanel.classList.add("hidden");
     });
 
     messageInput.addEventListener("input", () => {
@@ -551,6 +623,19 @@
         messageInput.value = text;
         renderError(`Gagal kirim pesan: ${error.message}`);
       }
+    }
+
+    function insertAtCursor(value) {
+      const start = messageInput.selectionStart;
+      const end = messageInput.selectionEnd;
+      const before = messageInput.value.slice(0, start);
+      const after = messageInput.value.slice(end);
+
+      messageInput.value = `${before}${value}${after}`;
+      messageInput.selectionStart = start + value.length;
+      messageInput.selectionEnd = start + value.length;
+      messageInput.dispatchEvent(new Event("input"));
+      messageInput.focus();
     }
 
     function renderMessages() {

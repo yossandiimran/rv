@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="id">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Simulasi Scraping Instagram - Terminal View</title>
+	<style>
+		:root {
+			--bg: #050505;
+			--panel: #0b0b0b;
+			--line: #161616;
+			--text: #c8ffc8;
+			--muted: #79b879;
+			--accent: #00ff66;
+			--warn: #ffe96b;
+			--error: #ff6b6b;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			background:
+				radial-gradient(circle at 85% -10%, #0f3f20 0%, transparent 40%),
+				radial-gradient(circle at 20% 120%, #0a2c17 0%, transparent 38%),
+				var(--bg);
+			color: var(--text);
+			font-family: "Consolas", "Courier New", monospace;
+			min-height: 100vh;
+			padding: 20px;
+		}
+
+		.terminal {
+			width: min(1180px, 100%);
+			margin: 0 auto;
+			border: 1px solid #1f1f1f;
+			border-radius: 10px;
+			overflow: hidden;
+			box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+			background: var(--panel);
+		}
+
+		.terminal-header {
+			background: linear-gradient(180deg, #212121 0%, #111 100%);
+			border-bottom: 1px solid #2b2b2b;
+			padding: 10px 14px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+		}
+
+		.buttons {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.dot {
+			width: 12px;
+			height: 12px;
+			border-radius: 50%;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+		}
+
+		.dot.red { background: #ff5f57; }
+		.dot.yellow { background: #ffbd2f; }
+		.dot.green { background: #28c840; }
+
+		.title {
+			color: #d0d0d0;
+			font-size: 13px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.terminal-body {
+			padding: 14px;
+			background-image: linear-gradient(transparent 96%, rgba(0, 255, 102, 0.03) 100%);
+			background-size: 100% 26px;
+		}
+
+		.line {
+			margin: 0;
+			line-height: 1.65;
+			font-size: 14px;
+			word-break: break-word;
+		}
+
+		.prompt {
+			color: var(--accent);
+			font-weight: 700;
+		}
+
+		.muted {
+			color: var(--muted);
+		}
+
+		.warn {
+			color: var(--warn);
+		}
+
+		.error {
+			color: var(--error);
+		}
+
+		.grid {
+			margin-top: 18px;
+			display: grid;
+			grid-template-columns: 1.15fr 1fr;
+			gap: 14px;
+		}
+
+		.block {
+			border: 1px solid var(--line);
+			background: #080808;
+			border-radius: 8px;
+			overflow: hidden;
+		}
+
+		.block h3 {
+			margin: 0;
+			padding: 10px 12px;
+			border-bottom: 1px solid var(--line);
+			font-size: 13px;
+			letter-spacing: 0.4px;
+			color: var(--accent);
+			text-transform: uppercase;
+		}
+
+		.block-content {
+			padding: 10px 12px;
+			max-height: 310px;
+			overflow: auto;
+			font-size: 13px;
+		}
+
+		.chips {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		.chip {
+			border: 1px solid #1f492f;
+			color: #b4ffcb;
+			background: #0c1e14;
+			padding: 4px 8px;
+			border-radius: 5px;
+			font-size: 12px;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 12px;
+		}
+
+		th,
+		td {
+			border-bottom: 1px solid #182018;
+			padding: 7px 6px;
+			text-align: left;
+			vertical-align: top;
+		}
+
+		th {
+			color: #7bdc9b;
+			font-weight: 700;
+			position: sticky;
+			top: 0;
+			background: #0c0c0c;
+		}
+
+		.tree {
+			display: grid;
+			gap: 8px;
+			font-size: 12px;
+			color: #b9efb9;
+		}
+
+		.node {
+			border: 1px dashed #24442a;
+			border-radius: 6px;
+			padding: 8px;
+			background: #09130c;
+		}
+
+		.footer {
+			margin-top: 12px;
+			font-size: 12px;
+			color: #67a367;
+		}
+
+		@keyframes blink {
+			0%, 49% { opacity: 1; }
+			50%, 100% { opacity: 0; }
+		}
+
+		.cursor {
+			display: inline-block;
+			width: 10px;
+			height: 16px;
+			margin-left: 5px;
+			vertical-align: -2px;
+			background: var(--accent);
+			animation: blink 0.9s step-end infinite;
+		}
+
+		@media (max-width: 860px) {
+			.grid {
+				grid-template-columns: 1fr;
+			}
+
+			.terminal-body {
+				padding: 10px;
+			}
+
+			.line {
+				font-size: 12px;
+			}
+		}
+	</style>
+</head>
+<body>
+	<section class="terminal" aria-label="Simulasi terminal scraping">
+		<header class="terminal-header">
+			<div class="buttons" aria-hidden="true">
+				<span class="dot red"></span>
+				<span class="dot yellow"></span>
+				<span class="dot green"></span>
+			</div>
+			<div class="title">C:\Users\operator\tools\insta-scrape-cli.exe --mode visual</div>
+		</header>
+
+		<div class="terminal-body">
+			<p class="line"><span class="prompt">PS E:\yoss\Project\Node\rv\ahay&gt;</span> python insta_scrape.py --keywords "reppi alpiaini" "revi alpiani" --depth 3 --simulate</p>
+			<p class="line muted">[INFO] Mode: SIMULASI UI (tanpa koneksi API Instagram)</p>
+			<p class="line muted">[INFO] Memuat dataset akun hasil crawling snapshot lokal...</p>
+			<p class="line">[OK] Keyword #1: <span class="warn">reppi alpiaini</span> - 12 akun mirip ditemukan</p>
+			<p class="line">[OK] Keyword #2: <span class="warn">revi alpiani</span> - 19 akun mirip ditemukan</p>
+			<p class="line">[OK] Total kandidat username: <strong>31</strong></p>
+			<p class="line">[OK] Followers terindeks: <strong>74</strong> akun</p>
+			<p class="line">[OK] Relasi interaksi (like/comment/tag): <strong>126</strong> edge</p>
+			<p class="line">[WARN] Beberapa akun private, data interaksi dibatasi</p>
+
+			<div class="grid">
+				<article class="block">
+					<h3>Rekomendasi Username Serupa</h3>
+					<div class="block-content chips" role="list" aria-label="Kumpulan username rekomendasi">
+						<span class="chip">revialpn_</span>
+						<span class="chip">rvalpn</span>
+						<span class="chip">reppialpn</span>
+						<span class="chip">revi_alpn21</span>
+						<span class="chip">reppii_alpiani</span>
+						<span class="chip">revialpni</span>
+						<span class="chip">reppi_alpiaini</span>
+						<span class="chip">revialpiaini.id</span>
+						<span class="chip">revialpn.store</span>
+						<span class="chip">r3vialpn</span>
+						<span class="chip">revi.alpiani_</span>
+						<span class="chip">reppi.alpn</span>
+						<span class="chip">alpiani_revi</span>
+						<span class="chip">revvialpn</span>
+						<span class="chip">revialpn_official</span>
+						<span class="chip">reppi_alpn77</span>
+						<span class="chip">rv_alpiaini</span>
+						<span class="chip">reppialpiainii</span>
+						<span class="chip">revi_alpn.id</span>
+						<span class="chip">reppialpn_team</span>
+						<span class="chip">revi.alpn_real</span>
+						<span class="chip">alpnrevi_</span>
+						<span class="chip">reppialpn.co</span>
+						<span class="chip">rvalpiani21</span>
+						<span class="chip">revi_alpnbackup</span>
+						<span class="chip">reppi.alpiaini.new</span>
+						<span class="chip">revialpn.official.id</span>
+						<span class="chip">reppi_alpn_media</span>
+						<span class="chip">revia.lpni</span>
+						<span class="chip">real_revialpn</span>
+						<span class="chip">reppialpn_x</span>
+					</div>
+				</article>
+
+				<article class="block">
+					<h3>Daftar Followers Terhubung</h3>
+					<div class="block-content">
+						<table aria-label="Daftar followers dari akun yang disimulasikan">
+							<thead>
+								<tr>
+									<th>Username</th>
+									<th>Status</th>
+									<th>Interaksi Terakhir</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>gunadi_wicaksono</td>
+									<td>aktif</td>
+									<td>like foto @revi_alpn21</td>
+								</tr>
+								<tr>
+									<td>zaskia_putrii</td>
+									<td>aktif</td>
+									<td>comment posting @revialpn_ </td>
+								</tr>
+								<tr>
+									<td>andre.kurnia_7</td>
+									<td>low activity</td>
+									<td>tag di story @rvalpn</td>
+								</tr>
+								<tr>
+									<td>nabila_setiawan</td>
+									<td>aktif</td>
+									<td>follow balik @reppialpn</td>
+								</tr>
+								<tr>
+									<td>dimaspratama.id</td>
+									<td>aktif</td>
+									<td>save post @reppi_alpn77</td>
+								</tr>
+								<tr>
+									<td>fajarwibowo_</td>
+									<td>pasif</td>
+									<td>like reels @revialpn_official</td>
+								</tr>
+								<tr>
+									<td>sylvia_anggrn</td>
+									<td>aktif</td>
+									<td>mention @revi_alpn.id pada komentar</td>
+								</tr>
+								<tr>
+									<td>nanda_akbar93</td>
+									<td>aktif</td>
+									<td>reply story @revi.alpn_real</td>
+								</tr>
+								<tr>
+									<td>rahmat_hidayat_09</td>
+									<td>low activity</td>
+									<td>like foto @reppialpn_team</td>
+								</tr>
+								<tr>
+									<td>intanmaharani_</td>
+									<td>aktif</td>
+									<td>share posting @real_revialpn</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</article>
+			</div>
+
+			<div class="grid">
+				<article class="block">
+					<h3>Jejak Koneksi Followers (Graph Log)</h3>
+					<div class="block-content tree" aria-label="Jejak relasi followers">
+						<div class="node">[TRACE] gunadi_wicaksono -> like -> revi_alpn21 -> post id: RV-A21-7781</div>
+						<div class="node">[TRACE] zaskia_putrii -> comment "mantap" -> revialpn_ -> post id: RV-MN-1021</div>
+						<div class="node">[TRACE] nanda_akbar93 -> reply story -> revi.alpn_real -> story id: STL-0092</div>
+						<div class="node">[TRACE] dimaspratama.id -> save post -> reppi_alpn77 -> post id: RP-7718</div>
+						<div class="node">[TRACE] sylvia_anggrn -> mention -> revi_alpn.id -> comment thread id: CM-443</div>
+						<div class="node">[TRACE] intanmaharani_ -> share -> real_revialpn -> reel id: RE-882</div>
+						<div class="node">[TRACE] fajarwibowo_ -> like reel -> revialpn_official -> reel id: RL-219</div>
+					</div>
+				</article>
+
+				<article class="block">
+					<h3>Status Eksekusi Simulasi</h3>
+					<div class="block-content">
+						<p class="line">[SCAN] crawling profile clusters... <span class="warn">done</span></p>
+						<p class="line">[SCAN] resolving follower edges... <span class="warn">done</span></p>
+						<p class="line">[SCAN] building interaction graph... <span class="warn">done</span></p>
+						<p class="line">[EXPORT] report file -> output/revialpn_graph_snapshot.json</p>
+						<p class="line">[EXPORT] report file -> output/revialpn_followers_table.csv</p>
+						<p class="line">[SECURE] data source: mock-sample-for-ui-only</p>
+						<p class="line"><span class="prompt">PS E:\yoss\Project\Node\rv\ahay&gt;</span> _<span class="cursor" aria-hidden="true"></span></p>
+					</div>
+				</article>
+			</div>
+
+			<p class="footer">UI ini adalah simulasi visual command prompt untuk demo tampilan data scraping, bukan koneksi real-time ke Instagram API.</p>
+		</div>
+	</section>
+</body>
+</html>

@@ -1,413 +1,606 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Byy 🤍</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat Room</title>
   <style>
-    :root{
-      --bg1:#fff7fb;
-      --bg2:#fff0f6;
-      --accent:#ff6b8a;
-      --accent-2:#ff8fb3;
-      --card-bg: rgba(255,255,255,0.7);
-      --muted:#6b7280;
-      font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    :root {
+      color-scheme: light;
+      --bg: #eef2f7;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d8dee8;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bubble-me: #2563eb;
+      --bubble-other: #eef2f7;
+      --danger: #dc2626;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
     }
-    html,body{height:100%;margin:0}
-    body{
-      display:flex;align-items:center;justify-content:center;
-      background: radial-gradient( circle at 10% 10%, #fff7fb 0%, #fff1f2 30%, #fffaf0 100% );
-      min-height:100vh;
-      overflow:hidden;
-    }
-    .scene {
-      position:relative;
-      width:360px;
-      padding:36px;
-      border-radius:20px;
-      background:var(--card-bg);
-      box-shadow: 0 10px 30px rgba(25,23,39,0.08);
-      text-align:center;
-      backdrop-filter: blur(8px) saturate(120%);
-      -webkit-backdrop-filter: blur(8px) saturate(120%);
-      border: 1px solid rgba(255,255,255,0.5);
-    }
-    .title { font-size:20px; font-weight:800; color:#111827; margin-bottom:14px; display:flex;align-items:center;justify-content:center; gap:8px }
-    button#btn{
-      padding:12px 18px;border-radius:12px;border:0;
-      background: linear-gradient(135deg,var(--accent), var(--accent-2));
-      color:white;font-weight:700;cursor:pointer;font-size:15px;
-      box-shadow: 0 6px 18px rgba(255,107,138,0.18);
-      transition: transform .14s ease, box-shadow .14s ease;
-    }
-    button#btn:active{ transform: translateY(1px) scale(.995); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-    #output{ margin-top:18px; font-size:18px; color:#111; min-height:86px; display:flex;flex-direction:column;align-items:center;justify-content:center; gap:8px }
-    .name{ font-size:20px; font-weight:700; color:#111; display:flex;align-items:center; gap:10px; }
-    .heart { cursor:pointer; display:inline-block; width:48px; height:48px; border-radius:50%; display:flex;align-items:center;justify-content:center; font-size:22px; background:linear-gradient(180deg,#fff,#ffeef2); color:#ff2d6f; box-shadow: 0 6px 18px rgba(255,105,150,0.12);}
-    .heart.white { color:#fff; background: linear-gradient(180deg,#fff,#f8fafc); border: 2px solid rgba(0,0,0,0.04) }
-    .love { font-size:14px; color:var(--muted); text-decoration:none; display:inline-block; margin-top:4px; }
-    .love:hover{ text-decoration:underline; color:#111827}
-    .pulse { animation: pulse 900ms infinite alternate; transform-origin:center center; }
-    @keyframes pulse { from{ transform: scale(1)} to{ transform: scale(1.08)} }
 
-    /* flying hearts */
-    .flying-heart {
-      position:fixed;
-      pointer-events:none;
-      will-change: transform, opacity;
-      transform: translateY(0) translateX(0);
-      opacity:1;
-      transition: opacity .6s linear;
-      text-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    * {
+      box-sizing: border-box;
     }
-    @keyframes floatUp {
-      0% { transform: translateY(0) translateX(0) rotate(0deg); opacity:1; filter:blur(0);} 
-      60% { opacity:0.9; }
-      100% { transform: translateY(-180px) translateX(var(--tx)) rotate(var(--rot)); opacity:0; filter: blur(1px); }
-    }
-    .flying-heart.animate { animation: floatUp var(--dur) cubic-bezier(.22,.9,.3,1) forwards; }
 
-    /* subtle background hearts */
-    .bg-heart {
-      position:absolute;
-      font-size:42px;
-      opacity:0.06;
-      color:#ff6b8a;
-      user-select:none;
-      pointer-events:none;
-      transform:translateY(0);
-      animation: slowFloat 8s linear infinite;
+    html,
+    body {
+      height: 100%;
+      margin: 0;
     }
-    @keyframes slowFloat { 0%{ transform: translateY(0)} 50%{ transform: translateY(-10px)} 100%{ transform: translateY(0)} }
 
-    /* responsive */
-    @media (max-width:420px){
-      .scene{ width:92%; padding:24px; border-radius:16px }
-      .heart{ width:44px;height:44px;font-size:20px }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 30%),
+        linear-gradient(135deg, #eef2f7 0%, #f8fafc 48%, #e8eef7 100%);
+      color: var(--text);
+      padding: 20px;
     }
-    
-    /* party button */
-    .party-btn{
-      margin-top:10px;
-      padding:10px 14px;
-      border-radius:12px;
-      border:0;
-      background: linear-gradient(135deg,#ffd166,#ff9a8b);
-      color:#3b2e2e;
-      font-weight:700;
-      cursor:pointer;
-      box-shadow: 0 8px 24px rgba(255,150,120,0.18);
-      transform: scale(.96);
-      transition: transform .16s ease, opacity .2s ease;
-      opacity:0;
-      display:inline-block;
-    }
-    .party-btn.show{ opacity:1; transform: scale(1); }
 
-    /* mega burst items (flowers & hearts) */
-    .mega-item{
-      position:fixed;
-      pointer-events:none;
-      will-change: transform, opacity;
-      text-shadow: 0 6px 18px rgba(0,0,0,0.06);
-      z-index:9999;
+    button,
+    input,
+    textarea {
+      font: inherit;
     }
-    @keyframes megaPop {
-      0%{ opacity:0; transform: translate(0,0) scale(.6) rotate(0deg); }
-      10%{ opacity:1; transform: translate(0,0) scale(1) rotate(0deg); }
-      100%{ opacity:0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1.1); }
-    }
-    .mega-item.animate{ animation: megaPop var(--dur) cubic-bezier(.22,.9,.3,1) forwards; }
 
-    /* kangen popup */
-    .kangen-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.36); z-index:10000; animation: overlayIn .18s ease; }
-    .kangen-modal{ background: linear-gradient(180deg,#fff,#fffdf5); padding:22px 26px; border-radius:14px; text-align:center; box-shadow: 0 20px 40px rgba(15,12,25,0.25); transform: translateY(6px); animation: modalPop .28s cubic-bezier(.22,.9,.3,1) both; max-width:92%; }
-    .kangen-modal h2{ margin:0; font-size:22px; font-weight:800; color:#111827; }
-    .kangen-modal p{ margin:10px 0 0; color:var(--muted); font-size:15px; }
-    .kangen-close{ margin-top:14px; padding:8px 14px; border-radius:10px; border:0; background: linear-gradient(135deg,#ff6b8a,#ff8fb3); color:white; font-weight:700; cursor:pointer; }
-    @keyframes overlayIn { from{opacity:0} to{opacity:1} }
-    @keyframes modalPop { from{ transform: translateY(20px) scale(.96); opacity:0 } to{ transform: translateY(0) scale(1); opacity:1 } }
-    
-    /* flying photos (two images) */
-    .flying-photo-wrap{ position:fixed; pointer-events:none; z-index:10001; transform-origin:center center; }
-    .flying-photo-wrap.animate{ animation: photoFly var(--pdur) cubic-bezier(.22,.9,.3,1) forwards; }
-    @keyframes photoFly{ 0%{ transform: translate(0,0) rotate(0deg); opacity:0; filter: blur(6px); } 10%{ opacity:1; filter: blur(0);} 100%{ transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity:0; } }
-    .flying-photo-img{ display:block; border-radius:12px; box-shadow: 0 12px 30px rgba(0,0,0,0.25); max-width:260px }
-    @keyframes jedag { 0%{ transform: scale(1)} 25%{ transform: scale(1.14)} 50%{ transform: scale(1)} 75%{ transform: scale(1.08)} 100%{ transform: scale(1)} }
-    .flying-photo-img.beat{ animation: jedag 680ms ease-in-out infinite; transform-origin:center center }
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(100%, 920px);
+      height: min(760px, calc(100vh - 40px));
+      min-height: 560px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(216, 222, 232, 0.9);
+      border-radius: 8px;
+      box-shadow: 0 24px 80px rgba(23, 32, 51, 0.14);
+      backdrop-filter: blur(14px);
+    }
+
+    .login {
+      grid-row: 1 / -1;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background: var(--panel);
+    }
+
+    .login-box {
+      width: min(100%, 420px);
+      display: grid;
+      gap: 14px;
+    }
+
+    .login-title {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .login-copy {
+      margin: 0 0 6px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .login-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .field,
+    .message-input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .field {
+      height: 46px;
+      padding: 0 14px;
+    }
+
+    .message-input {
+      min-height: 46px;
+      max-height: 130px;
+      resize: none;
+      padding: 12px 14px;
+      line-height: 1.35;
+    }
+
+    .field:focus,
+    .message-input:focus {
+      border-color: rgba(37, 99, 235, 0.75);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .primary-btn,
+    .icon-btn {
+      height: 46px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      transition: background 160ms ease, transform 120ms ease;
+    }
+
+    .primary-btn {
+      padding: 0 18px;
+    }
+
+    .icon-btn {
+      width: 46px;
+    }
+
+    .primary-btn:hover,
+    .icon-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .primary-btn:active,
+    .icon-btn:active {
+      transform: translateY(1px);
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .room-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 800;
+    }
+
+    .room-text {
+      min-width: 0;
+    }
+
+    .room-text h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .room-text p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .ghost-btn,
+    .danger-btn {
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 8px;
+      background: var(--panel-soft);
+      color: var(--text);
+      font-weight: 700;
+      border: 1px solid var(--line);
+    }
+
+    .danger-btn {
+      color: var(--danger);
+    }
+
+    .messages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding: 18px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)),
+        repeating-linear-gradient(45deg, transparent 0 16px, rgba(37, 99, 235, 0.035) 16px 17px);
+    }
+
+    .empty {
+      margin: auto;
+      width: min(100%, 360px);
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .msg {
+      display: grid;
+      max-width: min(76%, 560px);
+      gap: 4px;
+    }
+
+    .msg.me {
+      align-self: flex-end;
+      justify-items: end;
+    }
+
+    .msg.other {
+      align-self: flex-start;
+      justify-items: start;
+    }
+
+    .meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 4px;
+    }
+
+    .bubble {
+      width: fit-content;
+      max-width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      line-height: 1.42;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .me .bubble {
+      background: var(--bubble-me);
+      color: #fff;
+      border-top-right-radius: 3px;
+    }
+
+    .other .bubble {
+      background: var(--bubble-other);
+      color: var(--text);
+      border-top-left-radius: 3px;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 14px 18px 18px;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 0;
+      }
+
+      .app {
+        width: 100%;
+        height: 100vh;
+        min-height: 100vh;
+        border-radius: 0;
+        border: 0;
+      }
+
+      .login-form {
+        grid-template-columns: 1fr;
+      }
+
+      .primary-btn {
+        width: 100%;
+      }
+
+      .app-header {
+        align-items: flex-start;
+        padding: 14px;
+      }
+
+      .header-actions {
+        flex-direction: column;
+      }
+
+      .ghost-btn,
+      .danger-btn {
+        width: 40px;
+        padding: 0;
+        font-size: 0;
+        position: relative;
+      }
+
+      .ghost-btn::before {
+        content: "G";
+        font-size: 14px;
+      }
+
+      .danger-btn::before {
+        content: "X";
+        font-size: 14px;
+      }
+
+      .messages {
+        padding: 14px;
+      }
+
+      .msg {
+        max-width: 88%;
+      }
+
+      .composer {
+        padding: 12px 14px 14px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="scene" role="main" aria-label="Romantic card">
-    <div class="title">Byy <span style="color:#ff6b8a;font-size:22px">🤍</span></div>
-    <button id="btn" aria-haspopup="true" aria-controls="output">Klik ini sayang</button>
-    <div id="output" aria-live="polite"></div>
+  <main class="app" aria-label="Aplikasi chat sederhana">
+    <section id="loginScreen" class="login">
+      <div class="login-box">
+        <div>
+          <h1 class="login-title">Masuk Chat</h1>
+          <p class="login-copy">Isi username dulu, lalu mulai ngobrol di room lokal browser ini.</p>
+        </div>
+        <form id="loginForm" class="login-form" autocomplete="off">
+          <input id="usernameInput" class="field" name="username" maxlength="24" placeholder="Username kamu" required>
+          <button class="primary-btn" type="submit">Masuk</button>
+        </form>
+      </div>
+    </section>
 
-    <!-- decorative background hearts -->
-    <div class="bg-heart" style="left: -20px; top: 10px; transform: rotate(-20deg);">❤</div>
-    <div class="bg-heart" style="right: -10px; bottom: 30px; font-size:56px; transform: rotate(10deg); animation-duration:10s">❤</div>
-  </div>
+    <header id="chatHeader" class="app-header hidden">
+      <div class="room-title">
+        <div id="avatar" class="avatar" aria-hidden="true">U</div>
+        <div class="room-text">
+          <h1>Room Chat</h1>
+          <p id="activeUser">Online sebagai -</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="changeUserBtn" class="ghost-btn" type="button" title="Ganti username">Ganti</button>
+        <button id="clearBtn" class="danger-btn" type="button" title="Hapus semua chat">Hapus</button>
+      </div>
+    </header>
 
-  <script>
-    const btn = document.getElementById('btn');
-    const out = document.getElementById('output');
-    let heartClickCount = 0;
-    let partyUsed = false;
-    let heheActivePhotos = [];
+    <section id="messages" class="messages hidden" aria-live="polite"></section>
 
-    btn.addEventListener('click', showLoveCard);
+    <form id="chatForm" class="composer hidden" autocomplete="off">
+      <textarea id="messageInput" class="message-input" name="message" rows="1" placeholder="Tulis pesan..." required></textarea>
+      <button class="icon-btn" type="submit" title="Kirim pesan" aria-label="Kirim pesan">&gt;</button>
+    </form>
+  </main>
 
-    function showLoveCard(){
-      out.innerHTML = `
-        <div class="name">Love U sayangg <button id="heart" class="heart pulse" aria-label="Ketuk hati">🤍</button></div>
-      `;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import {
+      getDatabase,
+      limitToLast,
+      onValue,
+      push,
+      query,
+      ref,
+      remove
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
-      const heart = document.getElementById('heart');
-      let liked = false;
+    const USER_KEY = "simple-chat-username";
+    const ROOM_ID = new URLSearchParams(window.location.search).get("room") || "private-room";
 
-      heart.addEventListener('click', (ev) => {
-        liked = !liked;
-        heartClickCount++;
-        // show special party button after 10 clicks
-        if (heartClickCount >= 10 && !document.getElementById('partyBtn')) {
-          const pb = document.createElement('button');
-          pb.id = 'partyBtn';
-          pb.className = 'party-btn';
-          pb.textContent = 'yakin gamau klik ini ?';
-          out.appendChild(pb);
-          // animate appear
-          requestAnimationFrame(() => pb.classList.add('show'));
-            pb.addEventListener('click', () => {
-              if (partyUsed) return;
-              partyUsed = true;
-              pb.disabled = true;
-              pb.textContent = '......';
-              // play meriah mode for 5s then show popup
-              startMeriah(5000);
-              setTimeout(() => pb.remove(), 5200);
-          });
-        }
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZoik0jOpDKIS0jLU2JLT2-sFiGkeEleI",
+      authDomain: "chat-random-cfc2c.firebaseapp.com",
+      databaseURL: "https://chat-random-cfc2c-default-rtdb.firebaseio.com",
+      projectId: "chat-random-cfc2c",
+      storageBucket: "chat-random-cfc2c.firebasestorage.app",
+      messagingSenderId: "773337926036",
+      appId: "1:773337926036:web:8ecec60f97428538b2a781",
+      measurementId: "G-LDMM5SJZLW"
+    };
 
-        if (liked) {
-          heart.classList.remove('white');
-          heart.style.color = '#fff';
-          heart.style.background = 'linear-gradient(135deg,#ff6b8a,#ff8fb3)';
-          heart.classList.add('pulse');
-          // spawn a lively burst
-          spawnRomanticHearts(heart, 100);
-        } else {
-          heart.classList.add('white');
-          heart.style.color = '#ff2d6f';
-          heart.style.background = 'linear-gradient(180deg,#fff,#ffeef2)';
-        }
-      });
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const messagesRef = ref(db, `rooms/${ROOM_ID}/messages`);
+    const latestMessagesQuery = query(messagesRef, limitToLast(100));
+
+    const loginScreen = document.getElementById("loginScreen");
+    const loginForm = document.getElementById("loginForm");
+    const usernameInput = document.getElementById("usernameInput");
+    const chatHeader = document.getElementById("chatHeader");
+    const activeUser = document.getElementById("activeUser");
+    const avatar = document.getElementById("avatar");
+    const messagesEl = document.getElementById("messages");
+    const chatForm = document.getElementById("chatForm");
+    const messageInput = document.getElementById("messageInput");
+    const changeUserBtn = document.getElementById("changeUserBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    let username = localStorage.getItem(USER_KEY) || "";
+    let messages = [];
+    let firebaseReady = false;
+
+    onValue(latestMessagesQuery, (snapshot) => {
+      firebaseReady = true;
+      const data = snapshot.val() || {};
+      messages = Object.entries(data)
+        .map(([id, message]) => ({ id, ...message }))
+        .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      renderMessages();
+    }, (error) => {
+      firebaseReady = false;
+      renderError(`Firebase error: ${error.message}`);
+    });
+
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const nextName = usernameInput.value.trim();
+      if (!nextName) return;
+
+      username = nextName.slice(0, 24);
+      localStorage.setItem(USER_KEY, username);
+      showChat();
+    });
+
+    chatForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      sendMessage();
+    });
+
+    messageInput.addEventListener("input", () => {
+      messageInput.style.height = "auto";
+      messageInput.style.height = `${messageInput.scrollHeight}px`;
+    });
+
+    messageInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    changeUserBtn.addEventListener("click", () => {
+      usernameInput.value = username;
+      showLogin();
+    });
+
+    clearBtn.addEventListener("click", () => {
+      if (!confirm("Hapus semua chat di room ini?")) return;
+      remove(messagesRef);
+    });
+
+    if (username) {
+      showChat();
+    } else {
+      showLogin();
     }
 
-    function spawnRomanticHearts(originEl, count = 100){
-      if (!originEl) return;
-      const rect = originEl.getBoundingClientRect();
-      const originX = rect.left + rect.width/2;
-      const originY = rect.top + rect.height/2;
+    function showLogin() {
+      loginScreen.classList.remove("hidden");
+      chatHeader.classList.add("hidden");
+      messagesEl.classList.add("hidden");
+      chatForm.classList.add("hidden");
+      usernameInput.focus();
+    }
 
-      const colors = ['#ff2d6f','#ff7eb6','#ffb1c1','#ff8fa3'];
-      for (let i=0;i<count;i++){
-        // spread creation a bit for a nicer, less janky burst
-        const delay = Math.random() * 350; // up to ~350ms
-        setTimeout(() => {
-          const h = document.createElement('div');
-          h.className = 'flying-heart';
-          h.textContent = '❤';
-          const size = 10 + Math.random()*40;
-          const left = originX + (Math.random()*60 - 30);
-          const top = originY + (Math.random()*40 - 20);
-          const tx = (Math.random()*220 - 110) + 'px';
-          const rot = (Math.random()*120 - 60) + 'deg';
-          const dur = 900 + Math.random()*1200;
+    function showChat() {
+      loginScreen.classList.add("hidden");
+      chatHeader.classList.remove("hidden");
+      messagesEl.classList.remove("hidden");
+      chatForm.classList.remove("hidden");
+      activeUser.textContent = `Online sebagai ${username} - room ${ROOM_ID}`;
+      avatar.textContent = username.charAt(0).toUpperCase();
+      renderMessages();
+      messageInput.focus();
+    }
 
-          h.style.left = left + 'px';
-          h.style.top = top + 'px';
-          h.style.fontSize = size + 'px';
-          h.style.color = colors[Math.floor(Math.random()*colors.length)];
-          h.style.setProperty('--tx', tx);
-          h.style.setProperty('--rot', rot);
-          h.style.setProperty('--dur', dur + 'ms');
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text || !username) return;
 
-          // small scale/pop effect
-          h.style.transform = 'translateY(0) scale(' + (0.85 + Math.random()*0.5) + ')';
-          document.body.appendChild(h);
+      const message = {
+        user: username,
+        text,
+        createdAt: Date.now()
+      };
 
-          // trigger animation in next frame
-          requestAnimationFrame(() => {
-            h.classList.add('animate');
-          });
+      messageInput.value = "";
+      messageInput.style.height = "auto";
+      messageInput.focus();
 
-          // remove after animation
-          setTimeout(() => { h.remove(); }, dur + 500);
-        }, delay);
+      try {
+        await push(messagesRef, message);
+      } catch (error) {
+        messageInput.value = text;
+        renderError(`Gagal kirim pesan: ${error.message}`);
       }
     }
-    
-    function megaBurst(count = 300){
-      const colors = ['#ff2d6f','#ff7eb6','#ffb1c1','#ff8fa3','#ffd166','#ff9a8b'];
-      for (let i=0;i<count;i++){
-        const delay = Math.random() * 900; // stagger
-        setTimeout(()=>{
-          const el = document.createElement('div');
-          el.className = 'mega-item';
-          // pick heart or flower
-          const isHeart = Math.random() < 0.55;
-          el.textContent = isHeart ? '❤' : '🌸';
-          const size = 12 + Math.random() * 44;
-          const left = Math.random() * window.innerWidth;
-          const top = Math.random() * window.innerHeight;
-          const angle = Math.random() * Math.PI * 2;
-          const dist = 80 + Math.random() * 520;
-          const dx = Math.cos(angle) * dist + 'px';
-          const dy = Math.sin(angle) * dist + 'px';
-          const rot = (Math.random() * 720 - 360) + 'deg';
-          const dur = 800 + Math.random() * 1600;
 
-          el.style.left = left + 'px';
-          el.style.top = top + 'px';
-          el.style.fontSize = size + 'px';
-          if (isHeart) el.style.color = colors[Math.floor(Math.random()*colors.length)];
-          el.style.setProperty('--dx', dx);
-          el.style.setProperty('--dy', dy);
-          el.style.setProperty('--rot', rot);
-          el.style.setProperty('--dur', dur + 'ms');
+    function renderMessages() {
+      messagesEl.innerHTML = "";
 
-          document.body.appendChild(el);
-          requestAnimationFrame(()=> el.classList.add('animate'));
-          setTimeout(()=> el.remove(), dur + 500);
-        }, delay);
+      if (!messages.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = firebaseReady
+          ? "Belum ada chat. Kirim pesan pertama buat mulai."
+          : "Menghubungkan ke Firebase...";
+        messagesEl.appendChild(empty);
+        return;
       }
-    }
-    
-    function startMeriah(durationMs = 5000){
-      const interval = 300;
-      const start = Date.now();
-      // initial big burst
-      megaBurst(120);
-      const timer = setInterval(()=>{
-        // ongoing bursts
-        megaBurst(60 + Math.floor(Math.random()*80));
-        if (Date.now() - start >= durationMs){
-          clearInterval(timer);
-          // final flourish
-          megaBurst(220);
-          setTimeout(showKangenPopup, 300);
-        }
-      }, interval);
-    }
 
-    function showKangenPopup(){
-      const overlay = document.createElement('div');
-      overlay.className = 'kangen-overlay';
-      overlay.setAttribute('role','dialog');
-      overlay.setAttribute('aria-modal','true');
-      const modal = document.createElement('div');
-      modal.className = 'kangen-modal';
-      modal.innerHTML = `<h2>Aku kangen kamuuuuu</h2><p>💕</p>`;
-      const close = document.createElement('button');
-      close.className = 'kangen-close';
-      close.textContent = 'hehe';
-      close.addEventListener('click', ()=>{ overlay.remove(); triggerHeheSequence(); });
-      modal.appendChild(close);
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-      close.focus();
-      overlay.addEventListener('click', (e)=> { if (e.target === overlay) overlay.remove(); });
-    }
+      const fragment = document.createDocumentFragment();
 
-    /* HEHE: popup + animate two photos with jedag-jeduh vibes */
-    function triggerHeheSequence(){
-      // create overlay/modal
-      const overlay = document.createElement('div');
-      overlay.className = 'kangen-overlay';
-      overlay.setAttribute('role','dialog');
-      overlay.setAttribute('aria-modal','true');
-      const modal = document.createElement('div');
-      modal.className = 'kangen-modal';
-      modal.innerHTML = `<h2>KANGENN SI MUNGILLLLL !!</h2><p>💓</p>`;
-      const close = document.createElement('button');
-      close.className = 'kangen-close';
-      close.textContent = 'Tutup';
-      close.addEventListener('click', ()=>{ overlay.remove(); removeHehePhotos(); if (overlay._beatInterval) clearInterval(overlay._beatInterval); });
-      modal.appendChild(close);
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-      close.focus();
-      overlay.addEventListener('click', (e)=>{ if (e.target === overlay){ overlay.remove(); removeHehePhotos(); if (overlay._beatInterval) clearInterval(overlay._beatInterval); }});
+      messages.forEach((message) => {
+        const item = document.createElement("article");
+        item.className = `msg ${message.user === username ? "me" : "other"}`;
 
-      // spawn the two photos from the project folder
-      const images = [
-        'WhatsApp Image 2026-04-06 at 14.52.30.jpeg',
-        'WhatsApp Image 2026-04-06 at 15.20.57.jpeg'
-      ];
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = `${message.user} - ${formatTime(message.createdAt)}`;
 
-      spawnPhotosWithBeat(images, overlay);
-    }
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.textContent = message.text;
 
-    function spawnPhotosWithBeat(paths, overlay){
-      paths.forEach((p, idx) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'flying-photo-wrap';
-        const img = document.createElement('img');
-        img.className = 'flying-photo-img beat';
-        img.src = encodeURI(p);
-        img.alt = 'Foto ' + (idx+1);
-
-        // start near center with small offset
-        const cx = window.innerWidth/2 + (idx === 0 ? -90 : 90);
-        const cy = window.innerHeight/2 + (Math.random()*60 - 30);
-        wrap.style.left = cx + 'px';
-        wrap.style.top = cy + 'px';
-
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 200 + Math.random() * 420;
-        wrap.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
-        wrap.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
-        wrap.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
-        // fixed 5s duration for the photo fly
-        const dur = 5000;
-        wrap.style.setProperty('--pdur', dur + 'ms');
-
-        // slightly larger photos
-        img.style.maxWidth = (180 + Math.random() * 180) + 'px';
-        wrap.appendChild(img);
-        document.body.appendChild(wrap);
-        heheActivePhotos.push(wrap);
-
-        // trigger fly animation
-        requestAnimationFrame(()=> wrap.classList.add('animate'));
-
-        // schedule removal shortly after animation ends (5s)
-        setTimeout(()=>{ try{ wrap.remove(); }catch(e){} heheActivePhotos = heheActivePhotos.filter(w => w !== wrap); }, dur + 400);
+        item.append(meta, bubble);
+        fragment.appendChild(item);
       });
 
-      // modal jedag-jeduh pulse
-      const modalEl = document.querySelector('.kangen-modal');
-      if (modalEl){
-        const beatInterval = setInterval(()=>{
-          modalEl.animate([
-            { transform: 'scale(1)' },
-            { transform: 'scale(1.06)' },
-            { transform: 'scale(1)' }
-          ], { duration: 420, easing: 'ease-in-out' });
-        }, 840);
-        if (overlay) overlay._beatInterval = beatInterval;
-      }
+      messagesEl.appendChild(fragment);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    function removeHehePhotos(){
-      if (heheActivePhotos && heheActivePhotos.length){
-        heheActivePhotos.forEach(w => { try{ w.remove(); }catch(e){} });
-        heheActivePhotos = [];
-      }
+    function renderError(message) {
+      messagesEl.innerHTML = "";
+      const errorBox = document.createElement("div");
+      errorBox.className = "empty";
+      errorBox.textContent = message;
+      messagesEl.appendChild(errorBox);
+    }
+
+    function formatTime(value) {
+      return new Intl.DateTimeFormat("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(value));
     }
   </script>
 </body>

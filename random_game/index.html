@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#171916" />
+    <title>Sumpah Merdeka — Demo Kombat</title>
+    <link rel="stylesheet" href="demo/styles.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">Sumpah Merdeka</p>
+          <h1>Serbuan Kampung</h1>
+        </div>
+        <div class="status-chip">Demo kombat · tanpa audio</div>
+      </header>
+
+      <section class="stage" aria-label="Demo game Sumpah Merdeka">
+        <canvas id="game" width="640" height="360" tabindex="0" aria-label="Arena permainan"></canvas>
+
+        <div id="loading" class="panel loading-panel">
+          <span class="loading-mark" aria-hidden="true"></span>
+          <p>Menyiapkan kampung...</p>
+        </div>
+
+        <div id="intro" class="panel story-panel hidden">
+          <p class="panel-kicker">Akhir 1945 · malam</p>
+          <h2>Pasukan masuk dari jalan timur.</h2>
+          <p>
+            Darma sedang membuka jalur menuju hutan. Sutrisno harus menahan serbuan dan
+            memberi waktu bagi warga untuk pergi.
+          </p>
+          <button id="start-button" class="primary-button" type="button">Mulai bertahan</button>
+        </div>
+
+        <div id="result" class="panel result-panel hidden">
+          <p id="result-kicker" class="panel-kicker">Pertempuran selesai</p>
+          <h2 id="result-title">Jalur aman terbuka.</h2>
+          <p id="result-copy"></p>
+          <button id="restart-button" class="primary-button" type="button">Ulangi demo</button>
+        </div>
+
+        <div id="pause" class="pause-card hidden">Dijeda · tekan Esc untuk lanjut</div>
+
+        <div id="mobile-controls" aria-label="Kontrol sentuh">
+          <div id="joystick" class="joystick" aria-label="Analog gerak" role="application">
+            <span class="joystick-ring" aria-hidden="true"></span>
+            <span id="joystick-knob" class="joystick-knob" aria-hidden="true"></span>
+            <span class="joystick-label" aria-hidden="true">GERAK</span>
+          </div>
+          <div class="action-pad">
+            <button data-action="bandage">Perban</button>
+            <button data-action="reload">Isi</button>
+            <button data-action="dodge">Dodge</button>
+            <button data-action="melee">Pukul</button>
+            <button class="fire-button" data-action="fire">Tembak</button>
+          </div>
+        </div>
+      </section>
+
+      <footer class="controls-strip">
+        <span><kbd>WASD</kbd> bergerak</span>
+        <span><kbd>Mouse</kbd> bidik</span>
+        <span><kbd>Klik/Spasi</kbd> tembak</span>
+        <span><kbd>E</kbd> pukul</span>
+        <span><kbd>R</kbd> isi peluru</span>
+        <span><kbd>F</kbd> perban</span>
+        <span><kbd>Shift</kbd> menghindar</span>
+      </footer>
+    </main>
+
+    <script src="demo/game.js"></script>
+  </body>
+</html>

@@ -1,0 +1,371 @@
+project: Sumpah Merdeka
+house_style: Garis Merdeka
+updated_at: 2026-08-05
+pack_version: visual-environment-expansion-v3
+generation_session: 019fd095-542b-73d3-9872-352491eb63aa
+
+asset_contract:
+  internal_resolution: 640x360
+  orientation: landscape
+  tile_size: 32x32
+  character_cell: 32x48
+  directions: [down, left, right, up]
+  walk_frames_per_direction: 4
+  portrait_source: square
+  still_frame_ratio: 16:9
+  palette_target: 32 colors per scene family
+  transparent_source_method: chroma-key then local alpha cleanup
+
+assets:
+  - id: STYLE-001
+    type: styleboard
+    file: source/style/garis-merdeka-styleboard-v1.png
+    prompt: source/prompts/000_styleboard.md
+    tool: built-in-imagegen
+    status: approved-reference-v1
+    created_at: 2026-08-05
+    human_edits: none
+    historical_sources: pending
+    license_or_terms: generated-output-review-required
+
+  - id: CHAR-CONCEPT-001
+    type: character-concept-set
+    files:
+      - source/characters/sutrisno-concept-v1.png
+      - source/characters/sastro-concept-v1.png
+      - source/characters/marni-concept-v1.png
+      - source/characters/darma-concept-v1.png
+      - source/characters/bima-concept-v1.png
+      - source/characters/sari-concept-v1.png
+      - source/characters/karso-concept-v1.png
+      - source/characters/joyo-concept-v1.png
+      - source/characters/hendrik-concept-v1.png
+      - source/characters/side-characters-lineup-v1.png
+    prompt: source/prompts/010_character_concepts.md
+    tool: built-in-imagegen
+    status: approved-reference-v1
+    human_edits: none
+
+  - id: CHAR-SPRITE-001
+    type: main-character-walk-set
+    file_glob: characters/sprites/*-walk-32x48-v1.png
+    expected_files: 10
+    includes: [sutrisno, sastro, marni, darma, bima, sari, karso, joyo, hendrik, patrol]
+    prompt: source/prompts/020_sprites_and_portraits.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 128x192
+    alpha: true
+
+  - id: CHAR-SPRITE-002
+    type: side-character-direction-set
+    file: characters/sprites/side-characters-directions-32x48-v1.png
+    includes: [lastri, mbah_wiryo, bu_rukmini, mantri_rahman, aji]
+    prompt: source/prompts/020_sprites_and_portraits.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1-static-directions
+    runtime: 160x192
+    alpha: true
+
+  - id: CHAR-PORTRAIT-001
+    type: expression-portrait-set
+    file_glob: characters/portraits/*-expressions-256-v1.png
+    expected_files: 9
+    prompt: source/prompts/020_sprites_and_portraits.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 512x512
+    alpha: true
+
+  - id: ENV-BG-001
+    type: environment-background-set
+    file_glob: environments/backgrounds/*-640x360-v2.png
+    expected_files: 6
+    includes: [village_peaceful, village_burning, forest_route, refugee_camp, river_crossing, cemetery_epilogue]
+    prompt: source/prompts/030_world_ui_items.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v2-approved
+    runtime: 640x360
+    alpha: false
+
+  - id: TILE-001
+    type: terrain-atlas
+    file: tilesets/terrain-atlas-32-v2.png
+    prompt: source/prompts/030_world_ui_items.md
+    tool: built-in-imagegen-plus-local-export
+    status: prototype-runtime-v2-seam-review-needed
+    runtime: 128x128
+    alpha: false
+
+  - id: PROP-001
+    type: world-prop-atlas
+    file: tilesets/world-props-128-v1.png
+    prompt: source/prompts/030_world_ui_items.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 512x512
+    alpha: true
+
+  - id: ITEM-001
+    type: inventory-icon-atlas
+    file: items/inventory-icons-64-v1.png
+    prompt: source/prompts/030_world_ui_items.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 256x256
+    alpha: true
+
+  - id: UI-001
+    type: dialogue-overlay
+    file: ui/dialogue-overlay-640x360-v2.png
+    prompt: source/prompts/030_world_ui_items.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v2-approved
+    runtime: 640x360
+    alpha: true
+
+  - id: UI-002
+    type: ui-icon-atlas
+    file: ui/ui-icons-32-v1.png
+    prompt: source/prompts/030_world_ui_items.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 128x128
+    alpha: true
+
+  - id: UI-003
+    type: title-keyart
+    file: ui/title-keyart-640x360-v2.png
+    prompt: source/prompts/030_world_ui_items.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v2-approved-title-text-added-in-code
+    runtime: 640x360
+    alpha: false
+
+  - id: VFX-001
+    type: environmental-vfx-atlas
+    file: effects/environment-vfx-64-v1.png
+    prompt: source/prompts/030_world_ui_items.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 256x256
+    alpha: true
+
+  - id: CUTSCENE-001
+    type: cutscene-still-set
+    file_glob: cutscenes/*-640x360-v2.png
+    expected_files: 6
+    prompt: source/prompts/040_cutscenes.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v2-approved
+    runtime: 640x360
+    alpha: false
+
+  - id: CHAR-VARIANT-001
+    type: republican-field-and-epilogue-concepts
+    files:
+      - source/characters/variants/republican-field-lineup-v1.png
+      - source/characters/variants/epilogue-veterans-lineup-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen
+    status: approved-reference-v1
+
+  - id: CHAR-VARIANT-002
+    type: armed-and-veteran-walk-set
+    file_glob: characters/variants/*-walk-32x48-v1.png
+    expected_files: 6
+    includes: [sutrisno_armed, bima_rifleman, sari_medic, karso_scout, darma_leader, sutrisno_colonel]
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 128x192
+    alpha: true
+
+  - id: CHAR-ACTION-001
+    type: sutrisno-combat-action-atlas
+    file: characters/variants/sutrisno-combat-actions-48-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 192x192
+    alpha: true
+
+  - id: ENEMY-CONCEPT-001
+    type: enemy-archetype-lineup
+    file: source/enemies/enemy-archetypes-lineup-v1.png
+    includes: [rifle_patrol, sentry, scout, sergeant, intermediary]
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen
+    status: approved-reference-v1-historical-unit-pending
+
+  - id: ENEMY-SPRITE-001
+    type: combat-enemy-walk-set
+    file_glob: enemies/sprites/*-walk-32x48-v1.png
+    expected_files: 4
+    includes: [rifle_patrol, sentry, scout, sergeant]
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1-shared-two-base-ai
+    runtime: 128x192
+    alpha: true
+
+  - id: ENEMY-SPRITE-002
+    type: intermediary-directions
+    file: enemies/sprites/intermediary-directions-32x48-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1-noncombat
+    runtime: 128x48
+    alpha: true
+
+  - id: ENEMY-ACTION-001
+    type: shared-rifle-action-atlas
+    file: enemies/sprites/enemy-rifle-actions-48-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 192x192
+    alpha: true
+
+  - id: VEHICLE-001
+    type: enemy-vehicle-concept-lineup
+    file: source/vehicles/enemy-vehicle-lineup-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen
+    status: approved-reference-v1-date-scope-required
+
+  - id: VEHICLE-002
+    type: combat-vehicle-state-set
+    files:
+      - vehicles/armored-car-states-128x96-v1.png
+      - vehicles/stuart-light-tank-states-128x96-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 512x192
+    alpha: true
+    history_scope:
+      armored_car: core-late-1945
+      stuart_tank: optional-1946-plus
+
+  - id: VEHICLE-003
+    type: cargo-truck-directions
+    file: vehicles/cargo-truck-directions-128x96-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1-scripted-prop
+    runtime: 512x96
+    alpha: true
+
+  - id: WEAPON-001
+    type: world-weapon-pickup-atlas
+    file: weapons/world-weapons-128x96-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 512x384
+    alpha: true
+
+  - id: EQUIPMENT-001
+    type: combat-equipment-icon-atlas
+    file: weapons/combat-equipment-icons-64-v1.png
+    prompt: source/prompts/050_military_enemy_vehicle_weapons.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 256x256
+    alpha: true
+
+  - id: ENV-MOD-001
+    type: modular-building-atlas-set
+    files:
+      - environment/buildings/village-buildings-256x192-v1.png
+      - environment/buildings/camp-structures-256x192-v1.png
+    prompt: source/prompts/060_environment_modular.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 768x384
+    alpha: true
+
+  - id: ENV-MOD-002
+    type: modular-interior-set
+    files:
+      - environment/interiors/interior-shells-320x240-v1.png
+      - environment/interiors/home-interior-props-128-v1.png
+    prompt: source/prompts/060_environment_modular.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    alpha: true
+    layouts:
+      shells: 640x480
+      props: 512x512
+
+  - id: TILE-002
+    type: modular-terrain-atlas-set
+    files:
+      - tilesets/dirt-road-autotile-32-v1.png
+      - tilesets/riverbank-autotile-32-v1.png
+      - tilesets/rice-terrace-atlas-32-v1.png
+    prompt: source/prompts/060_environment_modular.md
+    tool: built-in-imagegen-plus-local-export
+    status: prototype-runtime-v1-seam-review-needed
+    runtime: 128x128
+    tile: 32x32
+    alpha: false
+
+  - id: ENV-VEG-001
+    type: modular-vegetation-set
+    files:
+      - environment/vegetation/trees-large-192-v1.png
+      - environment/vegetation/ground-vegetation-64-v1.png
+    prompt: source/prompts/060_environment_modular.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    alpha: true
+    layouts:
+      trees: 768x576
+      ground: 256x256
+
+  - id: ENV-PROP-002
+    type: natural-obstacle-and-utility-atlas
+    file: environment/vegetation/natural-obstacles-128-v1.png
+    prompt: source/prompts/060_environment_modular.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 512x512
+    alpha: true
+
+  - id: ENV-BRIDGE-001
+    type: river-crossing-overlay-atlas
+    file: environment/bridges/river-crossings-256x128-v1.png
+    prompt: source/prompts/060_environment_modular.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 1024x384
+    alpha: true
+
+  - id: ENV-DECAL-001
+    type: ground-decal-atlas
+    file: environment/decals/ground-decals-64-v1.png
+    prompt: source/prompts/060_environment_modular.md
+    tool: built-in-imagegen-plus-local-export
+    status: runtime-v1
+    runtime: 256x256
+    alpha: true
+
+  - id: AUDIO-001
+    type: audio-generation-brief
+    file: audio/README.md
+    tool: none-in-current-session
+    status: prompt-ready-not-rendered
+
+quality_audit:
+  checked_at: 2026-08-05
+  runtime_images_checked: 70
+  expansion_runtime_images_checked: 18
+  environment_runtime_images_checked: 12
+  total_png_including_sources_and-superseded: 221
+  total_png_mib: 259.02
+  transparent_assets_corner_alpha: 0
+  opaque_v2_corner_alpha: 255
+  historical_review: preliminary-date-scope-complete-exact-units-pending
+  manual_tile_seam_review: pending

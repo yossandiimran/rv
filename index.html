@@ -442,6 +442,7 @@
         </div>
       </div>
       <div class="header-actions">
+        <button id="notifyBtn" class="ghost-btn" type="button" title="Aktifkan notifikasi">Notif</button>
         <button id="changeUserBtn" class="ghost-btn" type="button" title="Ganti username">Ganti</button>
         <button id="clearBtn" class="danger-btn" type="button" title="Hapus semua chat">Hapus</button>
       </div>
@@ -501,6 +502,7 @@
     const messageInput = document.getElementById("messageInput");
     const emojiToggle = document.getElementById("emojiToggle");
     const emojiPanel = document.getElementById("emojiPanel");
+    const notifyBtn = document.getElementById("notifyBtn");
     const changeUserBtn = document.getElementById("changeUserBtn");
     const clearBtn = document.getElementById("clearBtn");
     const emojis = ["😀", "😁", "😂", "🤣", "😊", "😍", "😘", "🥰", "😎", "😅", "😢", "😭", "😡", "😴", "🤔", "👍", "🙏", "🔥", "✨", "❤️", "💙", "💕", "💌", "🌹"];
@@ -508,13 +510,18 @@
     let username = localStorage.getItem(USER_KEY) || "";
     let messages = [];
     let firebaseReady = false;
+    let latestSeenTime = Date.now();
+    let firstFirebaseLoad = true;
 
     onValue(latestMessagesQuery, (snapshot) => {
       firebaseReady = true;
       const data = snapshot.val() || {};
-      messages = Object.entries(data)
+      const nextMessages = Object.entries(data)
         .map(([id, message]) => ({ id, ...message }))
         .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+      notifyIncomingMessages(nextMessages);
+      messages = nextMessages;
       renderMessages();
     }, (error) => {
       firebaseReady = false;
@@ -573,9 +580,29 @@
       showLogin();
     });
 
+    notifyBtn.addEventListener("click", async () => {
+      if (!("Notification" in window)) {
+        alert("Browser ini belum support notifikasi.");
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      updateNotifyButton();
+
+      if (permission === "granted") {
+        new Notification("Notifikasi aktif", {
+          body: "Pesan baru akan muncul selama halaman chat ini tetap terbuka."
+        });
+      }
+    });
+
     clearBtn.addEventListener("click", () => {
       if (!confirm("Hapus semua chat di room ini?")) return;
       remove(messagesRef);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) latestSeenTime = Date.now();
     });
 
     if (username) {
@@ -589,6 +616,7 @@
       chatHeader.classList.add("hidden");
       messagesEl.classList.add("hidden");
       chatForm.classList.add("hidden");
+      updateNotifyButton();
       usernameInput.focus();
     }
 
@@ -599,6 +627,7 @@
       chatForm.classList.remove("hidden");
       activeUser.textContent = `Online sebagai ${username} - room ${ROOM_ID}`;
       avatar.textContent = username.charAt(0).toUpperCase();
+      updateNotifyButton();
       renderMessages();
       messageInput.focus();
     }
@@ -636,6 +665,59 @@
       messageInput.selectionEnd = start + value.length;
       messageInput.dispatchEvent(new Event("input"));
       messageInput.focus();
+    }
+
+    function notifyIncomingMessages(nextMessages) {
+      const newestTime = nextMessages.reduce((max, message) => {
+        return Math.max(max, Number(message.createdAt) || 0);
+      }, latestSeenTime);
+
+      if (firstFirebaseLoad) {
+        firstFirebaseLoad = false;
+        latestSeenTime = newestTime;
+        return;
+      }
+
+      const incoming = nextMessages.filter((message) => {
+        return message.user !== username && Number(message.createdAt) > latestSeenTime;
+      });
+
+      latestSeenTime = newestTime;
+
+      if (!incoming.length || !canShowNotification()) return;
+
+      const lastMessage = incoming[incoming.length - 1];
+      new Notification(`Pesan dari ${lastMessage.user}`, {
+        body: lastMessage.text,
+        tag: `chat-${ROOM_ID}`,
+        renotify: true
+      });
+    }
+
+    function canShowNotification() {
+      return "Notification" in window
+        && Notification.permission === "granted"
+        && document.hidden;
+    }
+
+    function updateNotifyButton() {
+      if (!("Notification" in window)) {
+        notifyBtn.textContent = "No Notif";
+        notifyBtn.disabled = true;
+        return;
+      }
+
+      if (Notification.permission === "granted") {
+        notifyBtn.textContent = "Notif On";
+        return;
+      }
+
+      if (Notification.permission === "denied") {
+        notifyBtn.textContent = "Notif Off";
+        return;
+      }
+
+      notifyBtn.textContent = "Notif";
     }
 
     function renderMessages() {

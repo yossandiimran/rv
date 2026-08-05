@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Byy 🤍</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1:#fff7fb;
+      --bg2:#fff0f6;
+      --accent:#ff6b8a;
+      --accent-2:#ff8fb3;
+      --card-bg: rgba(255,255,255,0.7);
+      --muted:#6b7280;
+      font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0}
+    body{
+      display:flex;align-items:center;justify-content:center;
+      background: radial-gradient( circle at 10% 10%, #fff7fb 0%, #fff1f2 30%, #fffaf0 100% );
+      min-height:100vh;
+      overflow:hidden;
+    }
+    .scene {
+      position:relative;
+      width:360px;
+      padding:36px;
+      border-radius:20px;
+      background:var(--card-bg);
+      box-shadow: 0 10px 30px rgba(25,23,39,0.08);
+      text-align:center;
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+    .title { font-size:20px; font-weight:800; color:#111827; margin-bottom:14px; display:flex;align-items:center;justify-content:center; gap:8px }
+    button#btn{
+      padding:12px 18px;border-radius:12px;border:0;
+      background: linear-gradient(135deg,var(--accent), var(--accent-2));
+      color:white;font-weight:700;cursor:pointer;font-size:15px;
+      box-shadow: 0 6px 18px rgba(255,107,138,0.18);
+      transition: transform .14s ease, box-shadow .14s ease;
+    }
+    button#btn:active{ transform: translateY(1px) scale(.995); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    #output{ margin-top:18px; font-size:18px; color:#111; min-height:86px; display:flex;flex-direction:column;align-items:center;justify-content:center; gap:8px }
+    .name{ font-size:20px; font-weight:700; color:#111; display:flex;align-items:center; gap:10px; }
+    .heart { cursor:pointer; display:inline-block; width:48px; height:48px; border-radius:50%; display:flex;align-items:center;justify-content:center; font-size:22px; background:linear-gradient(180deg,#fff,#ffeef2); color:#ff2d6f; box-shadow: 0 6px 18px rgba(255,105,150,0.12);}
+    .heart.white { color:#fff; background: linear-gradient(180deg,#fff,#f8fafc); border: 2px solid rgba(0,0,0,0.04) }
+    .love { font-size:14px; color:var(--muted); text-decoration:none; display:inline-block; margin-top:4px; }
+    .love:hover{ text-decoration:underline; color:#111827}
+    .pulse { animation: pulse 900ms infinite alternate; transform-origin:center center; }
+    @keyframes pulse { from{ transform: scale(1)} to{ transform: scale(1.08)} }
+
+    /* flying hearts */
+    .flying-heart {
+      position:fixed;
+      pointer-events:none;
+      will-change: transform, opacity;
+      transform: translateY(0) translateX(0);
+      opacity:1;
+      transition: opacity .6s linear;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) translateX(0) rotate(0deg); opacity:1; filter:blur(0);} 
+      60% { opacity:0.9; }
+      100% { transform: translateY(-180px) translateX(var(--tx)) rotate(var(--rot)); opacity:0; filter: blur(1px); }
+    }
+    .flying-heart.animate { animation: floatUp var(--dur) cubic-bezier(.22,.9,.3,1) forwards; }
+
+    /* subtle background hearts */
+    .bg-heart {
+      position:absolute;
+      font-size:42px;
+      opacity:0.06;
+      color:#ff6b8a;
+      user-select:none;
+      pointer-events:none;
+      transform:translateY(0);
+      animation: slowFloat 8s linear infinite;
+    }
+    @keyframes slowFloat { 0%{ transform: translateY(0)} 50%{ transform: translateY(-10px)} 100%{ transform: translateY(0)} }
+
+    /* responsive */
+    @media (max-width:420px){
+      .scene{ width:92%; padding:24px; border-radius:16px }
+      .heart{ width:44px;height:44px;font-size:20px }
+    }
+    
+    /* party button */
+    .party-btn{
+      margin-top:10px;
+      padding:10px 14px;
+      border-radius:12px;
+      border:0;
+      background: linear-gradient(135deg,#ffd166,#ff9a8b);
+      color:#3b2e2e;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow: 0 8px 24px rgba(255,150,120,0.18);
+      transform: scale(.96);
+      transition: transform .16s ease, opacity .2s ease;
+      opacity:0;
+      display:inline-block;
+    }
+    .party-btn.show{ opacity:1; transform: scale(1); }
+
+    /* mega burst items (flowers & hearts) */
+    .mega-item{
+      position:fixed;
+      pointer-events:none;
+      will-change: transform, opacity;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      z-index:9999;
+    }
+    @keyframes megaPop {
+      0%{ opacity:0; transform: translate(0,0) scale(.6) rotate(0deg); }
+      10%{ opacity:1; transform: translate(0,0) scale(1) rotate(0deg); }
+      100%{ opacity:0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1.1); }
+    }
+    .mega-item.animate{ animation: megaPop var(--dur) cubic-bezier(.22,.9,.3,1) forwards; }
+
+    /* kangen popup */
+    .kangen-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.36); z-index:10000; animation: overlayIn .18s ease; }
+    .kangen-modal{ background: linear-gradient(180deg,#fff,#fffdf5); padding:22px 26px; border-radius:14px; text-align:center; box-shadow: 0 20px 40px rgba(15,12,25,0.25); transform: translateY(6px); animation: modalPop .28s cubic-bezier(.22,.9,.3,1) both; max-width:92%; }
+    .kangen-modal h2{ margin:0; font-size:22px; font-weight:800; color:#111827; }
+    .kangen-modal p{ margin:10px 0 0; color:var(--muted); font-size:15px; }
+    .kangen-close{ margin-top:14px; padding:8px 14px; border-radius:10px; border:0; background: linear-gradient(135deg,#ff6b8a,#ff8fb3); color:white; font-weight:700; cursor:pointer; }
+    @keyframes overlayIn { from{opacity:0} to{opacity:1} }
+    @keyframes modalPop { from{ transform: translateY(20px) scale(.96); opacity:0 } to{ transform: translateY(0) scale(1); opacity:1 } }
+    
+    /* flying photos (two images) */
+    .flying-photo-wrap{ position:fixed; pointer-events:none; z-index:10001; transform-origin:center center; }
+    .flying-photo-wrap.animate{ animation: photoFly var(--pdur) cubic-bezier(.22,.9,.3,1) forwards; }
+    @keyframes photoFly{ 0%{ transform: translate(0,0) rotate(0deg); opacity:0; filter: blur(6px); } 10%{ opacity:1; filter: blur(0);} 100%{ transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity:0; } }
+    .flying-photo-img{ display:block; border-radius:12px; box-shadow: 0 12px 30px rgba(0,0,0,0.25); max-width:260px }
+    @keyframes jedag { 0%{ transform: scale(1)} 25%{ transform: scale(1.14)} 50%{ transform: scale(1)} 75%{ transform: scale(1.08)} 100%{ transform: scale(1)} }
+    .flying-photo-img.beat{ animation: jedag 680ms ease-in-out infinite; transform-origin:center center }
+  </style>
+</head>
+<body>
+  <div class="scene" role="main" aria-label="Romantic card">
+    <div class="title">Byy <span style="color:#ff6b8a;font-size:22px">🤍</span></div>
+    <button id="btn" aria-haspopup="true" aria-controls="output">Klik ini sayang</button>
+    <div id="output" aria-live="polite"></div>
+
+    <!-- decorative background hearts -->
+    <div class="bg-heart" style="left: -20px; top: 10px; transform: rotate(-20deg);">❤</div>
+    <div class="bg-heart" style="right: -10px; bottom: 30px; font-size:56px; transform: rotate(10deg); animation-duration:10s">❤</div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('btn');
+    const out = document.getElementById('output');
+    let heartClickCount = 0;
+    let partyUsed = false;
+    let heheActivePhotos = [];
+
+    btn.addEventListener('click', showLoveCard);
+
+    function showLoveCard(){
+      out.innerHTML = `
+        <div class="name">Love U sayangg <button id="heart" class="heart pulse" aria-label="Ketuk hati">🤍</button></div>
+      `;
+
+      const heart = document.getElementById('heart');
+      let liked = false;
+
+      heart.addEventListener('click', (ev) => {
+        liked = !liked;
+        heartClickCount++;
+        // show special party button after 10 clicks
+        if (heartClickCount >= 10 && !document.getElementById('partyBtn')) {
+          const pb = document.createElement('button');
+          pb.id = 'partyBtn';
+          pb.className = 'party-btn';
+          pb.textContent = 'yakin gamau klik ini ?';
+          out.appendChild(pb);
+          // animate appear
+          requestAnimationFrame(() => pb.classList.add('show'));
+            pb.addEventListener('click', () => {
+              if (partyUsed) return;
+              partyUsed = true;
+              pb.disabled = true;
+              pb.textContent = '......';
+              // play meriah mode for 5s then show popup
+              startMeriah(5000);
+              setTimeout(() => pb.remove(), 5200);
+          });
+        }
+
+        if (liked) {
+          heart.classList.remove('white');
+          heart.style.color = '#fff';
+          heart.style.background = 'linear-gradient(135deg,#ff6b8a,#ff8fb3)';
+          heart.classList.add('pulse');
+          // spawn a lively burst
+          spawnRomanticHearts(heart, 100);
+        } else {
+          heart.classList.add('white');
+          heart.style.color = '#ff2d6f';
+          heart.style.background = 'linear-gradient(180deg,#fff,#ffeef2)';
+        }
+      });
+    }
+
+    function spawnRomanticHearts(originEl, count = 100){
+      if (!originEl) return;
+      const rect = originEl.getBoundingClientRect();
+      const originX = rect.left + rect.width/2;
+      const originY = rect.top + rect.height/2;
+
+      const colors = ['#ff2d6f','#ff7eb6','#ffb1c1','#ff8fa3'];
+      for (let i=0;i<count;i++){
+        // spread creation a bit for a nicer, less janky burst
+        const delay = Math.random() * 350; // up to ~350ms
+        setTimeout(() => {
+          const h = document.createElement('div');
+          h.className = 'flying-heart';
+          h.textContent = '❤';
+          const size = 10 + Math.random()*40;
+          const left = originX + (Math.random()*60 - 30);
+          const top = originY + (Math.random()*40 - 20);
+          const tx = (Math.random()*220 - 110) + 'px';
+          const rot = (Math.random()*120 - 60) + 'deg';
+          const dur = 900 + Math.random()*1200;
+
+          h.style.left = left + 'px';
+          h.style.top = top + 'px';
+          h.style.fontSize = size + 'px';
+          h.style.color = colors[Math.floor(Math.random()*colors.length)];
+          h.style.setProperty('--tx', tx);
+          h.style.setProperty('--rot', rot);
+          h.style.setProperty('--dur', dur + 'ms');
+
+          // small scale/pop effect
+          h.style.transform = 'translateY(0) scale(' + (0.85 + Math.random()*0.5) + ')';
+          document.body.appendChild(h);
+
+          // trigger animation in next frame
+          requestAnimationFrame(() => {
+            h.classList.add('animate');
+          });
+
+          // remove after animation
+          setTimeout(() => { h.remove(); }, dur + 500);
+        }, delay);
+      }
+    }
+    
+    function megaBurst(count = 300){
+      const colors = ['#ff2d6f','#ff7eb6','#ffb1c1','#ff8fa3','#ffd166','#ff9a8b'];
+      for (let i=0;i<count;i++){
+        const delay = Math.random() * 900; // stagger
+        setTimeout(()=>{
+          const el = document.createElement('div');
+          el.className = 'mega-item';
+          // pick heart or flower
+          const isHeart = Math.random() < 0.55;
+          el.textContent = isHeart ? '❤' : '🌸';
+          const size = 12 + Math.random() * 44;
+          const left = Math.random() * window.innerWidth;
+          const top = Math.random() * window.innerHeight;
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 80 + Math.random() * 520;
+          const dx = Math.cos(angle) * dist + 'px';
+          const dy = Math.sin(angle) * dist + 'px';
+          const rot = (Math.random() * 720 - 360) + 'deg';
+          const dur = 800 + Math.random() * 1600;
+
+          el.style.left = left + 'px';
+          el.style.top = top + 'px';
+          el.style.fontSize = size + 'px';
+          if (isHeart) el.style.color = colors[Math.floor(Math.random()*colors.length)];
+          el.style.setProperty('--dx', dx);
+          el.style.setProperty('--dy', dy);
+          el.style.setProperty('--rot', rot);
+          el.style.setProperty('--dur', dur + 'ms');
+
+          document.body.appendChild(el);
+          requestAnimationFrame(()=> el.classList.add('animate'));
+          setTimeout(()=> el.remove(), dur + 500);
+        }, delay);
+      }
+    }
+    
+    function startMeriah(durationMs = 5000){
+      const interval = 300;
+      const start = Date.now();
+      // initial big burst
+      megaBurst(120);
+      const timer = setInterval(()=>{
+        // ongoing bursts
+        megaBurst(60 + Math.floor(Math.random()*80));
+        if (Date.now() - start >= durationMs){
+          clearInterval(timer);
+          // final flourish
+          megaBurst(220);
+          setTimeout(showKangenPopup, 300);
+        }
+      }, interval);
+    }
+
+    function showKangenPopup(){
+      const overlay = document.createElement('div');
+      overlay.className = 'kangen-overlay';
+      overlay.setAttribute('role','dialog');
+      overlay.setAttribute('aria-modal','true');
+      const modal = document.createElement('div');
+      modal.className = 'kangen-modal';
+      modal.innerHTML = `<h2>Aku kangen kamuuuuu</h2><p>💕</p>`;
+      const close = document.createElement('button');
+      close.className = 'kangen-close';
+      close.textContent = 'hehe';
+      close.addEventListener('click', ()=>{ overlay.remove(); triggerHeheSequence(); });
+      modal.appendChild(close);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      close.focus();
+      overlay.addEventListener('click', (e)=> { if (e.target === overlay) overlay.remove(); });
+    }
+
+    /* HEHE: popup + animate two photos with jedag-jeduh vibes */
+    function triggerHeheSequence(){
+      // create overlay/modal
+      const overlay = document.createElement('div');
+      overlay.className = 'kangen-overlay';
+      overlay.setAttribute('role','dialog');
+      overlay.setAttribute('aria-modal','true');
+      const modal = document.createElement('div');
+      modal.className = 'kangen-modal';
+      modal.innerHTML = `<h2>KANGENN SI MUNGILLLLL !!</h2><p>💓</p>`;
+      const close = document.createElement('button');
+      close.className = 'kangen-close';
+      close.textContent = 'Tutup';
+      close.addEventListener('click', ()=>{ overlay.remove(); removeHehePhotos(); if (overlay._beatInterval) clearInterval(overlay._beatInterval); });
+      modal.appendChild(close);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      close.focus();
+      overlay.addEventListener('click', (e)=>{ if (e.target === overlay){ overlay.remove(); removeHehePhotos(); if (overlay._beatInterval) clearInterval(overlay._beatInterval); }});
+
+      // spawn the two photos from the project folder
+      const images = [
+        'WhatsApp Image 2026-04-06 at 14.52.30.jpeg',
+        'WhatsApp Image 2026-04-06 at 15.20.57.jpeg'
+      ];
+
+      spawnPhotosWithBeat(images, overlay);
+    }
+
+    function spawnPhotosWithBeat(paths, overlay){
+      paths.forEach((p, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'flying-photo-wrap';
+        const img = document.createElement('img');
+        img.className = 'flying-photo-img beat';
+        img.src = encodeURI(p);
+        img.alt = 'Foto ' + (idx+1);
+
+        // start near center with small offset
+        const cx = window.innerWidth/2 + (idx === 0 ? -90 : 90);
+        const cy = window.innerHeight/2 + (Math.random()*60 - 30);
+        wrap.style.left = cx + 'px';
+        wrap.style.top = cy + 'px';
+
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 200 + Math.random() * 420;
+        wrap.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+        wrap.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+        wrap.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+        // fixed 5s duration for the photo fly
+        const dur = 5000;
+        wrap.style.setProperty('--pdur', dur + 'ms');
+
+        // slightly larger photos
+        img.style.maxWidth = (180 + Math.random() * 180) + 'px';
+        wrap.appendChild(img);
+        document.body.appendChild(wrap);
+        heheActivePhotos.push(wrap);
+
+        // trigger fly animation
+        requestAnimationFrame(()=> wrap.classList.add('animate'));
+
+        // schedule removal shortly after animation ends (5s)
+        setTimeout(()=>{ try{ wrap.remove(); }catch(e){} heheActivePhotos = heheActivePhotos.filter(w => w !== wrap); }, dur + 400);
+      });
+
+      // modal jedag-jeduh pulse
+      const modalEl = document.querySelector('.kangen-modal');
+      if (modalEl){
+        const beatInterval = setInterval(()=>{
+          modalEl.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.06)' },
+            { transform: 'scale(1)' }
+          ], { duration: 420, easing: 'ease-in-out' });
+        }, 840);
+        if (overlay) overlay._beatInterval = beatInterval;
+      }
+    }
+
+    function removeHehePhotos(){
+      if (heheActivePhotos && heheActivePhotos.length){
+        heheActivePhotos.forEach(w => { try{ w.remove(); }catch(e){} });
+        heheActivePhotos = [];
+      }
+    }
+  </script>
+</body>
+</html>

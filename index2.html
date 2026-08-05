@@ -3,70 +3,562 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Byy 🤍</title>
+  <title>Simulasi Perang Pulau Jawa</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    :root{font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-    body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f6f7fb}
-    .card{background:white;padding:28px;border-radius:12px;box-shadow:0 6px 18px rgba(20,20,40,0.08);text-align:center;width:320px}
-    button{padding:10px 16px;border-radius:8px;border:0;background:#5b21b6;color:white;font-weight:600;cursor:pointer}
-    #output{margin-top:18px;font-size:20px;color:#111}
-    .name{font-size:22px;font-weight:700}
-    .heart{color:#e11d48;margin-left:8px}
-    .love{font-size:16px;color:#6b7280;margin-top:6px}
+    html,body,#map{height:100%;margin:0;padding:0}
+    #map{position:fixed;inset:0}
+    /* ── API Key Modal ── */
+    #apiModal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;font-family:system-ui}
+    .modal-box{background:#fff;padding:24px;border-radius:12px;width:380px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+    .modal-box h3{margin:0 0 8px;font-size:18px;font-weight:700}
+    .modal-box p{font-size:13px;color:#666;margin:0 0 14px;line-height:1.5}
+    .modal-box input{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #d1d5db;border-radius:7px;font-size:14px;margin-bottom:12px}
+    .modal-btns{display:flex;gap:8px}
+    .modal-btns button{flex:1;padding:9px;border-radius:7px;border:0;cursor:pointer;font-size:13px;font-weight:600}
+    #applyKey{background:#2563EB;color:#fff}
+    #skipKey{background:#f1f5f9;color:#333}
+    /* ── Control Panel ── */
+    .control-panel{position:fixed;left:12px;top:12px;z-index:1000;background:rgba(255,255,255,0.96);padding:12px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.13);min-width:230px;font-family:system-ui;max-height:calc(100vh - 40px);overflow-y:auto}
+    .control-panel h3{margin:0 0 10px;font-size:15px;font-weight:700}
+    .troop-btn{display:inline-flex;align-items:center;gap:5px;margin:3px;padding:7px 10px;border-radius:7px;border:0;background:#f1f5f9;cursor:pointer;font-size:13px;font-weight:600;transition:background .15s}
+    .troop-btn:hover{background:#e2e8f0}
+    .troop-btn.active{background:#2563EB;color:#fff}
+    .game-controls{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+    .btn-sm{padding:6px 9px;border-radius:6px;border:0;background:#18181B;color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:opacity .15s}
+    .btn-sm:hover{opacity:.8}
+    .btn-sm.red{background:#ef4444}
+    .info{margin-top:10px;font-size:12px;color:#555;line-height:1.5;border-top:1px solid #f1f5f9;padding-top:8px}
+    #finishRoute{display:none;margin-top:8px;padding:8px 10px;border-radius:7px;border:0;background:#10B981;color:#fff;cursor:pointer;font-size:13px;font-weight:600;width:100%}
+    /* ── Troop Icons ── */
+    .troop-icon{border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;border:2px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.28)}
+    .troop-icon.plane{background:#2563EB}
+    .troop-icon.tank{background:#FB923C}
+    .troop-icon.infantry{background:#18181B}
+    .troop-icon.enemy{background:#ef4444}
+    /* ── Popup ── */
+    .leaflet-popup-content button{margin:3px 2px;padding:5px 8px;border-radius:5px;border:0;background:#2563EB;color:#fff;cursor:pointer;font-size:12px;font-weight:600}
+    .leaflet-popup-content button.danger{background:#ef4444}
+    .hp-bar{height:6px;border-radius:3px;background:#e5e7eb;margin-top:5px}
+    .hp-bar-fill{height:100%;border-radius:3px;background:#10B981;transition:width .3s}
+    /* ── Loading toast ── */
+    #loading{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.72);color:#fff;padding:8px 18px;border-radius:20px;font-family:system-ui;font-size:13px;z-index:1001;display:none;pointer-events:none}
+    /* ── Status bar ── */
+    .status{position:fixed;right:12px;bottom:12px;background:rgba(24,24,27,0.85);color:#fff;padding:8px 14px;border-radius:8px;font-family:system-ui;font-size:13px;z-index:1000;backdrop-filter:blur(4px)}
+    /* ── Tile badge ── */
+    #tileBadge{position:fixed;left:12px;bottom:12px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;font-family:system-ui;z-index:1000}
   </style>
 </head>
 <body>
-  <div class="card">
-    <button id="btn">Klik ini byy</button>
-    <div id="output" aria-live="polite"></div>
+
+  <!-- Google Maps API Key Modal -->
+  <div id="apiModal">
+    <div class="modal-box">
+      <h3>Google Maps</h3>
+      <p>Masukkan API key Google Maps untuk menggunakan peta Google. Tanpa key, peta pakai OpenStreetMap (tetap bisa dimainkan).</p>
+      <input type="text" id="apiKeyInput" placeholder="AIzaSy..." autocomplete="off" />
+      <div class="modal-btns">
+        <button id="applyKey">Gunakan Google Maps</button>
+        <button id="skipKey">Pakai OSM</button>
+      </div>
+    </div>
   </div>
 
+  <div id="map"></div>
+
+  <div class="control-panel">
+    <h3>⚔ Simulasi Perang — Jawa</h3>
+    <div style="font-size:11px;color:#888;margin-bottom:6px">Pilih jenis troop:</div>
+    <div id="troopButtons">
+      <button class="troop-btn" data-type="plane">✈ Pesawat</button>
+      <button class="troop-btn" data-type="tank">🚛 Tank</button>
+      <button class="troop-btn" data-type="infantry">👤 Infanteri</button>
+    </div>
+    <div class="game-controls">
+      <button id="saveBtn" class="btn-sm">💾 Save</button>
+      <button id="loadBtn" class="btn-sm">📂 Load</button>
+      <button id="newBtn" class="btn-sm red">🔄 New</button>
+      <button id="spawnBtn" class="btn-sm">👾 Spawn</button>
+    </div>
+    <button id="finishRoute">✅ Selesai buat rute</button>
+    <div class="info" id="info">Pilih jenis troop, klik peta untuk menaruh. Klik marker untuk aksi.</div>
+  </div>
+
+  <div id="tileBadge">OSM</div>
+  <div id="loading">Menghitung rute jalan...</div>
+  <div class="status" id="status">Ready</div>
+  <input type="file" id="loadFile" accept="application/json" style="display:none" />
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
   <script>
-    const btn = document.getElementById('btn');
-    const out = document.getElementById('output');
+    // ── Map Setup ──────────────────────────────────────────────────
+    const map = L.map('map', { preferCanvas: true }).setView([-7.5, 110.0], 7);
+    let currentTile = null;
 
-    btn.addEventListener('click', () => {
-      out.innerHTML = `
-        <div class="name">Love U sayangg <span id="heart" class="heart">🤍</span></div>
-        <div class="love" id="loveText">klik lagi hati putih nya</div>
-        <a href="question.html" class="love" id="loveText">Main tebak tebakan</a>
-      `;
+    function setOSM() {
+      if (currentTile) map.removeLayer(currentTile);
+      currentTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      document.getElementById('tileBadge').textContent = 'OSM';
+    }
 
-      const heart = document.getElementById('heart');
-      const loveText = document.getElementById('loveText');
+    function setGoogle(type) {
+      if (currentTile) map.removeLayer(currentTile);
+      currentTile = L.gridLayer.googleMutant({ type: type || 'roadmap', maxZoom: 20 }).addTo(map);
+      document.getElementById('tileBadge').textContent = 'Google Maps';
+    }
 
-      heart.addEventListener('click', () => {
-        spawnGlitchHearts();
+    setOSM();
+
+    // ── Google Maps Modal ──────────────────────────────────────────
+    function loadGoogleScript(key) {
+      return new Promise((resolve, reject) => {
+        if (window.google && window.google.maps) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key);
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    document.getElementById('applyKey').addEventListener('click', async () => {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      if (!key) { alert('Masukkan API key terlebih dahulu.'); return; }
+      const btn = document.getElementById('applyKey');
+      btn.textContent = 'Memuat...'; btn.disabled = true;
+      try {
+        await loadGoogleScript(key);
+        setGoogle('roadmap');
+        document.getElementById('apiModal').style.display = 'none';
+        setStatus('Google Maps aktif ✓');
+      } catch (e) {
+        alert('Gagal memuat Google Maps. Periksa API key Anda.');
+        btn.textContent = 'Gunakan Google Maps'; btn.disabled = false;
+      }
+    });
+
+    document.getElementById('skipKey').addEventListener('click', () => {
+      document.getElementById('apiModal').style.display = 'none';
+    });
+
+    // ── Helpers ────────────────────────────────────────────────────
+    const makeId = p => (p || 'id') + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const infoEl   = document.getElementById('info');
+    const statusEl = document.getElementById('status');
+    function setStatus(msg) { statusEl.textContent = msg; }
+    function setInfo(msg)   { infoEl.textContent   = msg; }
+
+    // ── Icons ──────────────────────────────────────────────────────
+    const ICONS = {};
+    ['plane','tank','infantry','enemy'].forEach(t => {
+      const label = { plane:'✈', tank:'T', infantry:'I', enemy:'E' }[t];
+      ICONS[t] = L.divIcon({
+        className: '',
+        html: `<div class="troop-icon ${t}">${label}</div>`,
+        iconSize: [30, 30], iconAnchor: [15, 15]
       });
     });
 
-    function spawnGlitchHearts() {
-      for (let i = 0; i < 50; i++) {
-        const h = document.createElement('div');
-        h.textContent = '❤';
-        h.style.position = 'fixed';
-        h.style.left = Math.random() * window.innerWidth + 'px';
-        h.style.top = Math.random() * window.innerHeight + 'px';
-        h.style.fontSize = (20 + Math.random() * 40) + 'px';
-        h.style.color = '#e11d48';
-        h.style.opacity = '1';
-        h.style.pointerEvents = 'none';
-        h.style.transform = 'translate(0,0)';
-        h.style.transition = 'transform 0.2s ease, opacity 0.4s ease';
-        document.body.appendChild(h);
+    const GROUND  = new Set(['tank', 'infantry']);
+    const SPEED   = { plane: 200, tank: 28, infantry: 9 };   // m/s
 
-        setTimeout(() => {
-          const randX = (Math.random() * 600 - 300) + 'px';
-          const randY = (Math.random() * 600 - 300) + 'px';
-          h.style.transform = `translate(${randX}, ${randY}) rotate(${Math.random()*180}deg)`;
-          h.style.opacity = '0';
-        }, 30 + i * 10);
+    // ── Game State ─────────────────────────────────────────────────
+    let selectedType = null;
+    let action       = null;   // 'placing' | 'drawing'
+    let drawingFor   = null;
+    let tempPoly     = null;
+    let tempPts      = [];
+    let spawnEnabled = false;
 
-        setTimeout(() => {
-          h.remove();
-        }, 700);
-      }
+    const troops  = [];
+    const enemies = [];
+
+    const JAVA = { latMin: -8.9, latMax: -5.5, lngMin: 105.0, lngMax: 114.5 };
+
+    // ── OSRM Road Routing ──────────────────────────────────────────
+    async function fetchRoadRoute(waypoints) {
+      // waypoints: [[lat,lng], ...]
+      const coords = waypoints.map(p => `${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(';');
+      const url = `https://router.project-osrm.org/route/v1/driving/${coords}?geometries=geojson&overview=full&steps=false`;
+      const res  = await fetch(url);
+      if (!res.ok) throw new Error('OSRM HTTP ' + res.status);
+      const data = await res.json();
+      if (data.code !== 'Ok') throw new Error('OSRM: ' + data.message);
+      // GeoJSON is [lng, lat] → convert to [lat, lng] for Leaflet
+      return data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
     }
+
+    // ── Troop Management ───────────────────────────────────────────
+    function typeColor(t) {
+      return { plane: '#2563EB', tank: '#FB923C', infantry: '#18181B' }[t] || '#333';
+    }
+
+    function buildPopup(t) {
+      const hp = Math.max(0, Math.min(100, t.hp));
+      const hint = GROUND.has(t.type)
+        ? '<small style="color:#10B981">Rute ikut jalan tercepat (OSRM)</small><br>'
+        : '<small style="color:#60A5FA">Rute garis lurus (udara)</small><br>';
+      return `
+        <b>${t.type.toUpperCase()}</b>
+        <span style="font-size:11px;color:#888"> ${t.id.slice(-5)}</span>
+        <div class="hp-bar"><div class="hp-bar-fill" style="width:${hp}%"></div></div>
+        <div style="font-size:11px;color:#888;margin:2px 0">${Math.round(hp)}/100 HP</div>
+        ${hint}
+        <button data-cmd="create-route" data-id="${t.id}">📍 Buat Rute</button>
+        <button data-cmd="start-move"   data-id="${t.id}">▶ Gerak</button>
+        <button data-cmd="stop-move"    data-id="${t.id}">⏹ Stop</button>
+        <button class="danger" data-cmd="delete" data-id="${t.id}">🗑 Hapus</button>
+      `;
+    }
+
+    function createTroop(type, latlng, opts) {
+      const o  = opts || {};
+      const id = o.id || makeId('troop');
+      const marker = L.marker(latlng, { icon: ICONS[type] }).addTo(map);
+      const troop  = {
+        id, type, marker,
+        route:     o.route || [],
+        polyline:  null,
+        hp:        o.hp != null ? o.hp : 100,
+        isMoving:  false,
+        moveState: { segment: 0, progress: 0 }
+      };
+      marker.bindPopup(buildPopup(troop), { maxWidth: 240 });
+      if (troop.route.length) {
+        troop.polyline = L.polyline(troop.route, {
+          color: typeColor(type), weight: 3, opacity: 0.85,
+          dashArray: GROUND.has(type) ? null : '8'
+        }).addTo(map);
+        marker.setLatLng(troop.route[0]);
+      }
+      troops.push(troop);
+      return troop;
+    }
+
+    function refreshPopup(t) { t.marker.setPopupContent(buildPopup(t)); }
+
+    function removeTroop(id) {
+      const i = troops.findIndex(t => t.id === id);
+      if (i < 0) return;
+      const t = troops[i];
+      map.removeLayer(t.marker);
+      if (t.polyline) map.removeLayer(t.polyline);
+      troops.splice(i, 1);
+    }
+
+    // ── Popup Command Delegation ───────────────────────────────────
+    map.on('popupopen', e => {
+      e.popup.getElement()?.querySelectorAll('button[data-cmd]').forEach(b => {
+        b.addEventListener('click', () => {
+          const cmd = b.dataset.cmd;
+          const id  = b.dataset.id;
+          map.closePopup();
+          const t = troops.find(x => x.id === id);
+          switch (cmd) {
+            case 'create-route': if (t) startDrawing(t.id);  break;
+            case 'start-move':   if (t) startMove(t.id);     break;
+            case 'stop-move':    if (t) { t.isMoving = false; setStatus('Troop dihentikan.'); } break;
+            case 'delete':       if (t) removeTroop(t.id);   break;
+          }
+        });
+      });
+    });
+
+    // ── Route Drawing ──────────────────────────────────────────────
+    function startDrawing(troopId) {
+      action     = 'drawing';
+      drawingFor = troopId;
+      tempPts    = [];
+      if (tempPoly) { map.removeLayer(tempPoly); tempPoly = null; }
+      document.getElementById('finishRoute').style.display = 'block';
+      const t = troops.find(x => x.id === troopId);
+      if (t && GROUND.has(t.type))
+        setInfo('Klik peta untuk waypoint darat. Rute akan otomatis ikut jalan tercepat (OSRM). Tekan ✅ Selesai.');
+      else
+        setInfo('Klik peta untuk titik rute lurus (pesawat udara). Tekan ✅ Selesai.');
+    }
+
+    async function finishRoute() {
+      if (!drawingFor || tempPts.length < 2) { alert('Butuh minimal 2 titik rute.'); return; }
+      const t = troops.find(x => x.id === drawingFor);
+      if (!t) return;
+
+      let finalRoute = tempPts.slice();
+
+      if (GROUND.has(t.type)) {
+        const loadEl = document.getElementById('loading');
+        const btn    = document.getElementById('finishRoute');
+        loadEl.style.display = 'block';
+        btn.disabled = true;
+        try {
+          finalRoute = await fetchRoadRoute(tempPts);
+          setStatus('Rute jalan berhasil ✓');
+        } catch (err) {
+          setStatus('OSRM gagal — pakai garis lurus.');
+          console.warn('OSRM error:', err);
+        } finally {
+          loadEl.style.display = 'none';
+          btn.disabled = false;
+        }
+      }
+
+      t.route = finalRoute;
+      if (t.polyline) map.removeLayer(t.polyline);
+      t.polyline = L.polyline(finalRoute, {
+        color: typeColor(t.type), weight: 3,
+        dashArray: GROUND.has(t.type) ? null : '8'
+      }).addTo(map);
+      t.marker.setLatLng(finalRoute[0]);
+      t.moveState = { segment: 0, progress: 0 };
+
+      drawingFor = null;
+      action     = null;
+      if (tempPoly) { map.removeLayer(tempPoly); tempPoly = null; }
+      tempPts    = [];
+      document.getElementById('finishRoute').style.display = 'none';
+      setInfo('Rute tersimpan. Klik marker ▶ Gerak untuk mulai bergerak.');
+    }
+
+    document.getElementById('finishRoute').addEventListener('click', finishRoute);
+
+    // ── Map Click ──────────────────────────────────────────────────
+    map.on('click', e => {
+      if (action === 'placing' && selectedType) {
+        createTroop(selectedType, e.latlng);
+        setInfo(`${selectedType} ditempatkan. Klik marker untuk aksi.`);
+      } else if (action === 'drawing' && drawingFor) {
+        tempPts.push([e.latlng.lat, e.latlng.lng]);
+        if (tempPoly) tempPoly.setLatLngs(tempPts);
+        else tempPoly = L.polyline(tempPts, { color: '#60A5FA', dashArray: '6', weight: 2 }).addTo(map);
+      }
+    });
+
+    // ── Movement ───────────────────────────────────────────────────
+    function startMove(id) {
+      const t = troops.find(x => x.id === id);
+      if (!t || t.route.length < 2) { alert('Buat rute dulu (min 2 titik).'); return; }
+      t.isMoving = true;
+      t.moveState = { segment: 0, progress: 0 };
+      setStatus(`${t.type} mulai bergerak...`);
+    }
+
+    // ── Enemy Spawn ────────────────────────────────────────────────
+    function spawnEnemy() {
+      const lat = JAVA.latMin + Math.random() * (JAVA.latMax - JAVA.latMin);
+      const lng = JAVA.lngMin + Math.random() * (JAVA.lngMax - JAVA.lngMin);
+      const id  = makeId('enemy');
+      const marker = L.marker([lat, lng], { icon: ICONS.enemy }).addTo(map);
+      marker.bindPopup('<b>Enemy</b>');
+      enemies.push({ id, marker, hp: 50, target: null });
+    }
+
+    // ── Game Loop ──────────────────────────────────────────────────
+    let lastTick = Date.now();
+    setInterval(() => {
+      const now = Date.now();
+      const dt  = Math.min((now - lastTick) / 1000, 0.5);
+      lastTick  = now;
+      tickTroops(dt);
+      tickEnemies(dt);
+      if (spawnEnabled && Math.random() < 0.05) spawnEnemy();
+    }, 200);
+
+    function tickTroops(dt) {
+      troops.forEach(t => {
+        if (!t.isMoving || t.route.length < 2) return;
+        const speed = SPEED[t.type] || 10;
+        let { segment, progress } = t.moveState;
+        let travel = speed * dt;
+        while (travel > 0 && segment < t.route.length - 1) {
+          const p1  = L.latLng(t.route[segment]);
+          const p2  = L.latLng(t.route[segment + 1]);
+          const len = map.distance(p1, p2);
+          const rem = Math.max(len - progress, 0);
+          if (travel < rem) {
+            const frac = (progress + travel) / len;
+            t.marker.setLatLng([
+              p1.lat + (p2.lat - p1.lat) * frac,
+              p1.lng + (p2.lng - p1.lng) * frac
+            ]);
+            t.moveState.progress += travel;
+            travel = 0;
+          } else {
+            travel   -= rem;
+            segment  += 1;
+            progress  = 0;
+            t.moveState = { segment, progress };
+            if (segment >= t.route.length - 1) {
+              t.marker.setLatLng(t.route[t.route.length - 1]);
+              t.isMoving = false;
+              setStatus(`${t.type} tiba di tujuan.`);
+              break;
+            }
+          }
+        }
+      });
+    }
+
+    function tickEnemies(dt) {
+      enemies.forEach(e => {
+        // Acquire nearest target
+        if (!e.target || !troops.find(t => t.id === e.target)) {
+          let bestDist = Infinity, best = null;
+          troops.forEach(t => {
+            const d = map.distance(e.marker.getLatLng(), t.marker.getLatLng());
+            if (d < bestDist) { bestDist = d; best = t; }
+          });
+          e.target = (best && bestDist < 5000) ? best.id : null;
+        }
+        if (e.target) {
+          const tgt = troops.find(t => t.id === e.target);
+          if (!tgt) { e.target = null; return; }
+          const curr = e.marker.getLatLng();
+          const dest = tgt.marker.getLatLng();
+          const d    = map.distance(curr, dest);
+          if (d > 50) {
+            const step = (30 * dt) / d;
+            e.marker.setLatLng([
+              curr.lat + (dest.lat - curr.lat) * step,
+              curr.lng + (dest.lng - curr.lng) * step
+            ]);
+          }
+          if (d < 150) {
+            tgt.hp -= 8 * dt;
+            refreshPopup(tgt);
+            if (tgt.hp <= 0) {
+              removeTroop(tgt.id);
+              e.target = null;
+              setStatus('Sebuah troop dihancurkan!');
+            }
+          }
+        } else {
+          const pos = e.marker.getLatLng();
+          e.marker.setLatLng([
+            pos.lat + (Math.random() - 0.5) * 0.015,
+            pos.lng + (Math.random() - 0.5) * 0.015
+          ]);
+        }
+      });
+    }
+
+    // ── Save / Load / Reset ────────────────────────────────────────
+    function saveGame() {
+      const data = {
+        troops:  troops.map(t  => ({
+          id: t.id, type: t.type, hp: t.hp, route: t.route,
+          latlng: [t.marker.getLatLng().lat, t.marker.getLatLng().lng]
+        })),
+        enemies: enemies.map(e => ({
+          id: e.id, hp: e.hp,
+          latlng: [e.marker.getLatLng().lat, e.marker.getLatLng().lng]
+        }))
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'rv-game.json'; a.click();
+      URL.revokeObjectURL(url);
+      setStatus('Game saved ✓');
+    }
+
+    function loadGameFromData(data) {
+      resetGame();
+      (data.troops || []).forEach(t => {
+        const ll = t.latlng || (t.route && t.route[0]) || [-7.5, 110];
+        createTroop(t.type, ll, { id: t.id, route: t.route || [], hp: t.hp != null ? t.hp : 100 });
+      });
+      (data.enemies || []).forEach(e => {
+        const ll = e.latlng || [-7.5, 110];
+        const marker = L.marker(ll, { icon: ICONS.enemy }).addTo(map);
+        marker.bindPopup('<b>Enemy</b>');
+        enemies.push({ id: e.id || makeId('enemy'), marker, hp: e.hp || 50, target: null });
+      });
+      setStatus('Game loaded ✓');
+    }
+
+    function resetGame() {
+      troops.forEach(t  => { map.removeLayer(t.marker); if (t.polyline) map.removeLayer(t.polyline); });
+      enemies.forEach(e => map.removeLayer(e.marker));
+      troops.length = 0; enemies.length = 0;
+      action = null; drawingFor = null;
+      if (tempPoly) { map.removeLayer(tempPoly); tempPoly = null; }
+      tempPts = []; selectedType = null;
+      document.querySelectorAll('.troop-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('finishRoute').style.display = 'none';
+      setInfo('New game. Pilih jenis troop untuk mulai.');
+      setStatus('Ready');
+    }
+
+    // ── UI Button Hooks ────────────────────────────────────────────
+    document.querySelectorAll('.troop-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.troop-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedType = btn.dataset.type;
+        action = 'placing';
+        setInfo(`Mode menaruh: ${selectedType}. Klik peta.`);
+      });
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', saveGame);
+    document.getElementById('loadBtn').addEventListener('click', () => document.getElementById('loadFile').click());
+    document.getElementById('newBtn').addEventListener('click', () => { if (confirm('Reset game baru?')) resetGame(); });
+    document.getElementById('spawnBtn').addEventListener('click', () => {
+      spawnEnabled = !spawnEnabled;
+      document.getElementById('spawnBtn').textContent = spawnEnabled ? '🛑 Stop Spawn' : '👾 Spawn';
+      setStatus(spawnEnabled ? 'Enemy spawn aktif' : 'Enemy spawn mati');
+    });
+
+    document.getElementById('loadFile').addEventListener('change', evt => {
+      const f = evt.target.files[0]; if (!f) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try { loadGameFromData(JSON.parse(e.target.result)); }
+        catch { alert('File JSON tidak valid.'); }
+      };
+      reader.readAsText(f);
+      evt.target.value = '';
+    });
+
+    // ── Demo Troops ────────────────────────────────────────────────
+    createTroop('infantry', [-7.8, 110.4]);
+    createTroop('tank',     [-7.1, 111.0]);
+    createTroop('plane',    [-6.9, 107.6]);
+    setInfo('Selamat datang! Pilih troop dari panel kiri, klik peta untuk menaruh, klik marker untuk buat rute & bergerak.');
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

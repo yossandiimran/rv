@@ -24,6 +24,13 @@ import {
   moveActor,
   stepWorld,
 } from "./sim.mjs";
+import {
+  AUTO_MATCH_SECONDS,
+  AUTO_MATCH_SHARDS,
+  AUTO_MATCH_SLOT_PRIORITY,
+  autoMatchCandidateCodes,
+  autoMatchRoomCode,
+} from "./matchmaking.mjs";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAZoik0jOpDKIS0jLU2JLT2-sFiGkeEleI",
@@ -51,6 +58,7 @@ const ui = {
   roomScreen: document.querySelector("#room-screen"),
   gameScreen: document.querySelector("#game-screen"),
   playerName: document.querySelector("#player-name"),
+  autoMatch: document.querySelector("#auto-match"),
   roomCodeInput: document.querySelector("#room-code-input"),
   createRoom: document.querySelector("#create-room"),
   joinRoom: document.querySelector("#join-room"),
@@ -105,8 +113,8 @@ const images = {};
 const keys = Object.create(null);
 const pointer = { x: 480, y: 270, inside: false, fire: false };
 const touchMove = { x: 0, y: 0 };
-const touchAim = { x: 1, y: 0, active: false };
 const touchActions = { fire: false, capture: false };
+const mobileInputQuery = window.matchMedia("(pointer: coarse), (max-width: 820px)");
 
 let currentUser = null;
 let authReady = false;
@@ -218,6 +226,7 @@ async function loadAssets() {
 
 function enableLobbyActions() {
   const enabled = authReady && !busy;
+  ui.autoMatch.disabled = !enabled;
   ui.createRoom.disabled = !enabled;
   ui.joinRoom.disabled = !enabled;
 }
@@ -255,6 +264,132 @@ async function claimTeamSlot(code, team) {
     if (result.committed && result.snapshot.val() === currentUser.uid) return slot;
   }
   throw new Error(`Tim ${team === TEAMS.PEJUANG ? "Pejuang" : "Kolonial"} sudah penuh.`);
+}
+
+async function claimExactSlot(code, team, slot) {
+  const slotRef = ref(db, `gameMatches/${code}/slots/${team}/${slot}`);
+  const result = await runTransaction(
+    slotRef,
+    (value) => (value === null || value === currentUser.uid ? currentUser.uid : undefined),
+    { applyLocally: false },
+  );
+  return result.committed && result.snapshot.val() === currentUser.uid;
+}
+
+async function claimPreferredAutoSlot(code) {
+  for (const [team, slot] of AUTO_MATCH_SLOT_PRIORITY) {
+    if (await claimExactSlot(code, team, slot)) return { team, slot };
+  }
+  return null;
+}
+
+async function autoMatchCandidates() {
+  const codes = autoMatchCandidateCodes();
+  const snapshots = await Promise.all(codes.map(async (code) => ({
+    code,
+    snapshot: await get(ref(db, `gameMatches/${code}`)),
+  })));
+  const now = Date.now();
+  return snapshots
+    .filter(({ snapshot }) => {
+      if (!snapshot.exists()) return false;
+      const room = snapshot.val();
+      const humanCount = Object.keys(room.members || {}).length;
+      return room.meta?.autoMatch === true
+        && room.meta?.status === "lobby"
+        && Number(room.meta?.matchmakingEndsAt || 0) > now
+        && humanCount < 4;
+    })
+    .sort((a, b) => Number(a.snapshot.val().meta.createdAt || 0) - Number(b.snapshot.val().meta.createdAt || 0));
+}
+
+async function tryJoinAutoRoom(code) {
+  let claimed = null;
+  try {
+    const metaSnapshot = await get(ref(db, `gameMatches/${code}/meta`));
+    const meta = metaSnapshot.val();
+    if (!meta || meta.autoMatch !== true || meta.status !== "lobby" || Number(meta.matchmakingEndsAt || 0) <= Date.now()) {
+      return false;
+    }
+
+    const existingMember = await get(ref(db, `gameMatches/${code}/members/${currentUser.uid}`));
+    if (existingMember.exists()) {
+      const member = existingMember.val();
+      const team = member.team === TEAMS.KOLONIAL ? TEAMS.KOLONIAL : TEAMS.PEJUANG;
+      const slot = Number(member.slot) === 1 ? 1 : 0;
+      if (!(await claimExactSlot(code, team, slot))) return false;
+      claimed = { team, slot };
+    } else {
+      claimed = await claimPreferredAutoSlot(code);
+      if (!claimed) return false;
+      await writeOwnMember(code, claimed.team, claimed.slot);
+    }
+    await enterRoom(code, claimed.team, claimed.slot);
+    return true;
+  } catch (error) {
+    if (claimed) await remove(ref(db, `gameMatches/${code}/slots/${claimed.team}/${claimed.slot}`)).catch(() => {});
+    if (String(error?.code || "").includes("PERMISSION_DENIED")) throw error;
+    return false;
+  }
+}
+
+async function autoMatch() {
+  if (!authReady || busy) return;
+  busy = true;
+  enableLobbyActions();
+  setLobbyStatus("Mencari pejuang lain...");
+
+  try {
+    const candidates = await autoMatchCandidates();
+    for (const candidate of candidates) {
+      if (await tryJoinAutoRoom(candidate.code)) return;
+    }
+
+    const bucket = Math.floor(Date.now() / (AUTO_MATCH_SECONDS * 1000));
+    for (let shard = 0; shard < AUTO_MATCH_SHARDS; shard += 1) {
+      const code = autoMatchRoomCode(bucket, shard);
+      const createdAt = Date.now();
+      const metaRef = ref(db, `gameMatches/${code}/meta`);
+      const result = await runTransaction(
+        metaRef,
+        (value) => value === null
+          ? {
+              hostUid: currentUser.uid,
+              status: "lobby",
+              createdAt,
+              matchmakingEndsAt: createdAt + AUTO_MATCH_SECONDS * 1000,
+              mode: "benteng-2v2",
+              autoMatch: true,
+            }
+          : undefined,
+        { applyLocally: false },
+      );
+
+      if (!result.committed) {
+        if (await tryJoinAutoRoom(code)) return;
+        continue;
+      }
+
+      const claimed = await claimPreferredAutoSlot(code);
+      if (!claimed) throw new Error("Room publik gagal menyediakan slot Pejuang.");
+      try {
+        await writeOwnMember(code, claimed.team, claimed.slot);
+        await enterRoom(code, claimed.team, claimed.slot);
+        return;
+      } catch (error) {
+        await remove(ref(db, `gameMatches/${code}/slots/${claimed.team}/${claimed.slot}`)).catch(() => {});
+        await update(metaRef, { status: "abandoned" }).catch(() => {});
+        throw error;
+      }
+    }
+    throw new Error("Antrean sedang penuh. Coba tekan Auto Matchmaking lagi.");
+  } catch (error) {
+    console.error(error);
+    setLobbyStatus(error.message || "Auto matchmaking gagal.", true);
+  } finally {
+    busy = false;
+    enableLobbyActions();
+  }
 }
 
 async function writeOwnMember(code, team, slot) {
@@ -415,7 +550,8 @@ function handleMetaSnapshot(snapshot) {
   }
   roomMeta = nextMeta;
   isHost = roomMeta.hostUid === currentUser.uid;
-  ui.startMatch.classList.toggle("hidden", !isHost);
+  ui.startMatch.classList.toggle("hidden", !isHost || roomMeta.autoMatch === true);
+  ui.copyRoom.classList.toggle("hidden", roomMeta.autoMatch === true);
 
   if (roomMeta.status === "lobby") {
     if (previousRoomStatus === "finished") {
@@ -495,6 +631,8 @@ function renderRoom() {
     ui.roomStatus.textContent = "Lineup dikunci · menyiapkan bot dan arena...";
   } else if (memberList.length >= 4) {
     ui.roomStatus.textContent = "Empat pemain ditemukan · pertandingan segera dimulai.";
+  } else if (roomMeta?.autoMatch === true) {
+    ui.roomStatus.textContent = `Auto matchmaking ${seconds} detik · Pejuang diisi lebih dahulu, lalu ${4 - memberList.length} slot kosong menjadi bot.`;
   } else {
     ui.roomStatus.textContent = `Mencari pemain ${seconds} detik · jika kosong, ${4 - memberList.length} slot diisi bot.`;
   }
@@ -648,7 +786,7 @@ async function returnToLobby() {
   await update(ref(db, roomPath("meta")), {
     status: "lobby",
     result: null,
-    matchmakingEndsAt: Date.now() + 10_000,
+    matchmakingEndsAt: Date.now() + (roomMeta?.autoMatch === true ? AUTO_MATCH_SECONDS * 1000 : 10_000),
     humanCount: null,
     botCount: null,
   });
@@ -673,18 +811,35 @@ function currentAuthoritativePlayer() {
   return authoritativeWorld?.players?.[currentUser?.uid] || latestSnapshot?.players?.[currentUser?.uid] || null;
 }
 
+function nearestAutoAimTarget(world, player) {
+  if (!world || !player) return null;
+  return Object.values(world.players || {})
+    .filter((candidate) => !candidate.dead && candidate.team !== player.team)
+    .sort(
+      (a, b) => Math.hypot(a.x - player.x, a.y - player.y) - Math.hypot(b.x - player.x, b.y - player.y),
+    )[0] || null;
+}
+
 function currentAim() {
-  if (touchAim.active || Math.hypot(touchAim.x, touchAim.y) > 0.1 && !pointer.inside) {
-    return { x: touchAim.x, y: touchAim.y };
+  const authoritativePlayer = currentAuthoritativePlayer();
+  const player = predictedLocal || authoritativePlayer;
+  if (mobileInputQuery.matches && player && authoritativePlayer) {
+    const world = isHost && authoritativeWorld ? authoritativeWorld : latestSnapshot;
+    const target = nearestAutoAimTarget(world, { ...authoritativePlayer, x: player.x, y: player.y });
+    if (target) {
+      const dx = target.x - player.x;
+      const dy = target.y - player.y;
+      const length = Math.hypot(dx, dy) || 1;
+      return { x: dx / length, y: dy / length };
+    }
   }
-  const player = predictedLocal || currentAuthoritativePlayer();
   if (pointer.inside && player) {
     const dx = pointer.x - player.x;
     const dy = pointer.y - player.y;
     const length = Math.hypot(dx, dy) || 1;
     return { x: dx / length, y: dy / length };
   }
-  const fallback = currentAuthoritativePlayer();
+  const fallback = authoritativePlayer;
   return { x: fallback?.aimX || (currentTeam === TEAMS.PEJUANG ? 1 : -1), y: fallback?.aimY || 0 };
 }
 
@@ -1200,6 +1355,30 @@ function drawPlayer(player, uid) {
   ctx.restore();
 }
 
+function drawAutoAimLock(world, local) {
+  if (!mobileInputQuery.matches || !local || local.dead) return;
+  const target = nearestAutoAimTarget(world, local);
+  if (!target) return;
+  const display = renderPlayers.get(target.uid) || target;
+  const pulse = 19 + Math.sin(elapsed * 7) * 2;
+  ctx.save();
+  ctx.translate(display.x, display.y - 12);
+  ctx.strokeStyle = "rgba(235, 184, 76, 0.88)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([7, 5]);
+  ctx.beginPath();
+  ctx.arc(0, 0, pulse, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "rgba(18, 21, 17, 0.8)";
+  ctx.fillRect(-18, -31, 36, 11);
+  ctx.fillStyle = "#efd38f";
+  ctx.font = "800 7px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("AUTO", 0, -30);
+  ctx.restore();
+}
+
 function drawWorld(dt) {
   const world = isHost && authoritativeWorld ? authoritativeWorld : latestSnapshot;
   drawGround();
@@ -1215,6 +1394,7 @@ function drawWorld(dt) {
 
   const local = renderPlayers.get(currentUser?.uid);
   if (local && !local.dead) {
+    drawAutoAimLock(world, local);
     const nearby = (world?.points || []).find((point) => Math.hypot(local.x - point.x, local.y - point.y) <= 58);
     if (nearby && nearby.owner !== local.team) {
       ctx.fillStyle = "rgba(15, 18, 14, 0.88)";
@@ -1351,20 +1531,6 @@ const resetMoveStick = bindStick(
   () => { touchMove.x = 0; touchMove.y = 0; },
 );
 
-const resetAimStick = bindStick(
-  "#aim-stick",
-  "#aim-knob",
-  (x, y) => {
-    const length = Math.hypot(x, y);
-    if (length > 0.12) {
-      touchAim.x = x / length;
-      touchAim.y = y / length;
-      touchAim.active = true;
-    }
-  },
-  () => { touchAim.active = false; },
-);
-
 canvas.addEventListener("pointermove", updatePointer);
 canvas.addEventListener("pointerenter", updatePointer);
 canvas.addEventListener("pointerleave", () => { pointer.inside = false; pointer.fire = false; });
@@ -1399,7 +1565,6 @@ window.addEventListener("blur", () => {
   touchActions.fire = false;
   touchActions.capture = false;
   resetMoveStick();
-  resetAimStick();
 });
 
 for (const button of document.querySelectorAll("[data-touch-action]")) {
@@ -1423,6 +1588,7 @@ for (const button of document.querySelectorAll("[data-touch-action]")) {
   button.addEventListener("lostpointercapture", release);
 }
 
+ui.autoMatch.addEventListener("click", () => autoMatch().catch(console.error));
 ui.createRoom.addEventListener("click", createRoom);
 ui.joinRoom.addEventListener("click", joinRoom);
 ui.readyButton.addEventListener("click", () => toggleReady().catch(console.error));

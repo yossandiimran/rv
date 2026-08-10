@@ -4,7 +4,7 @@
       ".read": "auth != null",
       "meta": {
         ".write": "auth != null && ((!data.exists() && newData.child('hostUid').val() === auth.uid) || data.child('hostUid').val() === auth.uid)",
-        ".validate": "!newData.exists() || (newData.child('hostUid').isString() && newData.child('mode').val() === 'benteng-2v2' && (newData.child('status').val() === 'lobby' || newData.child('status').val() === 'starting' || newData.child('status').val() === 'playing' || newData.child('status').val() === 'finished' || newData.child('status').val() === 'abandoned'))"
+        ".validate": "!newData.exists() || (newData.child('hostUid').isString() && newData.child('mode').val() === 'benteng-2v2' && (!newData.child('autoMatch').exists() || newData.child('autoMatch').isBoolean()) && (newData.child('status').val() === 'lobby' || newData.child('status').val() === 'starting' || newData.child('status').val() === 'playing' || newData.child('status').val() === 'finished' || newData.child('status').val() === 'abandoned'))"
       },
       "slots": {
         "$team": {

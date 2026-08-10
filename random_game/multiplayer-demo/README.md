@@ -4,8 +4,9 @@ Demo terpisah untuk mode dua Pejuang Republik melawan dua Pasukan Kolonial. Demo
 
 ## Fitur
 
-- Lobby Firebase dengan kode room enam karakter.
-- Matchmaking otomatis selama sepuluh detik, lalu setiap slot kosong diisi bot.
+- Tombol **Auto Matchmaking** mempertemukan semua pemain publik yang menekan tombol tersebut.
+- Auto matchmaking menunggu 15 detik, lalu setiap slot kosong diisi bot.
+- Room privat dengan kode enam karakter tetap tersedia.
 - Satu pemain mendapat tiga bot, dua pemain mendapat dua bot, dan tiga pemain mendapat satu bot.
 - Dua slot Pejuang dan dua slot Kolonial.
 - Anonymous Authentication untuk identitas pemain sementara.
@@ -17,18 +18,18 @@ Demo terpisah untuk mode dua Pejuang Republik melawan dua Pasukan Kolonial. Demo
 - Walk cycle bersenjata, action tembak/popor/hit, muzzle flash, impact, debu langkah, serta pickup semuanya memakai aset utama; tidak ada aset visual baru khusus demo ini.
 - Enam titik bendera dengan neutralize, capture, contested state, dan percepatan ketika dua rekan berada di titik.
 - Target 200 poin, batas tujuh menit, overtime, dan kemenangan langsung jika enam titik dikuasai selama 12 detik.
-- Kontrol desktop serta dual analog untuk browser HP.
+- Kontrol desktop dengan mouse serta analog gerak + auto aim untuk browser HP.
 
-## Alur matchmaking bot
+## Alur auto matchmaking
 
-Timer dimulai saat host membuat room. Jika empat manusia belum terkumpul dalam sepuluh detik, host mengunci lineup dan mengisi slot kosong:
+Tekan **Auto Matchmaking** untuk mencari room publik aktif atau membuat antrean publik baru. Manusia diprioritaskan mengisi dua slot Pejuang Republik terlebih dahulu, baru dua slot Kolonial. Jika empat manusia belum terkumpul dalam 15 detik, host mengunci lineup dan mengisi slot kosong:
 
 - 1 manusia + 3 bot
 - 2 manusia + 2 bot
 - 3 manusia + 1 bot
 - 4 manusia tanpa bot dan pertandingan langsung dimulai
 
-Bot memilih capture point, mencari jalur mengitari collision, menembak dan memukul lawan, memakai perban, reload, dodge, respawn, mengambil drop, dan ikut memasang bendera. Tombol **Mulai sekarang + bot** memungkinkan host melewati sisa timer.
+Bot memilih capture point, mencari jalur mengitari collision, menembak dan memukul lawan, memakai perban, reload, dodge, respawn, mengambil drop, dan ikut memasang bendera. Room privat masih menyediakan tombol **Mulai sekarang + bot**; auto matchmaking selalu memakai timer 15 detik.
 
 ## Menyiapkan Firebase
 
@@ -88,7 +89,7 @@ Untuk menguji empat pemain pada satu komputer, gunakan empat profil browser atau
 ### HP
 
 - Analog kiri: bergerak
-- Analog kanan: membidik
+- Auto aim otomatis mengunci lawan hidup terdekat
 - Tombol **Tembak**: menembak
 - Tombol **Pukul**: memukul dengan popor
 - Tombol **Perban**: memulihkan HP

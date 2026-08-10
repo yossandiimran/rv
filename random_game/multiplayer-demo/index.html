@@ -32,7 +32,7 @@
             <li>Enam titik bendera A–F</li>
             <li>Respawn lima detik</li>
             <li>Tujuh menit per pertandingan</li>
-            <li>Bot mengisi slot kosong setelah 10 detik</li>
+            <li>Auto matchmaking 15 detik, lalu slot kosong diisi bot</li>
             <li>Kuasai semua titik 12 detik untuk menang langsung</li>
           </ul>
         </div>
@@ -40,6 +40,13 @@
         <div class="lobby-form">
           <label class="field-label" for="player-name">Nama pejuang</label>
           <input id="player-name" maxlength="16" autocomplete="nickname" placeholder="Contoh: Sutrisno" />
+
+          <button id="auto-match" class="matchmaking-button" type="button" disabled>
+            <strong>Auto Matchmaking</strong>
+            <small>Utamakan Pejuang Republik · bot masuk setelah 15 detik</small>
+          </button>
+
+          <div class="join-divider"><span>atau buat room privat</span></div>
 
           <fieldset class="team-picker">
             <legend>Pilih pihak</legend>
@@ -151,11 +158,7 @@
               <button data-touch-action="bandage">Perban</button>
               <button class="fire-button" data-touch-action="fire">Tembak</button>
             </div>
-            <div id="aim-stick" class="touch-stick aim-stick">
-              <span class="stick-ring"></span>
-              <span id="aim-knob" class="stick-knob"></span>
-              <small>BIDIK</small>
-            </div>
+            <span class="auto-aim-badge">AUTO AIM AKTIF</span>
           </div>
         </div>
 

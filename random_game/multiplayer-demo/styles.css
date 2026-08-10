@@ -218,6 +218,37 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(208, 163, 93, 0.12);
 }
 
+.matchmaking-button {
+  display: grid;
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid rgba(226, 111, 80, 0.78);
+  border-radius: 8px;
+  padding: 13px 16px;
+  background:
+    linear-gradient(105deg, rgba(161, 54, 39, 0.96), rgba(104, 42, 31, 0.96)),
+    rgba(18, 21, 17, 0.96);
+  box-shadow: 0 10px 28px rgba(91, 29, 22, 0.28);
+  color: #f6e5c2;
+  text-align: left;
+}
+
+.matchmaking-button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.matchmaking-button strong {
+  font: 800 0.8rem/1 system-ui, sans-serif;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.matchmaking-button small {
+  margin-top: 7px;
+  color: rgba(247, 225, 184, 0.72);
+  font: 600 0.64rem/1.25 system-ui, sans-serif;
+}
+
 #room-code-input {
   letter-spacing: 0.18em;
   text-align: center;
@@ -667,6 +698,20 @@ kbd {
   touch-action: none;
 }
 
+.auto-aim-badge {
+  position: absolute;
+  right: 2px;
+  bottom: calc(100% + 6px);
+  border: 1px solid rgba(222, 183, 95, 0.42);
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(18, 21, 17, 0.76);
+  color: rgba(240, 211, 145, 0.86);
+  font: 800 0.48rem/1 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
 .touch-stick {
   position: relative;
   width: 104px;
@@ -701,10 +746,6 @@ kbd {
   background: radial-gradient(circle at 35% 30%, #83775e, #363a31 72%);
   box-shadow: 0 5px 13px rgba(0, 0, 0, 0.45);
   will-change: transform;
-}
-
-.aim-stick .stick-knob {
-  background: radial-gradient(circle at 35% 30%, #876854, #39332d 72%);
 }
 
 .touch-stick small {

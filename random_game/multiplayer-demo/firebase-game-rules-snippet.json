@@ -1,0 +1,34 @@
+{
+  "gameMatches": {
+    "$roomId": {
+      ".read": "auth != null",
+      "meta": {
+        ".write": "auth != null && ((!data.exists() && newData.child('hostUid').val() === auth.uid) || data.child('hostUid').val() === auth.uid)",
+        ".validate": "!newData.exists() || (newData.child('hostUid').isString() && newData.child('mode').val() === 'benteng-2v2' && (newData.child('status').val() === 'lobby' || newData.child('status').val() === 'starting' || newData.child('status').val() === 'playing' || newData.child('status').val() === 'finished' || newData.child('status').val() === 'abandoned'))"
+      },
+      "slots": {
+        "$team": {
+          "$slot": {
+            ".write": "auth != null && ($team === 'pejuang' || $team === 'kolonial') && ($slot === '0' || $slot === '1') && ((!data.exists() && newData.val() === auth.uid && root.child('gameMatches').child($roomId).child('meta').child('status').val() === 'lobby') || (data.val() === auth.uid && (!newData.exists() || newData.val() === auth.uid)))",
+            ".validate": "!newData.exists() || newData.isString()"
+          }
+        }
+      },
+      "members": {
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && (!newData.exists() || data.exists() || root.child('gameMatches').child($roomId).child('meta').child('status').val() === 'lobby')",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name', 'team', 'slot', 'ready']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 16 && (newData.child('team').val() === 'pejuang' || newData.child('team').val() === 'kolonial') && newData.child('slot').isNumber() && newData.child('slot').val() >= 0 && newData.child('slot').val() <= 1 && newData.child('ready').isBoolean())"
+        }
+      },
+      "inputs": {
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && root.child('gameMatches').child($roomId).child('members').child($uid).exists()",
+          ".validate": "!newData.exists() || (newData.hasChildren(['mx', 'my', 'ax', 'ay', 'fire', 'capture', 'reloadSeq', 'dodgeSeq', 'seq']) && newData.child('mx').isNumber() && newData.child('mx').val() >= -1 && newData.child('mx').val() <= 1 && newData.child('my').isNumber() && newData.child('my').val() >= -1 && newData.child('my').val() <= 1 && newData.child('ax').isNumber() && newData.child('ax').val() >= -1 && newData.child('ax').val() <= 1 && newData.child('ay').isNumber() && newData.child('ay').val() >= -1 && newData.child('ay').val() <= 1 && newData.child('fire').isBoolean() && newData.child('capture').isBoolean() && newData.child('reloadSeq').isNumber() && newData.child('dodgeSeq').isNumber() && newData.child('seq').isNumber())"
+        }
+      },
+      "state": {
+        ".write": "auth != null && root.child('gameMatches').child($roomId).child('meta').child('hostUid').val() === auth.uid"
+      }
+    }
+  }
+}

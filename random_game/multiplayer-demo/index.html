@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#151815" />
+    <title>Sumpah Merdeka — Benteng 2v2</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">Sumpah Merdeka · Multiplayer</p>
+          <h1>Benteng Enam Bendera</h1>
+        </div>
+        <div id="connection-chip" class="connection-chip" data-state="loading">
+          <span></span>
+          <strong id="connection-label">Menghubungkan Firebase</strong>
+        </div>
+      </header>
+
+      <section id="lobby-screen" class="paper-panel lobby-screen">
+        <div class="lobby-copy">
+          <p class="section-kicker">Demo 2 lawan 2</p>
+          <h2>Rebut enam titik. Tegakkan bendera. Kuasai benteng.</h2>
+          <p>
+            Pejuang Republik dan Pasukan Kolonial bertempur memperebutkan enam titik
+            pertahanan. Tim pertama mencapai 200 poin memenangkan pertandingan.
+          </p>
+          <ul class="mode-rules">
+            <li>Enam titik bendera A–F</li>
+            <li>Respawn lima detik</li>
+            <li>Tujuh menit per pertandingan</li>
+            <li>Bot mengisi slot kosong setelah 10 detik</li>
+            <li>Kuasai semua titik 12 detik untuk menang langsung</li>
+          </ul>
+        </div>
+
+        <div class="lobby-form">
+          <label class="field-label" for="player-name">Nama pejuang</label>
+          <input id="player-name" maxlength="16" autocomplete="nickname" placeholder="Contoh: Sutrisno" />
+
+          <fieldset class="team-picker">
+            <legend>Pilih pihak</legend>
+            <label class="team-option pejuang-option">
+              <input type="radio" name="team" value="pejuang" checked />
+              <span>
+                <strong>Pejuang Republik</strong>
+                <small>Merah putih · markas barat</small>
+              </span>
+            </label>
+            <label class="team-option kolonial-option">
+              <input type="radio" name="team" value="kolonial" />
+              <span>
+                <strong>Pasukan Kolonial</strong>
+                <small>Biru · markas timur</small>
+              </span>
+            </label>
+          </fieldset>
+
+          <button id="create-room" class="primary-button" type="button" disabled>
+            Buat room baru
+          </button>
+
+          <div class="join-divider"><span>atau masuk dengan kode</span></div>
+
+          <div class="join-row">
+            <input id="room-code-input" maxlength="6" inputmode="text" placeholder="ABC123" />
+            <button id="join-room" class="secondary-button" type="button" disabled>Gabung</button>
+          </div>
+
+          <p id="lobby-status" class="form-status" role="status">
+            Menyiapkan identitas pemain...
+          </p>
+        </div>
+      </section>
+
+      <section id="room-screen" class="paper-panel room-screen hidden">
+        <div class="room-heading">
+          <div>
+            <p class="section-kicker">Ruang persiapan</p>
+            <h2>Room <span id="room-code-label">------</span></h2>
+          </div>
+          <button id="copy-room" class="secondary-button compact-button" type="button">Salin kode</button>
+        </div>
+
+        <div class="versus-grid">
+          <article class="roster pejuang-roster">
+            <header><span></span> Pejuang Republik</header>
+            <div id="pejuang-slots" class="slot-list"></div>
+          </article>
+          <div class="versus-mark">VS</div>
+          <article class="roster kolonial-roster">
+            <header><span></span> Pasukan Kolonial</header>
+            <div id="kolonial-slots" class="slot-list"></div>
+          </article>
+        </div>
+
+        <p id="room-status" class="room-status">Menunggu empat pemain bergabung.</p>
+
+        <div class="room-actions">
+          <button id="leave-room" class="ghost-button" type="button">Keluar</button>
+          <button id="ready-button" class="secondary-button hidden" type="button">Saya siap</button>
+          <button id="start-match" class="primary-button hidden" type="button">Mulai sekarang + bot</button>
+        </div>
+      </section>
+
+      <section id="game-screen" class="game-screen hidden">
+        <div class="scoreboard">
+          <div class="team-score pejuang-score">
+            <span>Pejuang</span>
+            <strong id="score-pejuang">0</strong>
+          </div>
+          <div class="match-clock">
+            <span id="match-state">PERTANDINGAN</span>
+            <strong id="match-timer">07:00</strong>
+          </div>
+          <div class="team-score kolonial-score">
+            <strong id="score-kolonial">0</strong>
+            <span>Kolonial</span>
+          </div>
+        </div>
+
+        <div id="game-stage" class="game-stage">
+          <canvas id="game" width="960" height="540" tabindex="0" aria-label="Arena multiplayer 2 lawan 2"></canvas>
+
+          <div id="game-loading" class="game-overlay">
+            <div class="loading-mark"></div>
+            <p>Memuat arena dan sinkronisasi...</p>
+          </div>
+
+          <div id="result-overlay" class="game-overlay result-overlay hidden">
+            <p id="result-kicker" class="section-kicker">Pertandingan selesai</p>
+            <h2 id="result-title">Pejuang Republik menang</h2>
+            <p id="result-detail"></p>
+            <button id="back-to-room" class="primary-button" type="button">Kembali ke lobby</button>
+          </div>
+
+          <div id="mobile-controls" aria-label="Kontrol layar sentuh">
+            <div id="move-stick" class="touch-stick">
+              <span class="stick-ring"></span>
+              <span id="move-knob" class="stick-knob"></span>
+              <small>GERAK</small>
+            </div>
+            <div class="mobile-actions">
+              <button data-touch-action="capture">Bendera</button>
+              <button data-touch-action="reload">Isi</button>
+              <button data-touch-action="dodge">Dodge</button>
+              <button class="fire-button" data-touch-action="fire">Tembak</button>
+            </div>
+            <div id="aim-stick" class="touch-stick aim-stick">
+              <span class="stick-ring"></span>
+              <span id="aim-knob" class="stick-knob"></span>
+              <small>BIDIK</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-footer">
+          <div id="player-readout">HP 100 · Peluru 5/25</div>
+          <div class="desktop-controls">
+            <span><kbd>WASD</kbd> gerak</span>
+            <span><kbd>Mouse</kbd> bidik</span>
+            <span><kbd>Klik</kbd> tembak</span>
+            <span><kbd>E</kbd> pasang bendera</span>
+            <span><kbd>R</kbd> isi peluru</span>
+            <span><kbd>Shift</kbd> dodge</span>
+          </div>
+          <div>Room <strong id="game-room-code">------</strong></div>
+        </div>
+      </section>
+
+      <div id="toast" class="toast hidden" role="status"></div>
+    </main>
+
+    <script type="module" src="game.mjs"></script>
+  </body>
+</html>

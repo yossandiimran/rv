@@ -545,6 +545,16 @@ input:focus {
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46);
 }
 
+.game-stage::after {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  border: 2px solid rgba(232, 213, 173, 0.08);
+  box-shadow: inset 0 0 42px rgba(7, 9, 7, 0.34);
+  content: "";
+  pointer-events: none;
+}
+
 canvas {
   display: block;
   width: 100%;
@@ -723,6 +733,28 @@ kbd {
   font: 750 0.56rem/1 system-ui, sans-serif;
   touch-action: none;
   user-select: none;
+  box-shadow: inset 0 0 13px rgba(255, 255, 255, 0.025), 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 80ms ease, filter 80ms ease;
+}
+
+.mobile-actions button:active {
+  transform: scale(0.91);
+  filter: brightness(1.24);
+}
+
+.mobile-actions button[data-touch-action="capture"] {
+  border-color: rgba(224, 190, 103, 0.64);
+  background: rgba(104, 85, 43, 0.76);
+}
+
+.mobile-actions button[data-touch-action="bandage"] {
+  border-color: rgba(197, 211, 180, 0.58);
+  background: rgba(61, 84, 64, 0.78);
+}
+
+.mobile-actions button[data-touch-action="melee"] {
+  border-color: rgba(203, 150, 97, 0.6);
+  background: rgba(91, 58, 39, 0.8);
 }
 
 .mobile-actions .fire-button {

@@ -30,9 +30,13 @@ function advance(world, inputs, seconds) {
   Object.assign(world.players.p1, { x: 220, y: 190, aimX: 1, aimY: 0, spawnShield: 0 });
   Object.assign(world.players.k1, { x: 310, y: 190, spawnShield: 0 });
   stepWorld(world, { p1: { ax: 1, ay: 0, fire: true } }, 0.05);
+  const firingSnapshot = createSnapshot(world);
+  assert.equal(firingSnapshot.players.p1.fireCooldown, 0.28);
+  assert.ok(firingSnapshot.effects.some((effect) => effect.type === "muzzle"), "Muzzle VFX harus ikut snapshot.");
   advance(world, { p1: { ax: 1, ay: 0, fire: false } }, 0.3);
   assert.equal(world.players.p1.ammo, 4);
   assert.equal(world.players.k1.hp, 74, "Projectile demo pertama harus memberi 26 damage.");
+  assert.ok(world.effects.some((effect) => effect.type === "hit"), "Hit VFX harus disinkronkan host.");
   assert.equal(world.bulletSeq, 1);
 }
 
@@ -43,6 +47,7 @@ function advance(world, inputs, seconds) {
   stepWorld(world, { p1: { ax: 1, ay: 0, meleeSeq: 1 } }, 0.05);
   assert.equal(world.players.k1.hp, 62, "Pukulan popor demo pertama harus memberi 38 damage.");
   assert.equal(world.players.p1.meleeCooldown, 0.66);
+  assert.ok(world.effects.some((effect) => effect.type === "melee"), "Pukulan harus membuat effect event.");
 }
 
 {
@@ -134,4 +139,4 @@ function advance(world, inputs, seconds) {
   assert.equal(createSnapshot(world).players["bot-pejuang-1"].isBot, true);
 }
 
-process.stdout.write("PASS: movement, combat, capture, bot AI, scoring, forfeit, dan snapshot multiplayer\n");
+process.stdout.write("PASS: movement, combat/VFX, capture, bot AI, scoring, forfeit, dan snapshot multiplayer\n");

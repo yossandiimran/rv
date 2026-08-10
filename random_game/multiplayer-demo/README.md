@@ -13,6 +13,8 @@ Demo terpisah untuk mode dua Pejuang Republik melawan dua Pasukan Kolonial. Demo
 - Sinkronisasi input 15 kali per detik dan snapshot dunia 10 kali per detik.
 - Combat mengikuti demo pertama: projectile berwaktu tempuh, tembak, pukul popor, reload, perban, dodge dengan invulnerability singkat, serta drop amunisi/perban.
 - HP, respawn lima detik, dan spawn protection tetap disesuaikan untuk pertandingan multiplayer.
+- Arena memakai langsung atlas utama di `random_game/assets`: petak sawah, kampung Republik, rumah terbakar dengan api/asap animasi, jembatan irigasi, dan markas kolonial.
+- Walk cycle bersenjata, action tembak/popor/hit, muzzle flash, impact, debu langkah, serta pickup semuanya memakai aset utama; tidak ada aset visual baru khusus demo ini.
 - Enam titik bendera dengan neutralize, capture, contested state, dan percepatan ketika dua rekan berada di titik.
 - Target 200 poin, batas tujuh menit, overtime, dan kemenangan langsung jika enam titik dikuasai selama 12 detik.
 - Kontrol desktop serta dual analog untuk browser HP.
@@ -59,14 +61,14 @@ Firebase config bukan mekanisme otorisasi. Jangan membuka root database dengan `
 
 ## Menjalankan lokal
 
-Dari folder demo:
+Dari folder `random_game` agar path aset utama ikut tersedia:
 
 ```powershell
-cd random_game\multiplayer-demo
+cd random_game
 python -m http.server 4173
 ```
 
-Buka `http://localhost:4173`.
+Buka `http://localhost:4173/multiplayer-demo/`.
 
 Untuk menguji empat pemain pada satu komputer, gunakan empat profil browser atau kombinasi browser normal dan incognito. Beberapa tab dalam profil yang sama memakai Anonymous UID yang sama dan akan dianggap sebagai satu pemain.
 
@@ -95,7 +97,11 @@ Untuk menguji empat pemain pada satu komputer, gunakan empat profil browser atau
 
 ## GitHub Pages
 
-Folder ini self-contained, termasuk aset runtime. Untuk repository khusus demo, upload seluruh isi folder ini ke root repository, lalu aktifkan **Settings → Pages → Deploy from a branch → main → /(root)**.
+Demo membaca aset melalui path `../assets`, sehingga folder `random_game/assets` dan `random_game/multiplayer-demo` harus tetap berada dalam struktur yang sama. Upload seluruh folder `random_game`, lalu aktifkan **Settings → Pages → Deploy from a branch → main → /(root)**. URL demo tetap:
+
+```text
+https://yossandiimran.github.io/rv/random_game/multiplayer-demo/
+```
 
 ## Batasan demo
 

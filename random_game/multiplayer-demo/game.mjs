@@ -13,7 +13,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import {
   CAPTURE_SECONDS,
-  STATIC_RECTS,
   TEAMS,
   TOTAL_CONTROL_SECONDS,
   WORLD_HEIGHT,
@@ -80,15 +79,26 @@ const ui = {
 };
 
 const assetSources = {
-  terrain: "assets/terrain.png",
-  road: "assets/road.png",
-  buildings: "assets/camp-structures.png",
-  trees: "assets/trees.png",
-  obstacles: "assets/obstacles.png",
-  sutrisno: "assets/sutrisno.png",
-  bima: "assets/bima.png",
-  patrol: "assets/patrol.png",
-  sergeant: "assets/sergeant.png",
+  terrain: "../assets/tilesets/terrain-atlas-32-v2.png",
+  road: "../assets/tilesets/dirt-road-autotile-32-v1.png",
+  rice: "../assets/tilesets/rice-terrace-atlas-32-v1.png",
+  river: "../assets/tilesets/riverbank-autotile-32-v1.png",
+  villageBuildings: "../assets/environment/buildings/village-buildings-256x192-v1.png",
+  campBuildings: "../assets/environment/buildings/camp-structures-256x192-v1.png",
+  trees: "../assets/environment/vegetation/trees-large-192-v1.png",
+  groundVegetation: "../assets/environment/vegetation/ground-vegetation-64-v1.png",
+  obstacles: "../assets/environment/vegetation/natural-obstacles-128-v1.png",
+  decals: "../assets/environment/decals/ground-decals-64-v1.png",
+  bridge: "../assets/environment/bridges/river-crossings-256x128-v1.png",
+  vfx: "../assets/effects/environment-vfx-64-v1.png",
+  weapons: "../assets/weapons/world-weapons-128x96-v1.png",
+  itemIcons: "../assets/items/inventory-icons-64-v1.png",
+  sutrisno: "../assets/characters/variants/sutrisno-armed-walk-32x48-v1.png",
+  bima: "../assets/characters/variants/bima-rifleman-walk-32x48-v1.png",
+  patrol: "../assets/enemies/sprites/rifle-patrol-walk-32x48-v1.png",
+  sergeant: "../assets/enemies/sprites/sergeant-walk-32x48-v1.png",
+  playerAction: "../assets/characters/variants/sutrisno-combat-actions-48-v1.png",
+  enemyAction: "../assets/enemies/sprites/enemy-rifle-actions-48-v1.png",
 };
 
 const images = {};
@@ -778,8 +788,23 @@ function drawAtlasCell(image, columns, rows, column, row, x, y, width, height, a
   const sourceWidth = image.width / columns;
   const sourceHeight = image.height / rows;
   ctx.save();
-  ctx.globalAlpha = alpha;
+  ctx.globalAlpha *= alpha;
   ctx.drawImage(image, column * sourceWidth, row * sourceHeight, sourceWidth, sourceHeight, x, y, width, height);
+  ctx.restore();
+  return true;
+}
+
+function drawTileRegion(image, column, row, x, y, width, height, alpha = 1) {
+  if (!image) return false;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.clip();
+  for (let tileY = y; tileY < y + height; tileY += 32) {
+    for (let tileX = x; tileX < x + width; tileX += 32) {
+      drawAtlasCell(image, 4, 4, column, row, tileX, tileY, 32, 32, alpha);
+    }
+  }
   ctx.restore();
   return true;
 }
@@ -787,22 +812,46 @@ function drawAtlasCell(image, columns, rows, column, row, x, y, width, height, a
 function drawGround() {
   ctx.fillStyle = "#4c543b";
   ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-  for (let y = 0; y < WORLD_HEIGHT; y += 32) {
-    for (let x = 0; x < WORLD_WIDTH; x += 32) {
-      if (!drawAtlasCell(images.terrain, 4, 4, 2, 0, x, y, 32, 32)) {
-        ctx.fillStyle = (x / 32 + y / 32) % 2 ? "#50593d" : "#4a5339";
-        ctx.fillRect(x, y, 32, 32);
-      }
-    }
+  if (!drawTileRegion(images.terrain, 2, 0, 0, 0, WORLD_WIDTH, WORLD_HEIGHT)) {
+    ctx.fillStyle = "#4e573b";
+    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
   }
 
-  for (let x = 0; x < WORLD_WIDTH; x += 32) {
-    drawAtlasCell(images.road, 4, 4, 1, 0, x, 240, 32, 32, 0.85);
-    drawAtlasCell(images.road, 4, 4, 1, 0, x, 272, 32, 32, 0.85);
-  }
-  for (let y = 0; y < WORLD_HEIGHT; y += 32) {
-    drawAtlasCell(images.road, 4, 4, 1, 0, 448, y, 32, 32, 0.7);
-    drawAtlasCell(images.road, 4, 4, 1, 0, 480, y, 32, 32, 0.7);
+  // Kampung Republik, petak sawah, tanah hangus, dan markas kolonial.
+  drawTileRegion(images.terrain, 1, 0, 24, 28, 334, 194, 0.92);
+  drawTileRegion(images.rice, 1, 0, 24, 326, 330, 192, 0.98);
+  drawTileRegion(images.terrain, 3, 3, 384, 136, 192, 252, 0.96);
+  drawTileRegion(images.terrain, 0, 0, 610, 26, 326, 202, 0.94);
+  drawTileRegion(images.terrain, 0, 0, 610, 316, 326, 202, 0.94);
+
+  // Jalan utama dan jalur penghubung enam benteng.
+  drawTileRegion(images.road, 3, 0, 0, 240, WORLD_WIDTH, 64, 0.9);
+  drawTileRegion(images.road, 2, 0, 448, 0, 64, WORLD_HEIGHT, 0.82);
+  drawTileRegion(images.road, 3, 0, 96, 112, 286, 34, 0.78);
+  drawTileRegion(images.road, 3, 0, 576, 112, 288, 34, 0.78);
+  drawTileRegion(images.road, 2, 0, 150, 142, 34, 260, 0.72);
+  drawTileRegion(images.road, 2, 0, 778, 142, 34, 260, 0.72);
+
+  // Saluran irigasi dangkal di titik jembatan.
+  drawTileRegion(images.river, 0, 0, 514, 334, 132, 62, 0.94);
+
+  // Pematang sawah membuat area selatan-barat terbaca sebagai petak, bukan karpet tile.
+  ctx.fillStyle = "rgba(74, 61, 34, 0.68)";
+  for (let y = 357; y < 510; y += 48) ctx.fillRect(24, y, 330, 5);
+  for (let x = 86; x < 354; x += 86) ctx.fillRect(x, 326, 5, 192);
+
+  const decals = [
+    [0, 0, 66, 70, 58, 58, 0.42],
+    [1, 0, 214, 174, 48, 48, 0.38],
+    [1, 1, 397, 167, 64, 64, 0.82],
+    [3, 1, 497, 284, 58, 58, 0.78],
+    [0, 3, 421, 311, 60, 60, 0.72],
+    [2, 0, 684, 84, 68, 68, 0.42],
+    [3, 0, 840, 354, 52, 52, 0.46],
+    [2, 3, 690, 466, 62, 62, 0.38],
+  ];
+  for (const [column, row, x, y, width, height, alpha] of decals) {
+    drawAtlasCell(images.decals, 4, 4, column, row, x, y, width, height, alpha);
   }
 
   const baseGradient = ctx.createLinearGradient(0, 0, WORLD_WIDTH, 0);
@@ -815,23 +864,51 @@ function drawGround() {
 }
 
 function drawFortifications() {
-  drawAtlasCell(images.buildings, 3, 2, 1, 0, 386, 154, 190, 143);
-  drawAtlasCell(images.trees, 4, 3, 3, 0, -25, -20, 128, 128);
-  drawAtlasCell(images.trees, 4, 3, 0, 0, 856, -18, 128, 128);
-  drawAtlasCell(images.trees, 4, 3, 2, 2, -18, 425, 125, 125);
-  drawAtlasCell(images.trees, 4, 3, 1, 1, 858, 425, 125, 125);
+  // Bangunan berikut ditambatkan ke STATIC_RECTS, jadi visual dan collision tetap selaras.
+  drawAtlasCell(images.villageBuildings, 3, 2, 2, 0, 242, 24, 145, 109);
+  drawAtlasCell(images.villageBuildings, 3, 2, 0, 1, 242, 357, 145, 109);
+  drawAtlasCell(images.villageBuildings, 3, 2, 1, 0, 384, 151, 194, 146);
+  drawAtlasCell(images.campBuildings, 3, 2, 1, 0, 568, 22, 148, 111);
+  drawAtlasCell(images.campBuildings, 3, 2, 0, 1, 570, 358, 148, 111);
+  drawAtlasCell(images.campBuildings, 3, 2, 2, 1, 82, 218, 158, 79);
+  drawAtlasCell(images.campBuildings, 3, 2, 2, 1, 720, 218, 158, 79);
 
-  for (let index = 0; index < STATIC_RECTS.length; index += 1) {
-    const rect = STATIC_RECTS[index];
-    if (index === 0) continue;
-    ctx.fillStyle = "rgba(52, 47, 37, 0.84)";
-    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-    ctx.strokeStyle = "rgba(218, 198, 156, 0.28)";
-    ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1);
-    for (let x = rect.x + 8; x < rect.x + rect.w - 8; x += 26) {
-      drawAtlasCell(images.obstacles, 4, 4, 1 + (index % 2), 0, x, rect.y - 6, 34, 34, 0.9);
-    }
+  // Jembatan kayu dan detail wilayah sawah.
+  drawAtlasCell(images.bridge, 4, 3, 0, 0, 493, 319, 174, 87, 1);
+  const ricePlants = [
+    [45, 337], [111, 337], [197, 337], [283, 337],
+    [45, 385], [111, 385], [197, 385], [283, 385],
+    [45, 433], [111, 433], [197, 433], [283, 433],
+    [45, 481], [111, 481], [197, 481], [283, 481],
+  ];
+  for (let index = 0; index < ricePlants.length; index += 1) {
+    const [x, y] = ricePlants[index];
+    const sway = Math.sin(elapsed * 1.7 + index) * 1.5;
+    drawAtlasCell(images.groundVegetation, 4, 4, index % 2, 1, x + sway, y, 30, 30, 0.8);
   }
+
+  // Siluet pohon membingkai arena; pohon mati memperkuat pusat kampung yang terbakar.
+  drawAtlasCell(images.trees, 4, 3, 0, 0, -44, -26, 156, 156);
+  drawAtlasCell(images.trees, 4, 3, 2, 0, 82, -47, 145, 145);
+  drawAtlasCell(images.trees, 4, 3, 3, 0, 846, -35, 154, 154);
+  drawAtlasCell(images.trees, 4, 3, 2, 2, -35, 410, 145, 145);
+  drawAtlasCell(images.trees, 4, 3, 1, 1, 848, 412, 150, 150);
+  drawAtlasCell(images.trees, 4, 3, 3, 1, 526, 85, 125, 125, 0.92);
+
+  // Perlengkapan kamp dan hasil bumi memakai natural-obstacle atlas utama.
+  drawAtlasCell(images.obstacles, 4, 4, 3, 2, 205, 443, 60, 60, 0.9);
+  drawAtlasCell(images.obstacles, 4, 4, 2, 2, 654, 164, 66, 66, 0.9);
+  drawAtlasCell(images.obstacles, 4, 4, 2, 1, 816, 166, 68, 68, 0.9);
+  drawAtlasCell(images.obstacles, 4, 4, 3, 3, 842, 421, 58, 58, 0.82);
+
+  // Api dan asap rumah runtuh dianimasikan dari environment-vfx atlas.
+  const fireFrame = Math.floor(elapsed * 8) % 4;
+  const smokeFrame = Math.floor(elapsed * 3.2) % 4;
+  drawAtlasCell(images.vfx, 4, 4, fireFrame, 0, 424, 198, 50, 50, 0.96);
+  drawAtlasCell(images.vfx, 4, 4, (fireFrame + 2) % 4, 0, 488, 207, 44, 44, 0.92);
+  drawAtlasCell(images.vfx, 4, 4, smokeFrame, 1, 434, 143, 78, 78, 0.6);
+  drawAtlasCell(images.vfx, 4, 4, (smokeFrame + 1) % 4, 1, 485, 156, 66, 66, 0.46);
+  drawAtlasCell(images.vfx, 4, 4, fireFrame, 0, 755, 165, 27, 27, 0.72);
 
   ctx.fillStyle = "rgba(151, 55, 43, 0.18)";
   ctx.fillRect(18, 190, 72, 160);
@@ -841,6 +918,22 @@ function drawFortifications() {
   ctx.fillRect(870, 190, 72, 160);
   ctx.strokeStyle = "rgba(86, 127, 163, 0.55)";
   ctx.strokeRect(870.5, 190.5, 71, 159);
+
+  const zoneLabels = [
+    [54, 42, "KAMPUNG REPUBLIK"],
+    [44, 505, "SAWAH SELATAN"],
+    [406, 116, "KAMPUNG TERBAKAR"],
+    [738, 42, "MARKAS KOLONIAL"],
+  ];
+  ctx.font = "800 8px system-ui, sans-serif";
+  ctx.textAlign = "left";
+  for (const [x, y, label] of zoneLabels) {
+    const width = ctx.measureText(label).width + 14;
+    ctx.fillStyle = "rgba(15, 18, 14, 0.68)";
+    ctx.fillRect(x - 6, y - 11, width, 17);
+    ctx.fillStyle = "rgba(232, 214, 177, 0.74)";
+    ctx.fillText(label, x, y - 9);
+  }
 }
 
 function teamColor(team, alpha = 1) {
@@ -879,10 +972,11 @@ function drawCapturePoint(point) {
   ctx.lineTo(0, -29);
   ctx.stroke();
   ctx.fillStyle = teamColor(point.owner, point.owner ? 0.95 : 0.45);
+  const flagWave = Math.sin(elapsed * 4.5 + point.id.charCodeAt(0)) * 3;
   ctx.beginPath();
   ctx.moveTo(1, -28);
-  ctx.lineTo(25, -20);
-  ctx.lineTo(1, -11);
+  ctx.quadraticCurveTo(13, -27 + flagWave, 26, -20);
+  ctx.quadraticCurveTo(14, -14 + flagWave, 1, -11);
   ctx.closePath();
   ctx.fill();
 
@@ -933,41 +1027,103 @@ function drawPickup(pickup) {
   ctx.translate(pickup.x, pickup.y + bob);
   ctx.fillStyle = "rgba(18, 20, 17, 0.72)";
   ctx.beginPath();
-  ctx.arc(0, 0, 9, 0, Math.PI * 2);
+  ctx.arc(0, 0, 12, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = pickup.type === "ammo" ? "#d3aa61" : "#d8d0af";
-  ctx.lineWidth = 2;
   if (pickup.type === "ammo") {
-    ctx.strokeRect(-4, -6, 8, 12);
-    ctx.beginPath();
-    ctx.moveTo(-4, -2);
-    ctx.lineTo(4, -2);
-    ctx.stroke();
+    drawAtlasCell(images.weapons, 4, 4, 2, 2, -15, -12, 30, 23);
   } else {
-    ctx.beginPath();
-    ctx.moveTo(-5, -4);
-    ctx.lineTo(5, 4);
-    ctx.moveTo(5, -4);
-    ctx.lineTo(-5, 4);
-    ctx.stroke();
+    drawAtlasCell(images.itemIcons, 4, 4, 0, 1, -11, -11, 22, 22);
   }
+  ctx.strokeStyle = pickup.type === "ammo" ? "rgba(211, 170, 97, 0.85)" : "rgba(216, 208, 175, 0.85)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-12.5, -12.5, 25, 25);
   ctx.restore();
 }
 
 function drawBullet(bullet) {
   const length = Math.hypot(bullet.vx, bullet.vy) || 1;
-  const trailX = (bullet.vx / length) * 10;
-  const trailY = (bullet.vy / length) * 10;
+  const trailX = (bullet.vx / length) * 17;
+  const trailY = (bullet.vy / length) * 17;
   ctx.strokeStyle = bullet.team === TEAMS.PEJUANG ? "rgba(244, 202, 112, 0.9)" : "rgba(226, 135, 85, 0.9)";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.4;
   ctx.beginPath();
   ctx.moveTo(bullet.x - trailX, bullet.y - trailY);
   ctx.lineTo(bullet.x, bullet.y);
   ctx.stroke();
-  ctx.fillStyle = "#f5ddb0";
-  ctx.beginPath();
-  ctx.arc(bullet.x, bullet.y, bullet.radius || 2.2, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.save();
+  ctx.translate(bullet.x, bullet.y);
+  ctx.rotate(Math.atan2(bullet.vy, bullet.vx) + Math.PI / 2);
+  drawAtlasCell(images.vfx, 4, 4, Math.floor(elapsed * 16 + bullet.id) % 4, 0, -7, -12, 14, 14, 0.7);
+  ctx.restore();
+}
+
+function directionVector(direction) {
+  if (direction === 0) return { x: 0, y: 1 };
+  if (direction === 1) return { x: -1, y: 0 };
+  if (direction === 3) return { x: 0, y: -1 };
+  return { x: 1, y: 0 };
+}
+
+function combatActionRow(player) {
+  if (player.team === TEAMS.KOLONIAL && player.dead) return 3;
+  if (player.hitTimer > 0) return player.team === TEAMS.PEJUANG ? 3 : 2;
+  if (player.meleeCooldown > 0.36) return player.team === TEAMS.PEJUANG ? 2 : 0;
+  if (player.fireCooldown > 0.1) return 1;
+  return -1;
+}
+
+function drawCombatEffect(effect) {
+  const frame = (Math.floor(elapsed * 14) + Number(effect.id || 0)) % 4;
+  if (effect.type === "muzzle") {
+    ctx.save();
+    ctx.translate(effect.x, effect.y);
+    const vector = directionVector(effect.direction);
+    ctx.rotate(Math.atan2(vector.y, vector.x) + Math.PI / 2);
+    drawAtlasCell(images.vfx, 4, 4, frame, 0, -12, -22, 24, 24, 0.92);
+    ctx.restore();
+    return;
+  }
+
+  const size = effect.type === "melee" ? 42 : effect.type === "hit" ? 34 : 28;
+  drawAtlasCell(images.vfx, 4, 4, frame, 2, effect.x - size / 2, effect.y - size / 2, size, size, 0.72);
+  if (effect.type === "melee") {
+    const vector = directionVector(effect.direction);
+    const angle = Math.atan2(vector.y, vector.x);
+    ctx.strokeStyle = teamColor(effect.team, Math.max(0.25, effect.ttl * 2.4));
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(effect.x - vector.x * 13, effect.y - vector.y * 13, 29, angle - 0.75, angle + 0.75);
+    ctx.stroke();
+  } else if (effect.type === "hit") {
+    ctx.strokeStyle = "rgba(169, 66, 48, 0.72)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, 9 + (0.28 - effect.ttl) * 32, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawLocalActionProgress(world) {
+  const player = world?.players?.[currentUser?.uid];
+  if (!player || player.dead || (player.reloadTimer <= 0 && player.bandageTimer <= 0)) return;
+  const isReloading = player.reloadTimer > 0;
+  const remaining = isReloading ? player.reloadTimer : player.bandageTimer;
+  const duration = isReloading ? 1.05 : 1.35;
+  const progress = Math.max(0, Math.min(1, 1 - remaining / duration));
+  const x = 410;
+  const y = 78;
+  ctx.fillStyle = "rgba(16, 19, 15, 0.9)";
+  ctx.fillRect(x, y, 140, 31);
+  ctx.strokeStyle = "rgba(229, 209, 166, 0.32)";
+  ctx.strokeRect(x + 0.5, y + 0.5, 139, 30);
+  ctx.fillStyle = "#342d23";
+  ctx.fillRect(x + 10, y + 20, 120, 5);
+  ctx.fillStyle = isReloading ? "#d4aa61" : "#d7d0ae";
+  ctx.fillRect(x + 10, y + 20, 120 * progress, 5);
+  ctx.fillStyle = "#ead8b4";
+  ctx.font = "800 8px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(isReloading ? "MENGISI PELURU" : "MEMBALUT LUKA", x + 70, y + 5);
 }
 
 function drawPlayer(player, uid) {
@@ -989,9 +1145,37 @@ function drawPlayer(player, uid) {
   }
 
   const sprite = spriteFor(player);
-  if (sprite) {
+  const actionRow = combatActionRow(player);
+  const actionAtlas = player.team === TEAMS.KOLONIAL
+    ? images.enemyAction
+    : Number(player.slot) === 0
+      ? images.playerAction
+      : null;
+  if (player.moving && !player.dead) {
+    const dustSize = player.dodgeTimer > 0 ? 38 : 25;
+    const dustFrame = Math.floor((elapsed + player.x * 0.004) * 9) % 4;
+    drawAtlasCell(images.vfx, 4, 4, dustFrame, 2, player.x - dustSize / 2, player.y - 10, dustSize, dustSize, player.dodgeTimer > 0 ? 0.7 : 0.3);
+  }
+
+  if (actionRow >= 0 && actionAtlas) {
+    drawAtlasCell(actionAtlas, 4, 4, player.direction, actionRow, player.x - 28, player.y - 58, 56, 56);
+  } else if (sprite) {
     const frame = player.moving ? Math.floor((elapsed + player.x * 0.002) * 9) % 4 : 0;
-    drawAtlasCell(sprite, 4, 4, frame, player.direction, player.x - 22, player.y - 58, 44, 66);
+    const vector = directionVector(player.direction);
+    const meleeLunge = player.meleeCooldown > 0.36 ? 5 : 0;
+    const recoil = player.fireCooldown > 0.1 ? -3 : 0;
+    const bob = player.moving ? Math.sin(elapsed * 18 + player.x * 0.02) * 1.2 : 0;
+    drawAtlasCell(
+      sprite,
+      4,
+      4,
+      frame,
+      player.direction,
+      player.x - 22 + vector.x * (meleeLunge + recoil),
+      player.y - 58 + vector.y * (meleeLunge + recoil) + bob,
+      44,
+      66,
+    );
   } else {
     ctx.fillStyle = teamColor(player.team, 1);
     ctx.beginPath();
@@ -1019,14 +1203,15 @@ function drawPlayer(player, uid) {
 function drawWorld(dt) {
   const world = isHost && authoritativeWorld ? authoritativeWorld : latestSnapshot;
   drawGround();
-  for (const point of world?.points || []) drawCapturePoint(point);
   drawFortifications();
+  for (const point of world?.points || []) drawCapturePoint(point);
   for (const pickup of world?.pickups || []) drawPickup(pickup);
   updateRenderPlayers(world, dt);
   const ordered = [...renderPlayers.entries()].sort((a, b) => a[1].y - b[1].y);
   for (const [uid, player] of ordered) drawPlayer(player, uid);
 
   for (const bullet of world?.bullets || []) drawBullet(bullet);
+  for (const effect of world?.effects || []) drawCombatEffect(effect);
 
   const local = renderPlayers.get(currentUser?.uid);
   if (local && !local.dead) {
@@ -1041,11 +1226,29 @@ function drawWorld(dt) {
     }
   }
 
+  drawLocalActionProgress(world);
+
   const vignette = ctx.createRadialGradient(480, 270, 190, 480, 270, 590);
   vignette.addColorStop(0, "rgba(8, 10, 8, 0)");
   vignette.addColorStop(1, "rgba(8, 10, 8, 0.52)");
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+  if (pointer.inside) {
+    ctx.strokeStyle = "rgba(239, 220, 178, 0.82)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(pointer.x, pointer.y, 7, 0, Math.PI * 2);
+    ctx.moveTo(pointer.x - 12, pointer.y);
+    ctx.lineTo(pointer.x - 4, pointer.y);
+    ctx.moveTo(pointer.x + 4, pointer.y);
+    ctx.lineTo(pointer.x + 12, pointer.y);
+    ctx.moveTo(pointer.x, pointer.y - 12);
+    ctx.lineTo(pointer.x, pointer.y - 4);
+    ctx.moveTo(pointer.x, pointer.y + 4);
+    ctx.lineTo(pointer.x, pointer.y + 12);
+    ctx.stroke();
+  }
 }
 
 function updateHud() {
@@ -1065,7 +1268,11 @@ function updateHud() {
 }
 
 function render(dt) {
+  const world = isHost && authoritativeWorld ? authoritativeWorld : latestSnapshot;
+  const local = world?.players?.[currentUser?.uid];
+  const shake = local?.hitTimer > 0 ? 3.5 * Math.min(1, local.hitTimer / 0.12) : 0;
   ctx.save();
+  if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
   drawWorld(dt);
   ctx.restore();
   updateHud();

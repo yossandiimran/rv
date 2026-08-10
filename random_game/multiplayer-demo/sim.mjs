@@ -114,6 +114,7 @@ export function createWorld(members, startedAt = Date.now()) {
       meleeCooldown: 0,
       reloadTimer: 0,
       bandageTimer: 0,
+      hitTimer: 0,
       dodgeTimer: 0,
       dodgeCooldown: 0,
       invulnerable: 0,
@@ -150,6 +151,8 @@ export function createWorld(members, startedAt = Date.now()) {
     bulletSeq: 0,
     pickups: [],
     pickupSeq: 0,
+    effects: [],
+    effectSeq: 0,
     eventSeq: 0,
     lastEvent: "Pertandingan dimulai · rebut enam titik bendera!",
     totalControl: { team: null, seconds: 0 },
@@ -266,6 +269,7 @@ function respawnPlayer(player) {
   player.meleeCooldown = 0;
   player.reloadTimer = 0;
   player.bandageTimer = 0;
+  player.hitTimer = 0;
   player.dodgeTimer = 0;
   player.dodgeCooldown = 0;
   player.invulnerable = 0;
@@ -290,6 +294,11 @@ function finishReload(player) {
 function directionFromAim(x, y) {
   if (Math.abs(x) > Math.abs(y)) return x < 0 ? 1 : 2;
   return y < 0 ? 3 : 0;
+}
+
+function addEffect(world, type, x, y, team = null, direction = 0, ttl = 0.26) {
+  world.effectSeq += 1;
+  world.effects.push({ id: world.effectSeq, type, x, y, team, direction, ttl });
 }
 
 function segmentHitsWorld(x1, y1, x2, y2, radius = 2) {
@@ -320,6 +329,7 @@ function fireWeapon(world, shooter) {
     life: 0.8,
     radius: 2.2,
   });
+  addEffect(world, "muzzle", shooter.x + shooter.aimX * 24, shooter.y - 12 + shooter.aimY * 24, shooter.team, shooter.direction, 0.2);
 }
 
 function dropPickup(world, player) {
@@ -337,6 +347,8 @@ function dropPickup(world, player) {
 function damagePlayer(world, target, amount, attacker, knockX = 0, knockY = 0) {
   if (target.dead || target.spawnShield > 0 || target.invulnerable > 0) return false;
   target.hp = Math.max(0, target.hp - amount);
+  target.hitTimer = 0.2;
+  addEffect(world, "hit", target.x, target.y - 11, attacker?.team || null, target.direction, 0.28);
   if (knockX || knockY) moveActor(target, knockX, knockY);
   if (target.hp > 0) return true;
 
@@ -355,6 +367,15 @@ function damagePlayer(world, target, amount, attacker, knockX = 0, knockY = 0) {
 
 function meleePlayer(world, attacker) {
   attacker.meleeCooldown = 0.66;
+  addEffect(
+    world,
+    "melee",
+    attacker.x + attacker.aimX * 28,
+    attacker.y - 8 + attacker.aimY * 22,
+    attacker.team,
+    attacker.direction,
+    0.3,
+  );
   let hit = false;
   for (const target of Object.values(world.players)) {
     if (target.dead || target.team === attacker.team) continue;
@@ -391,6 +412,7 @@ function updateBullets(world, dt) {
       || segmentHitsWorld(previousX, previousY, bullet.x, bullet.y, bullet.radius)
     ) {
       bullet.life = 0;
+      addEffect(world, "impact", bullet.x, bullet.y, bullet.team, 0, 0.24);
       continue;
     }
 
@@ -428,6 +450,7 @@ function updatePlayers(world, inputs, dt) {
     const input = inputs?.[uid] || {};
     player.fireCooldown = Math.max(0, player.fireCooldown - dt);
     player.meleeCooldown = Math.max(0, player.meleeCooldown - dt);
+    player.hitTimer = Math.max(0, player.hitTimer - dt);
     player.dodgeCooldown = Math.max(0, player.dodgeCooldown - dt);
     player.dodgeTimer = Math.max(0, player.dodgeTimer - dt);
     player.invulnerable = Math.max(0, player.invulnerable - dt);
@@ -630,6 +653,8 @@ export function stepWorld(world, inputs, dt) {
   updatePickups(world, safeDt);
   updateCapturePoints(world, safeDt);
   updateScoreAndVictory(world, safeDt);
+  for (const effect of world.effects) effect.ttl -= safeDt;
+  world.effects = world.effects.filter((effect) => effect.ttl > 0);
   return world;
 }
 
@@ -655,12 +680,14 @@ export function createSnapshot(world) {
       capture: player.capture,
       dead: player.dead,
       respawnTimer: round(player.respawnTimer),
-      reloadTimer: round(player.reloadTimer),
-      bandageTimer: round(player.bandageTimer),
-      meleeCooldown: round(player.meleeCooldown),
-      dodgeTimer: round(player.dodgeTimer),
-      dodgeCooldown: round(player.dodgeCooldown),
-      invulnerable: round(player.invulnerable),
+      fireCooldown: round(player.fireCooldown, 2),
+      reloadTimer: round(player.reloadTimer, 2),
+      bandageTimer: round(player.bandageTimer, 2),
+      hitTimer: round(player.hitTimer, 2),
+      meleeCooldown: round(player.meleeCooldown, 2),
+      dodgeTimer: round(player.dodgeTimer, 2),
+      dodgeCooldown: round(player.dodgeCooldown, 2),
+      invulnerable: round(player.invulnerable, 2),
       spawnShield: round(player.spawnShield),
       kills: player.kills,
       deaths: player.deaths,
@@ -704,6 +731,15 @@ export function createSnapshot(world) {
       x: round(pickup.x),
       y: round(pickup.y),
       life: round(pickup.life, 2),
+    })),
+    effects: world.effects.map((effect) => ({
+      id: effect.id,
+      type: effect.type,
+      x: round(effect.x),
+      y: round(effect.y),
+      team: effect.team,
+      direction: effect.direction,
+      ttl: round(effect.ttl, 2),
     })),
     totalControl: {
       team: world.totalControl.team,

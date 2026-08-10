@@ -710,7 +710,7 @@ kbd {
 
 .mobile-actions {
   display: grid;
-  grid-template: repeat(2, 45px) / repeat(2, 55px);
+  grid-template: repeat(2, 45px) / repeat(3, 48px);
   gap: 6px;
   pointer-events: auto;
 }
@@ -844,7 +844,7 @@ kbd {
   }
 
   .mobile-actions {
-    grid-template: repeat(2, 42px) / repeat(2, 48px);
+    grid-template: repeat(2, 42px) / repeat(3, 48px);
     gap: 4px;
   }
 }
@@ -857,7 +857,7 @@ kbd {
   }
 
   .mobile-actions {
-    grid-template: repeat(2, 39px) / repeat(2, 43px);
+    grid-template: repeat(2, 39px) / repeat(3, 43px);
   }
 
   .mobile-actions button {

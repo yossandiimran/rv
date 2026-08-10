@@ -105,18 +105,26 @@ export function createWorld(members, startedAt = Date.now()) {
       hp: 100,
       ammo: 5,
       reserve: 25,
+      bandages: 2,
       moving: false,
       capture: false,
       dead: false,
       respawnTimer: 0,
       fireCooldown: 0,
+      meleeCooldown: 0,
       reloadTimer: 0,
+      bandageTimer: 0,
       dodgeTimer: 0,
       dodgeCooldown: 0,
+      invulnerable: 0,
       spawnShield: 2,
       handledReloadSeq: 0,
+      handledMeleeSeq: 0,
+      handledBandageSeq: 0,
       handledDodgeSeq: 0,
       botReloadSeq: 0,
+      botMeleeSeq: 0,
+      botBandageSeq: 0,
       botDodgeSeq: 0,
       kills: 0,
       deaths: 0,
@@ -138,8 +146,10 @@ export function createWorld(members, startedAt = Date.now()) {
       progress: 0,
       contested: false,
     })),
-    tracers: [],
-    tracerSeq: 0,
+    bullets: [],
+    bulletSeq: 0,
+    pickups: [],
+    pickupSeq: 0,
     eventSeq: 0,
     lastEvent: "Pertandingan dimulai · rebut enam titik bendera!",
     totalControl: { team: null, seconds: 0 },
@@ -191,6 +201,8 @@ export function createBotInputs(world) {
         fire: false,
         capture: false,
         reloadSeq: player.botReloadSeq,
+        meleeSeq: player.botMeleeSeq,
+        bandageSeq: player.botBandageSeq,
         dodgeSeq: player.botDodgeSeq,
         seq: world.tick,
       };
@@ -215,6 +227,10 @@ export function createBotInputs(world) {
     }
 
     if (player.ammo <= 0 && player.reloadTimer <= 0) player.botReloadSeq += 1;
+    if (opponentDistance <= 42 && player.meleeCooldown <= 0) player.botMeleeSeq += 1;
+    if (player.hp <= 45 && player.bandages > 0 && player.bandageTimer <= 0 && opponentDistance > 110) {
+      player.botBandageSeq += 1;
+    }
     if (opponentDistance < 190 && player.dodgeCooldown <= 0 && world.tick % (67 + player.slot * 11) === 0) {
       player.botDodgeSeq += 1;
     }
@@ -227,6 +243,8 @@ export function createBotInputs(world) {
       fire: Boolean(opponent && opponentDistance <= 230 && pointDistance > 47),
       capture: pointDistance <= 53 && targetPoint.owner !== player.team,
       reloadSeq: player.botReloadSeq,
+      meleeSeq: player.botMeleeSeq,
+      bandageSeq: player.botBandageSeq,
       dodgeSeq: player.botDodgeSeq,
       seq: world.tick,
     };
@@ -241,18 +259,25 @@ function respawnPlayer(player) {
   player.hp = 100;
   player.ammo = 5;
   player.reserve = 25;
+  player.bandages = 2;
   player.dead = false;
   player.respawnTimer = 0;
+  player.fireCooldown = 0;
+  player.meleeCooldown = 0;
   player.reloadTimer = 0;
+  player.bandageTimer = 0;
   player.dodgeTimer = 0;
+  player.dodgeCooldown = 0;
+  player.invulnerable = 0;
   player.spawnShield = 2;
+  player.capture = false;
   player.aimX = player.team === TEAMS.PEJUANG ? 1 : -1;
   player.aimY = 0;
 }
 
 function startReload(player) {
   if (player.dead || player.reloadTimer > 0 || player.ammo >= 5 || player.reserve <= 0) return;
-  player.reloadTimer = 1.25;
+  player.reloadTimer = 1.05;
 }
 
 function finishReload(player) {
@@ -267,74 +292,145 @@ function directionFromAim(x, y) {
   return y < 0 ? 3 : 0;
 }
 
-function raycastWorld(x, y, aimX, aimY, maxRange = 245) {
-  for (let distance = 5; distance <= maxRange; distance += 5) {
-    const testX = x + aimX * distance;
-    const testY = y + aimY * distance;
-    if (collidesWorld(testX, testY, 2)) return Math.max(0, distance - 5);
+function segmentHitsWorld(x1, y1, x2, y2, radius = 2) {
+  const distance = Math.hypot(x2 - x1, y2 - y1);
+  const steps = Math.max(1, Math.ceil(distance / 4));
+  for (let index = 1; index <= steps; index += 1) {
+    const ratio = index / steps;
+    if (collidesWorld(x1 + (x2 - x1) * ratio, y1 + (y2 - y1) * ratio, radius)) return true;
   }
-  return maxRange;
+  return false;
 }
 
 function fireWeapon(world, shooter) {
-  if (shooter.ammo <= 0) {
-    startReload(shooter);
-    return;
-  }
+  if (shooter.ammo <= 0) return;
 
   shooter.ammo -= 1;
-  shooter.fireCooldown = 0.46;
-  const startX = shooter.x + shooter.aimX * 13;
-  const startY = shooter.y - 9 + shooter.aimY * 13;
-  const wallDistance = raycastWorld(startX, startY, shooter.aimX, shooter.aimY);
-  let hitTarget = null;
-  let hitDistance = wallDistance;
+  shooter.fireCooldown = 0.28;
+  world.bulletSeq += 1;
+  world.bullets.push({
+    id: world.bulletSeq,
+    ownerUid: shooter.uid,
+    team: shooter.team,
+    x: shooter.x + shooter.aimX * 15,
+    y: shooter.y - 12 + shooter.aimY * 15,
+    vx: shooter.aimX * 360,
+    vy: shooter.aimY * 360,
+    damage: 26,
+    life: 0.8,
+    radius: 2.2,
+  });
+}
 
+function dropPickup(world, player) {
+  if (Math.random() >= 0.42) return;
+  world.pickupSeq += 1;
+  world.pickups.push({
+    id: world.pickupSeq,
+    type: Math.random() < 0.75 ? "ammo" : "bandage",
+    x: player.x,
+    y: player.y,
+    life: 14,
+  });
+}
+
+function damagePlayer(world, target, amount, attacker, knockX = 0, knockY = 0) {
+  if (target.dead || target.spawnShield > 0 || target.invulnerable > 0) return false;
+  target.hp = Math.max(0, target.hp - amount);
+  if (knockX || knockY) moveActor(target, knockX, knockY);
+  if (target.hp > 0) return true;
+
+  target.dead = true;
+  target.respawnTimer = 5;
+  target.capture = false;
+  target.reloadTimer = 0;
+  target.bandageTimer = 0;
+  target.deaths += 1;
+  if (attacker) attacker.kills += 1;
+  dropPickup(world, target);
+  world.eventSeq += 1;
+  world.lastEvent = `${attacker?.name || "Lawan"} melumpuhkan ${target.name}`;
+  return true;
+}
+
+function meleePlayer(world, attacker) {
+  attacker.meleeCooldown = 0.66;
+  let hit = false;
   for (const target of Object.values(world.players)) {
-    if (target.dead || target.team === shooter.team) continue;
-    const relativeX = target.x - startX;
-    const relativeY = (target.y - 9) - startY;
-    const projection = relativeX * shooter.aimX + relativeY * shooter.aimY;
-    if (projection <= 0 || projection >= hitDistance) continue;
-    const perpendicular = Math.abs(relativeX * shooter.aimY - relativeY * shooter.aimX);
-    if (perpendicular <= PLAYER_RADIUS + 4) {
-      hitTarget = target;
-      hitDistance = projection;
+    if (target.dead || target.team === attacker.team) continue;
+    const dx = target.x - attacker.x;
+    const dy = target.y - attacker.y;
+    const distance = Math.hypot(dx, dy);
+    const dot = distance > 0 ? (dx / distance) * attacker.aimX + (dy / distance) * attacker.aimY : 1;
+    if (distance <= 42 && dot > -0.12) {
+      hit = damagePlayer(world, target, 38, attacker, attacker.aimX * 9, attacker.aimY * 9) || hit;
     }
   }
+  return hit;
+}
 
-  const endX = startX + shooter.aimX * hitDistance;
-  const endY = startY + shooter.aimY * hitDistance;
-  world.tracerSeq += 1;
-  world.tracers.push({
-    id: world.tracerSeq,
-    x1: startX,
-    y1: startY,
-    x2: endX,
-    y2: endY,
-    team: shooter.team,
-    ttl: 0.14,
-  });
+function startBandage(player) {
+  if (player.dead || player.bandageTimer > 0 || player.bandages <= 0 || player.hp >= 100) return;
+  player.bandageTimer = 1.35;
+}
 
-  if (!hitTarget || hitTarget.spawnShield > 0 || hitTarget.dodgeTimer > 0) return;
-  hitTarget.hp = Math.max(0, hitTarget.hp - 28);
-  if (hitTarget.hp > 0) return;
+function updateBullets(world, dt) {
+  for (const bullet of world.bullets) {
+    if (bullet.life <= 0) continue;
+    const previousX = bullet.x;
+    const previousY = bullet.y;
+    bullet.x += bullet.vx * dt;
+    bullet.y += bullet.vy * dt;
+    bullet.life -= dt;
 
-  hitTarget.dead = true;
-  hitTarget.respawnTimer = 5;
-  hitTarget.capture = false;
-  hitTarget.deaths += 1;
-  shooter.kills += 1;
-  world.eventSeq += 1;
-  world.lastEvent = `${shooter.name} melumpuhkan ${hitTarget.name}`;
+    if (
+      bullet.x < 0
+      || bullet.x > WORLD_WIDTH
+      || bullet.y < 0
+      || bullet.y > WORLD_HEIGHT
+      || segmentHitsWorld(previousX, previousY, bullet.x, bullet.y, bullet.radius)
+    ) {
+      bullet.life = 0;
+      continue;
+    }
+
+    for (const target of Object.values(world.players)) {
+      if (target.dead || target.team === bullet.team) continue;
+      if (Math.hypot(bullet.x - target.x, bullet.y - (target.y - 10)) <= PLAYER_RADIUS + bullet.radius + 3) {
+        if (target.invulnerable > 0) continue;
+        bullet.life = 0;
+        const attacker = world.players[bullet.ownerUid];
+        damagePlayer(world, target, bullet.damage, attacker, bullet.vx * 0.018, bullet.vy * 0.018);
+        break;
+      }
+    }
+  }
+  world.bullets = world.bullets.filter((bullet) => bullet.life > 0);
+}
+
+function updatePickups(world, dt) {
+  for (const pickup of world.pickups) {
+    pickup.life -= dt;
+    if (pickup.life <= 0) continue;
+    const collector = Object.values(world.players).find(
+      (player) => !player.dead && Math.hypot(player.x - pickup.x, player.y - pickup.y) < 22,
+    );
+    if (!collector) continue;
+    if (pickup.type === "ammo") collector.reserve = Math.min(40, collector.reserve + 6);
+    else collector.bandages = Math.min(3, collector.bandages + 1);
+    pickup.life = 0;
+  }
+  world.pickups = world.pickups.filter((pickup) => pickup.life > 0);
 }
 
 function updatePlayers(world, inputs, dt) {
   for (const [uid, player] of Object.entries(world.players)) {
     const input = inputs?.[uid] || {};
     player.fireCooldown = Math.max(0, player.fireCooldown - dt);
+    player.meleeCooldown = Math.max(0, player.meleeCooldown - dt);
     player.dodgeCooldown = Math.max(0, player.dodgeCooldown - dt);
     player.dodgeTimer = Math.max(0, player.dodgeTimer - dt);
+    player.invulnerable = Math.max(0, player.invulnerable - dt);
     player.spawnShield = Math.max(0, player.spawnShield - dt);
 
     if (player.dead) {
@@ -350,10 +446,30 @@ function updatePlayers(world, inputs, dt) {
       if (player.reloadTimer <= 0) finishReload(player);
     }
 
+    if (player.bandageTimer > 0) {
+      player.bandageTimer -= dt;
+      if (player.bandageTimer <= 0) {
+        player.bandages -= 1;
+        player.hp = Math.min(100, player.hp + 38);
+      }
+    }
+
     const reloadSeq = Number(input.reloadSeq) || 0;
     if (reloadSeq !== player.handledReloadSeq) {
       player.handledReloadSeq = reloadSeq;
       startReload(player);
+    }
+
+    const meleeSeq = Number(input.meleeSeq) || 0;
+    if (meleeSeq !== player.handledMeleeSeq) {
+      player.handledMeleeSeq = meleeSeq;
+      if (player.meleeCooldown <= 0 && player.reloadTimer <= 0) meleePlayer(world, player);
+    }
+
+    const bandageSeq = Number(input.bandageSeq) || 0;
+    if (bandageSeq !== player.handledBandageSeq) {
+      player.handledBandageSeq = bandageSeq;
+      startBandage(player);
     }
 
     const dodgeSeq = Number(input.dodgeSeq) || 0;
@@ -361,17 +477,18 @@ function updatePlayers(world, inputs, dt) {
       player.handledDodgeSeq = dodgeSeq;
       const moveLength = Math.hypot(Number(input.mx) || 0, Number(input.my) || 0);
       if (moveLength > 0.1 && player.dodgeCooldown <= 0) {
-        player.dodgeTimer = 0.23;
+        player.dodgeTimer = 0.24;
         player.dodgeCooldown = 2.1;
+        player.invulnerable = 0.32;
       }
     }
 
     const move = normalize(Number(input.mx) || 0, Number(input.my) || 0, 0, 0);
     const rawMoveLength = clamp(Math.hypot(Number(input.mx) || 0, Number(input.my) || 0), 0, 1);
-    const canMove = player.reloadTimer <= 0;
+    const canMove = player.reloadTimer <= 0 && player.bandageTimer <= 0;
     player.moving = canMove && rawMoveLength > 0.04;
     if (player.moving) {
-      const speed = player.dodgeTimer > 0 ? 260 : 128;
+      const speed = player.dodgeTimer > 0 ? 235 : 128;
       moveActor(player, move.x * speed * rawMoveLength * dt, move.y * speed * rawMoveLength * dt);
     }
 
@@ -383,8 +500,8 @@ function updatePlayers(world, inputs, dt) {
       player.direction = directionFromAim(aim.x, aim.y);
     }
 
-    player.capture = Boolean(input.capture) && player.reloadTimer <= 0;
-    if (input.fire && player.fireCooldown <= 0 && player.reloadTimer <= 0 && !player.capture) {
+    player.capture = Boolean(input.capture) && player.reloadTimer <= 0 && player.bandageTimer <= 0;
+    if (input.fire && player.fireCooldown <= 0 && player.reloadTimer <= 0 && player.bandageTimer <= 0 && !player.capture) {
       fireWeapon(world, player);
     }
   }
@@ -509,10 +626,10 @@ export function stepWorld(world, inputs, dt) {
   const safeDt = clamp(Number(dt) || 0, 0, 0.05);
   world.tick += 1;
   updatePlayers(world, inputs, safeDt);
+  updateBullets(world, safeDt);
+  updatePickups(world, safeDt);
   updateCapturePoints(world, safeDt);
   updateScoreAndVictory(world, safeDt);
-  for (const tracer of world.tracers) tracer.ttl -= safeDt;
-  world.tracers = world.tracers.filter((tracer) => tracer.ttl > 0);
   return world;
 }
 
@@ -533,12 +650,17 @@ export function createSnapshot(world) {
       hp: player.hp,
       ammo: player.ammo,
       reserve: player.reserve,
+      bandages: player.bandages,
       moving: player.moving,
       capture: player.capture,
       dead: player.dead,
       respawnTimer: round(player.respawnTimer),
       reloadTimer: round(player.reloadTimer),
+      bandageTimer: round(player.bandageTimer),
+      meleeCooldown: round(player.meleeCooldown),
       dodgeTimer: round(player.dodgeTimer),
+      dodgeCooldown: round(player.dodgeCooldown),
+      invulnerable: round(player.invulnerable),
       spawnShield: round(player.spawnShield),
       kills: player.kills,
       deaths: player.deaths,
@@ -566,7 +688,23 @@ export function createSnapshot(world) {
       progress: round(point.progress, 2),
       contested: point.contested,
     })),
-    tracers: world.tracers.map((tracer) => ({ ...tracer, ttl: round(tracer.ttl, 2) })),
+    bullets: world.bullets.map((bullet) => ({
+      id: bullet.id,
+      team: bullet.team,
+      x: round(bullet.x),
+      y: round(bullet.y),
+      vx: round(bullet.vx),
+      vy: round(bullet.vy),
+      life: round(bullet.life, 2),
+      radius: bullet.radius,
+    })),
+    pickups: world.pickups.map((pickup) => ({
+      id: pickup.id,
+      type: pickup.type,
+      x: round(pickup.x),
+      y: round(pickup.y),
+      life: round(pickup.life, 2),
+    })),
     totalControl: {
       team: world.totalControl.team,
       seconds: round(world.totalControl.seconds, 2),

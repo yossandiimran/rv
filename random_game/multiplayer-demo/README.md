@@ -11,7 +11,8 @@ Demo terpisah untuk mode dua Pejuang Republik melawan dua Pasukan Kolonial. Demo
 - Anonymous Authentication untuk identitas pemain sementara.
 - Browser pembuat room bertindak sebagai host/wasit pertandingan.
 - Sinkronisasi input 15 kali per detik dan snapshot dunia 10 kali per detik.
-- Combat, peluru, reload, dodge, HP, respawn lima detik, dan spawn protection.
+- Combat mengikuti demo pertama: projectile berwaktu tempuh, tembak, pukul popor, reload, perban, dodge dengan invulnerability singkat, serta drop amunisi/perban.
+- HP, respawn lima detik, dan spawn protection tetap disesuaikan untuk pertandingan multiplayer.
 - Enam titik bendera dengan neutralize, capture, contested state, dan percepatan ketika dua rekan berada di titik.
 - Target 200 poin, batas tujuh menit, overtime, dan kemenangan langsung jika enam titik dikuasai selama 12 detik.
 - Kontrol desktop serta dual analog untuk browser HP.
@@ -25,7 +26,7 @@ Timer dimulai saat host membuat room. Jika empat manusia belum terkumpul dalam s
 - 3 manusia + 1 bot
 - 4 manusia tanpa bot dan pertandingan langsung dimulai
 
-Bot memilih capture point, mencari jalur mengitari collision, menembak lawan, reload, dodge, respawn, dan ikut memasang bendera. Tombol **Mulai sekarang + bot** memungkinkan host melewati sisa timer.
+Bot memilih capture point, mencari jalur mengitari collision, menembak dan memukul lawan, memakai perban, reload, dodge, respawn, mengambil drop, dan ikut memasang bendera. Tombol **Mulai sekarang + bot** memungkinkan host melewati sisa timer.
 
 ## Menyiapkan Firebase
 
@@ -76,15 +77,19 @@ Untuk menguji empat pemain pada satu komputer, gunakan empat profil browser atau
 - `WASD` atau tombol panah: bergerak
 - Mouse: membidik
 - Klik kiri atau `Spasi`: menembak
-- Tahan `E`: menetralkan atau memasang bendera
+- `E`: memukul dengan popor
 - `R`: mengisi peluru
+- `F`: memakai perban
 - `Shift`: dodge
+- Tahan `C`: menetralkan atau memasang bendera
 
 ### HP
 
 - Analog kiri: bergerak
 - Analog kanan: membidik
 - Tombol **Tembak**: menembak
+- Tombol **Pukul**: memukul dengan popor
+- Tombol **Perban**: memulihkan HP
 - Tahan **Bendera**: menetralkan atau memasang bendera
 - Tombol **Isi** dan **Dodge**: reload dan menghindar
 

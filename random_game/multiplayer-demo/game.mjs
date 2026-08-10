@@ -117,6 +117,8 @@ let screen = "lobby";
 let ready = false;
 let busy = false;
 let reloadSeq = 0;
+let meleeSeq = 0;
+let bandageSeq = 0;
 let dodgeSeq = 0;
 let inputSeq = 0;
 let inputAccumulator = 0;
@@ -686,8 +688,10 @@ function buildInputPacket() {
     ax: Math.round(aim.x * 100) / 100,
     ay: Math.round(aim.y * 100) / 100,
     fire: Boolean(pointer.fire || keys.Space || touchActions.fire),
-    capture: Boolean(keys.KeyE || touchActions.capture),
+    capture: Boolean(keys.KeyC || touchActions.capture),
     reloadSeq,
+    meleeSeq,
+    bandageSeq,
     dodgeSeq,
     seq: inputSeq,
     clientAt: Date.now(),
@@ -723,10 +727,10 @@ function updatePrediction(dt, packet) {
   const correction = Math.min(1, dt * 5.5);
   predictedLocal.x += (serverPlayer.x - predictedLocal.x) * correction;
   predictedLocal.y += (serverPlayer.y - predictedLocal.y) * correction;
-  if (serverPlayer.dead || serverPlayer.reloadTimer > 0) return;
+  if (serverPlayer.dead || serverPlayer.reloadTimer > 0 || serverPlayer.bandageTimer > 0) return;
   const moveLength = Math.min(1, Math.hypot(packet.mx, packet.my));
   if (moveLength <= 0.03) return;
-  const speed = serverPlayer.dodgeTimer > 0 ? 260 : 128;
+  const speed = serverPlayer.dodgeTimer > 0 ? 235 : 128;
   moveActor(predictedLocal, packet.mx * speed * dt, packet.my * speed * dt);
 }
 
@@ -923,10 +927,54 @@ function spriteFor(player) {
   return Number(player.slot) === 0 ? images.patrol : images.sergeant;
 }
 
+function drawPickup(pickup) {
+  const bob = Math.sin(elapsed * 3.4 + Number(pickup.id || 0)) * 2;
+  ctx.save();
+  ctx.translate(pickup.x, pickup.y + bob);
+  ctx.fillStyle = "rgba(18, 20, 17, 0.72)";
+  ctx.beginPath();
+  ctx.arc(0, 0, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = pickup.type === "ammo" ? "#d3aa61" : "#d8d0af";
+  ctx.lineWidth = 2;
+  if (pickup.type === "ammo") {
+    ctx.strokeRect(-4, -6, 8, 12);
+    ctx.beginPath();
+    ctx.moveTo(-4, -2);
+    ctx.lineTo(4, -2);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(-5, -4);
+    ctx.lineTo(5, 4);
+    ctx.moveTo(5, -4);
+    ctx.lineTo(-5, 4);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawBullet(bullet) {
+  const length = Math.hypot(bullet.vx, bullet.vy) || 1;
+  const trailX = (bullet.vx / length) * 10;
+  const trailY = (bullet.vy / length) * 10;
+  ctx.strokeStyle = bullet.team === TEAMS.PEJUANG ? "rgba(244, 202, 112, 0.9)" : "rgba(226, 135, 85, 0.9)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(bullet.x - trailX, bullet.y - trailY);
+  ctx.lineTo(bullet.x, bullet.y);
+  ctx.stroke();
+  ctx.fillStyle = "#f5ddb0";
+  ctx.beginPath();
+  ctx.arc(bullet.x, bullet.y, bullet.radius || 2.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 function drawPlayer(player, uid) {
   ctx.save();
   if (player.dead) ctx.globalAlpha = 0.28;
   if (player.spawnShield > 0 && Math.floor(elapsed * 12) % 2 === 0) ctx.globalAlpha *= 0.55;
+  if (player.invulnerable > 0 && Math.floor(elapsed * 18) % 2 === 0) ctx.globalAlpha *= 0.28;
   ctx.fillStyle = "rgba(0, 0, 0, 0.32)";
   ctx.beginPath();
   ctx.ellipse(player.x, player.y + 3, 13, 5, 0, 0, Math.PI * 2);
@@ -973,18 +1021,12 @@ function drawWorld(dt) {
   drawGround();
   for (const point of world?.points || []) drawCapturePoint(point);
   drawFortifications();
+  for (const pickup of world?.pickups || []) drawPickup(pickup);
   updateRenderPlayers(world, dt);
   const ordered = [...renderPlayers.entries()].sort((a, b) => a[1].y - b[1].y);
   for (const [uid, player] of ordered) drawPlayer(player, uid);
 
-  for (const tracer of world?.tracers || []) {
-    ctx.strokeStyle = tracer.team === TEAMS.PEJUANG ? "rgba(244, 202, 112, 0.95)" : "rgba(226, 135, 85, 0.95)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(tracer.x1, tracer.y1);
-    ctx.lineTo(tracer.x2, tracer.y2);
-    ctx.stroke();
-  }
+  for (const bullet of world?.bullets || []) drawBullet(bullet);
 
   const local = renderPlayers.get(currentUser?.uid);
   if (local && !local.dead) {
@@ -995,7 +1037,7 @@ function drawWorld(dt) {
       ctx.fillStyle = "#ead8b4";
       ctx.font = "750 11px system-ui, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(nearby.contested ? "TITIK DIPEREBUTKAN" : "TAHAN E / BENDERA UNTUK MENGUASAI TITIK", 480, 490);
+      ctx.fillText(nearby.contested ? "TITIK DIPEREBUTKAN" : "TAHAN C / BENDERA UNTUK MENGUASAI TITIK", 480, 490);
     }
   }
 
@@ -1019,7 +1061,7 @@ function updateHud() {
   if (!player) return;
   ui.playerReadout.textContent = player.dead
     ? `Tumbang · respawn ${Math.max(0, Math.ceil(player.respawnTimer))} detik`
-    : `HP ${Math.max(0, Math.ceil(player.hp))} · Peluru ${player.ammo}/${player.reserve}${player.reloadTimer > 0 ? " · mengisi..." : ""}`;
+    : `HP ${Math.max(0, Math.ceil(player.hp))} · Peluru ${player.ammo}/${player.reserve} · Perban ${player.bandages ?? 0}${player.reloadTimer > 0 ? " · mengisi..." : player.bandageTimer > 0 ? " · merawat..." : ""}`;
 }
 
 function render(dt) {
@@ -1134,6 +1176,8 @@ window.addEventListener("keydown", (event) => {
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(event.code)) event.preventDefault();
   keys[event.code] = true;
   if (event.repeat) return;
+  if (event.code === "KeyE") meleeSeq += 1;
+  if (event.code === "KeyF") bandageSeq += 1;
   if (event.code === "KeyR") reloadSeq += 1;
   if (event.code === "ShiftLeft" || event.code === "ShiftRight") dodgeSeq += 1;
 });
@@ -1158,6 +1202,8 @@ for (const button of document.querySelectorAll("[data-touch-action]")) {
     button.setPointerCapture?.(event.pointerId);
     if (action === "fire") touchActions.fire = true;
     if (action === "capture") touchActions.capture = true;
+    if (action === "melee") meleeSeq += 1;
+    if (action === "bandage") bandageSeq += 1;
     if (action === "reload") reloadSeq += 1;
     if (action === "dodge") dodgeSeq += 1;
   });

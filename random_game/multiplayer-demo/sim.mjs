@@ -105,6 +105,8 @@ export function createWorld(members, startedAt = Date.now()) {
       y: spawn.y,
       aimX: team === TEAMS.PEJUANG ? 1 : -1,
       aimY: 0,
+      moveX: 0,
+      moveY: 0,
       direction: team === TEAMS.PEJUANG ? 2 : 1,
       hp: 100,
       ammo: 5,
@@ -337,6 +339,8 @@ function respawnPlayer(player) {
   player.capture = false;
   player.aimX = player.team === TEAMS.PEJUANG ? 1 : -1;
   player.aimY = 0;
+  player.moveX = 0;
+  player.moveY = 0;
 }
 
 function startReload(player) {
@@ -523,6 +527,8 @@ function updatePlayers(world, inputs, dt) {
     if (player.dead) {
       player.respawnTimer -= dt;
       player.moving = false;
+      player.moveX = 0;
+      player.moveY = 0;
       player.capture = false;
       if (player.respawnTimer <= 0) respawnPlayer(player);
       continue;
@@ -578,6 +584,8 @@ function updatePlayers(world, inputs, dt) {
     const rawMoveLength = clamp(Math.hypot(Number(input.mx) || 0, Number(input.my) || 0), 0, 1);
     const canMove = player.bandageTimer <= 0;
     player.moving = canMove && rawMoveLength > 0.04;
+    player.moveX = player.moving ? move.x * rawMoveLength : 0;
+    player.moveY = player.moving ? move.y * rawMoveLength : 0;
     if (player.moving) {
       const speed = player.dodgeTimer > 0 ? 235 : 128;
       moveActor(player, move.x * speed * rawMoveLength * dt, move.y * speed * rawMoveLength * dt);
@@ -739,6 +747,8 @@ export function createSnapshot(world) {
       y: round(player.y),
       aimX: round(player.aimX, 2),
       aimY: round(player.aimY, 2),
+      moveX: round(player.moveX, 2),
+      moveY: round(player.moveY, 2),
       direction: player.direction,
       hp: player.hp,
       ammo: player.ammo,

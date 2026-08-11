@@ -31,6 +31,9 @@ function advance(world, inputs, seconds) {
   const startX = world.players.p1.x;
   advance(world, { p1: { mx: 1, my: 0, ax: 1, ay: 0 } }, 0.5);
   assert.ok(world.players.p1.x > startX, "Pemain harus bergerak dari input host.");
+  assert.equal(createSnapshot(world).players.p1.moveX, 1, "Snapshot harus membawa arah gerak untuk extrapolasi client.");
+  stepWorld(world, { p1: { mx: 0, my: 0 } }, 0.05);
+  assert.equal(createSnapshot(world).players.p1.moveX, 0, "Snapshot harus menghentikan extrapolasi ketika input berhenti.");
 }
 
 {

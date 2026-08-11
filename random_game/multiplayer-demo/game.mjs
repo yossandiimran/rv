@@ -25,7 +25,7 @@ import {
   hasClearLineOfSight,
   moveActor,
   stepWorld,
-} from "./sim.mjs?v=20260811-8";
+} from "./sim.mjs?v=20260811-9";
 import {
   AUTO_MATCH_SECONDS,
   AUTO_MATCH_SHARDS,
@@ -124,6 +124,9 @@ const touchMove = { x: 0, y: 0 };
 const touchActions = { fire: false, capture: false };
 const mobileInputQuery = window.matchMedia("(pointer: coarse), (max-width: 820px)");
 const AUTO_AIM_RANGE = 270;
+const INPUT_CHANGE_INTERVAL = 1 / 30;
+const INPUT_HEARTBEAT_INTERVAL = 1 / 15;
+const SNAPSHOT_INTERVAL = 1 / 15;
 const camera = { x: WORLD_WIDTH / 2, y: WORLD_HEIGHT / 2, zoom: 1, ready: false };
 
 let currentUser = null;
@@ -152,6 +155,11 @@ let dodgeSeq = 0;
 let inputSeq = 0;
 let inputAccumulator = 0;
 let snapshotAccumulator = 0;
+let lastSentInput = null;
+let lastSnapshotReceivedAt = performance.now();
+let queuedSnapshotPublication = null;
+let snapshotWriteInFlight = false;
+let snapshotFlushPromise = Promise.resolve();
 let lastFrame = performance.now();
 let elapsed = 0;
 let lastEventSeq = -1;
@@ -608,6 +616,10 @@ async function enterRoom(code, team, slot) {
   matchStartPending = false;
   lastMatchmakingSecond = -1;
   predictedLocal = null;
+  lastSentInput = null;
+  inputAccumulator = 0;
+  snapshotAccumulator = 0;
+  lastSnapshotReceivedAt = performance.now();
   renderPlayers.clear();
   camera.x = WORLD_WIDTH / 2;
   camera.y = WORLD_HEIGHT / 2;
@@ -681,6 +693,7 @@ function handleGameSnapshot(snapshot) {
   const next = snapshot.val();
   if (!next) return;
   latestSnapshot = next;
+  lastSnapshotReceivedAt = performance.now();
   if (assetsReady) ui.gameLoading.classList.add("hidden");
   if (next.eventSeq !== lastEventSeq) {
     if (lastEventSeq >= 0 && next.lastEvent) showToast(next.lastEvent);
@@ -993,12 +1006,40 @@ function buildInputPacket() {
   };
 }
 
+function inputActionChanged(packet, previous) {
+  return !previous
+    || packet.fire !== previous.fire
+    || packet.capture !== previous.capture
+    || packet.reloadSeq !== previous.reloadSeq
+    || packet.meleeSeq !== previous.meleeSeq
+    || packet.bandageSeq !== previous.bandageSeq
+    || packet.dodgeSeq !== previous.dodgeSeq;
+}
+
+function inputDirectionChanged(packet, previous) {
+  if (!previous) return true;
+  return Math.abs(packet.mx - previous.mx) >= 0.04
+    || Math.abs(packet.my - previous.my) >= 0.04
+    || Math.abs(packet.ax - previous.ax) >= 0.07
+    || Math.abs(packet.ay - previous.ay) >= 0.07;
+}
+
+function shouldSendInput(packet) {
+  if (inputActionChanged(packet, lastSentInput)) return true;
+  if (inputAccumulator >= INPUT_CHANGE_INTERVAL && inputDirectionChanged(packet, lastSentInput)) return true;
+  return inputAccumulator >= INPUT_HEARTBEAT_INTERVAL;
+}
+
 function sendInput(packet) {
   if (!currentRoom || roomMeta?.status !== "playing") return;
   inputsCache[currentUser.uid] = packet;
-  set(ref(db, roomPath(`inputs/${currentUser.uid}`)), packet).catch((error) => {
-    if (error?.code !== "PERMISSION_DENIED") console.error(error);
-  });
+  lastSentInput = { ...packet };
+  inputAccumulator = 0;
+  if (!isHost) {
+    set(ref(db, roomPath(`inputs/${currentUser.uid}`)), packet).catch((error) => {
+      if (error?.code !== "PERMISSION_DENIED") console.error(error);
+    });
+  }
 }
 
 function reconcileLocalPrediction(serverPlayer) {
@@ -1008,7 +1049,7 @@ function reconcileLocalPrediction(serverPlayer) {
     return;
   }
   const distance = Math.hypot(serverPlayer.x - predictedLocal.x, serverPlayer.y - predictedLocal.y);
-  if (distance > 65) {
+  if (distance > 96) {
     predictedLocal.x = serverPlayer.x;
     predictedLocal.y = serverPlayer.y;
   }
@@ -1019,35 +1060,64 @@ function updatePrediction(dt, packet) {
   const serverPlayer = latestSnapshot?.players?.[currentUser?.uid];
   if (!serverPlayer) return;
   if (!predictedLocal) predictedLocal = { x: serverPlayer.x, y: serverPlayer.y };
-  const correction = Math.min(1, dt * 5.5);
+  const moveLength = Math.min(1, Math.hypot(packet.mx, packet.my));
+  const correction = Math.min(1, dt * (moveLength > 0.03 ? 1.8 : 8));
   predictedLocal.x += (serverPlayer.x - predictedLocal.x) * correction;
   predictedLocal.y += (serverPlayer.y - predictedLocal.y) * correction;
-  if (serverPlayer.dead || serverPlayer.reloadTimer > 0 || serverPlayer.bandageTimer > 0) return;
-  const moveLength = Math.min(1, Math.hypot(packet.mx, packet.my));
+  if (serverPlayer.dead || serverPlayer.bandageTimer > 0) return;
   if (moveLength <= 0.03) return;
   const speed = serverPlayer.dodgeTimer > 0 ? 235 : 128;
   moveActor(predictedLocal, packet.mx * speed * dt, packet.my * speed * dt);
+}
+
+function startSnapshotFlush() {
+  if (snapshotWriteInFlight || !queuedSnapshotPublication) return snapshotFlushPromise;
+  snapshotWriteInFlight = true;
+  snapshotFlushPromise = (async () => {
+    while (queuedSnapshotPublication) {
+      const publication = queuedSnapshotPublication;
+      queuedSnapshotPublication = null;
+      await set(
+        ref(db, `gameMatches/${publication.roomCode}/state/snapshot`),
+        publication.snapshot,
+      );
+    }
+  })().finally(() => {
+    snapshotWriteInFlight = false;
+    if (queuedSnapshotPublication) startSnapshotFlush().catch(console.error);
+  });
+  return snapshotFlushPromise;
+}
+
+function publishSnapshot(snapshot) {
+  queuedSnapshotPublication = { roomCode: currentRoom, snapshot };
+  return startSnapshotFlush();
 }
 
 function hostStep(dt, packet) {
   if (!isHost || !authoritativeWorld || roomMeta?.status !== "playing") return;
   Object.assign(inputsCache, createBotInputs(authoritativeWorld));
   inputsCache[currentUser.uid] = packet;
+  const previousEffectSeq = authoritativeWorld.effectSeq;
+  const previousEventSeq = authoritativeWorld.eventSeq;
   stepWorld(authoritativeWorld, inputsCache, dt);
   snapshotAccumulator += dt;
-  if (snapshotAccumulator >= 0.1) {
-    snapshotAccumulator %= 0.1;
+  const urgentSnapshot = authoritativeWorld.effectSeq !== previousEffectSeq
+    || authoritativeWorld.eventSeq !== previousEventSeq;
+  if (urgentSnapshot || snapshotAccumulator >= SNAPSHOT_INTERVAL) {
+    snapshotAccumulator = urgentSnapshot ? 0 : snapshotAccumulator % SNAPSHOT_INTERVAL;
     const snapshot = createSnapshot(authoritativeWorld);
     latestSnapshot = snapshot;
-    set(ref(db, roomPath("state/snapshot")), snapshot).catch(console.error);
+    publishSnapshot(snapshot).catch(console.error);
   }
 
   if (authoritativeWorld.result && !resultCommitted) {
     resultCommitted = true;
+    const finishedRoom = currentRoom;
     const finalSnapshot = createSnapshot(authoritativeWorld);
     latestSnapshot = finalSnapshot;
-    set(ref(db, roomPath("state/snapshot")), finalSnapshot)
-      .then(() => update(ref(db, roomPath("meta")), {
+    publishSnapshot(finalSnapshot)
+      .then(() => update(ref(db, `gameMatches/${finishedRoom}/meta`), {
         status: "finished",
         result: authoritativeWorld.result,
         finishedAt: Date.now(),
@@ -1060,10 +1130,7 @@ function updateGame(dt) {
   if (roomMeta?.status !== "playing") return;
   const packet = buildInputPacket();
   inputAccumulator += dt;
-  if (inputAccumulator >= 1 / 15) {
-    inputAccumulator %= 1 / 15;
-    sendInput(packet);
-  }
+  if (shouldSendInput(packet)) sendInput(packet);
   hostStep(dt, packet);
   updatePrediction(dt, packet);
 }
@@ -1370,16 +1437,34 @@ function drawCapturePoint(point) {
 
 function updateRenderPlayers(world, dt) {
   const activeIds = new Set(Object.keys(world?.players || {}));
+  const snapshotAge = isHost ? 0 : Math.min(0.12, Math.max(0, (performance.now() - lastSnapshotReceivedAt) / 1000));
   for (const [uid, player] of Object.entries(world?.players || {})) {
     let display = renderPlayers.get(uid);
     if (!display) {
       display = { ...player, x: player.x, y: player.y };
       renderPlayers.set(uid, display);
     }
-    Object.assign(display, player, { targetX: player.x, targetY: player.y });
-    const blend = isHost ? 1 : Math.min(1, dt * 12);
-    display.x += (display.targetX - display.x) * blend;
-    display.y += (display.targetY - display.y) * blend;
+    const previousX = display.x;
+    const previousY = display.y;
+    const remoteLead = !isHost && uid !== currentUser?.uid && player.moving
+      ? Math.min(0.14, 0.045 + snapshotAge)
+      : 0;
+    const speed = player.dodgeTimer > 0 ? 235 : 128;
+    Object.assign(display, player, {
+      targetX: player.x + (player.moveX || 0) * speed * remoteLead,
+      targetY: player.y + (player.moveY || 0) * speed * remoteLead,
+    });
+    display.x = previousX;
+    display.y = previousY;
+    const serverJump = Math.hypot(player.x - display.x, player.y - display.y);
+    if (isHost || player.dead || serverJump > 100) {
+      display.x = player.x;
+      display.y = player.y;
+    } else {
+      const blend = Math.min(1, dt * 18);
+      display.x += (display.targetX - display.x) * blend;
+      display.y += (display.targetY - display.y) * blend;
+    }
     if (uid === currentUser?.uid && !isHost && predictedLocal && !player.dead) {
       display.x = predictedLocal.x;
       display.y = predictedLocal.y;
@@ -1418,14 +1503,20 @@ function drawBullet(bullet) {
   const length = Math.hypot(bullet.vx, bullet.vy) || 1;
   const trailX = (bullet.vx / length) * 17;
   const trailY = (bullet.vy / length) * 17;
+  const snapshotAge = isHost ? 0 : Math.min(
+    Math.max(0, bullet.life || 0),
+    Math.min(0.12, Math.max(0, (performance.now() - lastSnapshotReceivedAt) / 1000)),
+  );
+  const bulletX = bullet.x + bullet.vx * snapshotAge;
+  const bulletY = bullet.y + bullet.vy * snapshotAge;
   ctx.strokeStyle = bullet.team === TEAMS.PEJUANG ? "rgba(244, 202, 112, 0.9)" : "rgba(226, 135, 85, 0.9)";
   ctx.lineWidth = 2.4;
   ctx.beginPath();
-  ctx.moveTo(bullet.x - trailX, bullet.y - trailY);
-  ctx.lineTo(bullet.x, bullet.y);
+  ctx.moveTo(bulletX - trailX, bulletY - trailY);
+  ctx.lineTo(bulletX, bulletY);
   ctx.stroke();
   ctx.save();
-  ctx.translate(bullet.x, bullet.y);
+  ctx.translate(bulletX, bulletY);
   ctx.rotate(Math.atan2(bullet.vy, bullet.vx) + Math.PI / 2);
   drawAtlasCell(images.vfx, 4, 4, Math.floor(elapsed * 16 + bullet.id) % 4, 0, -7, -12, 14, 14, 0.7);
   ctx.restore();

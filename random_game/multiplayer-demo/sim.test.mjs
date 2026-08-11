@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
-import { TEAMS, createBotInputs, createSnapshot, createWorld, finishByForfeit, stepWorld } from "./sim.mjs";
+import {
+  TEAMS,
+  createBotInputs,
+  createSnapshot,
+  createWorld,
+  finishByForfeit,
+  hasClearLineOfSight,
+  stepWorld,
+} from "./sim.mjs";
 
 const members = {
   p1: { name: "Sutrisno", team: TEAMS.PEJUANG, slot: 0 },
@@ -188,6 +196,16 @@ function advance(world, inputs, seconds) {
     human: { name: "Pemain", team: TEAMS.PEJUANG, slot: 0 },
     bot: { name: "Patroli BOT", team: TEAMS.KOLONIAL, slot: 0, isBot: true },
   }, 1);
+  assert.equal(
+    hasClearLineOfSight(400, 258, 560, 260, 2),
+    false,
+    "Bangunan tengah harus memutus line of sight bot dan auto aim.",
+  );
+  assert.equal(
+    hasClearLineOfSight(430, 138, 550, 140, 2),
+    true,
+    "Area terbuka harus dapat dikunci bot dan auto aim.",
+  );
   let attemptedBlockedShot = false;
   for (let step = 0; step < 60; step += 1) {
     Object.assign(world.players.human, { x: 400, y: 270, hp: 100, dead: false, spawnShield: 10 });

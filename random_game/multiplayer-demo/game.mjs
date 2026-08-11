@@ -22,9 +22,10 @@ import {
   createSnapshot,
   createWorld,
   finishByForfeit,
+  hasClearLineOfSight,
   moveActor,
   stepWorld,
-} from "./sim.mjs?v=20260811-7";
+} from "./sim.mjs?v=20260811-8";
 import {
   AUTO_MATCH_SECONDS,
   AUTO_MATCH_SHARDS,
@@ -122,6 +123,7 @@ const pointer = { x: 480, y: 270, inside: false, fire: false };
 const touchMove = { x: 0, y: 0 };
 const touchActions = { fire: false, capture: false };
 const mobileInputQuery = window.matchMedia("(pointer: coarse), (max-width: 820px)");
+const AUTO_AIM_RANGE = 270;
 const camera = { x: WORLD_WIDTH / 2, y: WORLD_HEIGHT / 2, zoom: 1, ready: false };
 
 let currentUser = null;
@@ -139,6 +141,7 @@ let authoritativeWorld = null;
 let inputsCache = {};
 let predictedLocal = null;
 let renderPlayers = new Map();
+let autoAimTargetUid = "";
 let screen = "lobby";
 let ready = false;
 let busy = false;
@@ -900,12 +903,47 @@ function currentAuthoritativePlayer() {
 }
 
 function nearestAutoAimTarget(world, player) {
-  if (!world || !player) return null;
-  return Object.values(world.players || {})
+  if (!world || !player) {
+    autoAimTargetUid = "";
+    return null;
+  }
+
+  const candidates = Object.values(world.players || {})
     .filter((candidate) => !candidate.dead && candidate.team !== player.team)
-    .sort(
-      (a, b) => Math.hypot(a.x - player.x, a.y - player.y) - Math.hypot(b.x - player.x, b.y - player.y),
-    )[0] || null;
+    .map((candidate) => {
+      const dx = candidate.x - player.x;
+      const dy = candidate.y - player.y;
+      const distance = Math.hypot(dx, dy);
+      if (
+        distance > AUTO_AIM_RANGE
+        || !hasClearLineOfSight(player.x, player.y - 12, candidate.x, candidate.y - 10, 2)
+      ) {
+        return null;
+      }
+
+      const towardPlayerX = distance > 0 ? -dx / distance : 0;
+      const towardPlayerY = distance > 0 ? -dy / distance : 0;
+      const threatDot = (candidate.aimX || 0) * towardPlayerX + (candidate.aimY || 0) * towardPlayerY;
+      let score = distance;
+      if (candidate.capture) score -= 55;
+      if (candidate.fireCooldown > 0.04) score -= 34;
+      if (threatDot > 0.72) score -= 30 + (threatDot - 0.72) * 55;
+      if (candidate.hp <= 45) score -= 14;
+      return { candidate, score };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.score - b.score);
+
+  if (!candidates.length) {
+    autoAimTargetUid = "";
+    return null;
+  }
+
+  const best = candidates[0];
+  const locked = candidates.find(({ candidate }) => candidate.uid === autoAimTargetUid);
+  const selected = locked && locked.score <= best.score + 36 ? locked : best;
+  autoAimTargetUid = selected.candidate.uid;
+  return selected.candidate;
 }
 
 function currentAim() {
@@ -920,6 +958,10 @@ function currentAim() {
       const length = Math.hypot(dx, dy) || 1;
       return { x: dx / length, y: dy / length };
     }
+    return {
+      x: authoritativePlayer.aimX || (currentTeam === TEAMS.PEJUANG ? 1 : -1),
+      y: authoritativePlayer.aimY || 0,
+    };
   }
   if (pointer.inside && player) {
     const dx = pointer.x - player.x;
@@ -1788,18 +1830,30 @@ function updatePointer(event) {
   pointer.inside = true;
 }
 
-function bindStick(elementId, knobId, onMove, onRelease) {
+function bindFloatingStick(elementId, knobId, onMove, onRelease) {
   const element = document.querySelector(elementId);
   const knob = document.querySelector(knobId);
   let activePointer = null;
+  let centerX = 0;
+  let centerY = 0;
+
+  const place = (event) => {
+    const bounds = ui.gameStage.getBoundingClientRect();
+    const half = element.offsetWidth / 2;
+    centerX = bounds.width <= half * 2
+      ? bounds.left + bounds.width / 2
+      : Math.max(bounds.left + half, Math.min(bounds.right - half, event.clientX));
+    centerY = bounds.height <= half * 2
+      ? bounds.top + bounds.height / 2
+      : Math.max(bounds.top + half, Math.min(bounds.bottom - half, event.clientY));
+    element.style.left = `${centerX}px`;
+    element.style.top = `${centerY}px`;
+  };
 
   const move = (event) => {
     if (event.pointerId !== activePointer) return;
     event.preventDefault();
-    const rect = element.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const max = rect.width * 0.3;
+    const max = element.offsetWidth * 0.32;
     let dx = event.clientX - centerX;
     let dy = event.clientY - centerY;
     const length = Math.hypot(dx, dy);
@@ -1815,23 +1869,28 @@ function bindStick(elementId, knobId, onMove, onRelease) {
     if (event && activePointer !== null && event.pointerId !== activePointer) return;
     activePointer = null;
     knob.style.transform = "translate3d(0, 0, 0)";
+    element.classList.remove("is-active");
     onRelease();
   };
 
-  element.addEventListener("pointerdown", (event) => {
-    if (activePointer !== null) return;
+  ui.gameStage.addEventListener("pointerdown", (event) => {
+    if (!mobileInputQuery.matches || event.pointerType === "mouse" || activePointer !== null || screen !== "game") return;
+    if (event.target.closest?.("button, .game-overlay")) return;
+    event.preventDefault();
     activePointer = event.pointerId;
-    element.setPointerCapture?.(event.pointerId);
+    place(event);
+    element.classList.add("is-active");
+    ui.gameStage.setPointerCapture?.(event.pointerId);
     move(event);
   });
-  element.addEventListener("pointermove", move);
-  element.addEventListener("pointerup", release);
-  element.addEventListener("pointercancel", release);
-  element.addEventListener("lostpointercapture", release);
+  ui.gameStage.addEventListener("pointermove", move);
+  ui.gameStage.addEventListener("pointerup", release);
+  ui.gameStage.addEventListener("pointercancel", release);
+  ui.gameStage.addEventListener("lostpointercapture", release);
   return release;
 }
 
-const resetMoveStick = bindStick(
+const resetMoveStick = bindFloatingStick(
   "#move-stick",
   "#move-knob",
   (x, y) => { touchMove.x = x; touchMove.y = y; },

@@ -260,7 +260,7 @@ export function createBotInputs(world) {
     const timing = botCombatTiming(world, player);
     const hasLineOfSight = Boolean(
       opponent
-      && !segmentHitsWorld(player.x, player.y - 12, opponent.x, opponent.y - 10, 2),
+      && hasClearLineOfSight(player.x, player.y - 12, opponent.x, opponent.y - 10, 2),
     );
     const reactionReady = Boolean(
       hasLineOfSight
@@ -369,6 +369,10 @@ function segmentHitsWorld(x1, y1, x2, y2, radius = 2) {
     if (collidesWorld(x1 + (x2 - x1) * ratio, y1 + (y2 - y1) * ratio, radius)) return true;
   }
   return false;
+}
+
+export function hasClearLineOfSight(x1, y1, x2, y2, radius = 2) {
+  return !segmentHitsWorld(x1, y1, x2, y2, radius);
 }
 
 function fireWeapon(world, shooter) {

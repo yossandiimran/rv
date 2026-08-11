@@ -17,8 +17,8 @@ Demo terpisah untuk mode dua Pejuang Republik melawan dua Pasukan Kolonial. Demo
 - Arena memakai langsung atlas utama di `random_game/assets`: petak sawah, kampung Republik, rumah terbakar dengan api/asap animasi, jembatan irigasi, dan markas kolonial.
 - Walk cycle bersenjata, action tembak/popor/hit, muzzle flash, impact, debu langkah, serta pickup semuanya memakai aset utama; tidak ada aset visual baru khusus demo ini.
 - Kamera HP mengikuti pemain di tengah dengan sabuk hutan di luar batas arena dan minimap benteng di kanan atas.
-- Tombol fullscreen mencoba mengunci orientasi landscape; analog dan tombol aksi tetap menjadi screen-space UI.
-- Magasin kosong otomatis memulai reload selama amunisi cadangan masih tersedia.
+- Tombol fullscreen mencoba mengunci orientasi landscape; floating analog dan tombol aksi tetap menjadi screen-space UI.
+- Magasin kosong otomatis memulai reload selama amunisi cadangan masih tersedia, dan pemain tetap dapat bergerak saat reload.
 - Enam titik bendera dengan neutralize, capture, contested state, dan percepatan ketika dua rekan berada di titik.
 - Target 200 poin, batas tujuh menit, overtime, dan kemenangan langsung jika enam titik dikuasai selama 12 detik.
 - Kontrol desktop dengan mouse serta analog gerak + auto aim untuk browser HP.
@@ -91,9 +91,9 @@ Untuk menguji empat pemain pada satu komputer, gunakan empat profil browser atau
 
 ### HP
 
-- Analog kiri: bergerak
-- Auto aim otomatis mengunci lawan hidup terdekat
-- Tombol **Landscape**: fullscreen dan mencoba mengunci orientasi mendatar
+- Sentuh lalu geser area kosong permainan: memunculkan floating analog untuk bergerak
+- Smart auto aim mengunci lawan terlihat dalam jarak senjata dan memprioritaskan ancaman atau perebut titik
+- Tombol **Fullscreen**: memperbesar frame dan mencoba mengunci orientasi mendatar
 - Minimap kanan atas: posisi pemain, titik bendera, bangunan, dan area kamera
 - Tombol **Tembak**: menembak
 - Tombol **Pukul**: memukul dengan popor

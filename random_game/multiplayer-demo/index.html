@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#151815" />
     <title>Sumpah Merdeka — Benteng 2v2</title>
-    <link rel="stylesheet" href="styles.css?v=20260811-4" />
+    <link rel="stylesheet" href="styles.css?v=20260811-5" />
   </head>
   <body>
     <main class="app-shell">
@@ -132,6 +132,21 @@
         <div id="game-stage" class="game-stage">
           <canvas id="game" width="960" height="540" tabindex="0" aria-label="Arena multiplayer 2 lawan 2"></canvas>
 
+          <div class="stage-scoreboard" aria-label="Skor dan waktu pertandingan">
+            <div class="stage-team-score stage-pejuang-score">
+              <span>Pejuang</span>
+              <strong id="stage-score-pejuang">0</strong>
+            </div>
+            <div class="stage-match-clock">
+              <span id="stage-match-state">PERTANDINGAN</span>
+              <strong id="stage-match-timer">07:00</strong>
+            </div>
+            <div class="stage-team-score stage-kolonial-score">
+              <strong id="stage-score-kolonial">0</strong>
+              <span>Kolonial</span>
+            </div>
+          </div>
+
           <button id="fullscreen-button" class="fullscreen-button" type="button" aria-label="Aktifkan layar penuh landscape">
             <span>⛶</span>
             <small>Fullscreen</small>
@@ -186,6 +201,6 @@
       <div id="toast" class="toast hidden" role="status"></div>
     </main>
 
-    <script type="module" src="game.mjs?v=20260811-4"></script>
+    <script type="module" src="game.mjs?v=20260811-6"></script>
   </body>
 </html>

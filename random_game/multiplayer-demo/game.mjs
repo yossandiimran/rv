@@ -85,6 +85,10 @@ const ui = {
   scoreKolonial: document.querySelector("#score-kolonial"),
   matchState: document.querySelector("#match-state"),
   matchTimer: document.querySelector("#match-timer"),
+  stageScorePejuang: document.querySelector("#stage-score-pejuang"),
+  stageScoreKolonial: document.querySelector("#stage-score-kolonial"),
+  stageMatchState: document.querySelector("#stage-match-state"),
+  stageMatchTimer: document.querySelector("#stage-match-timer"),
   playerReadout: document.querySelector("#player-readout"),
   toast: document.querySelector("#toast"),
 };
@@ -1730,12 +1734,20 @@ function drawWorld(dt) {
 function updateHud() {
   const world = isHost && authoritativeWorld ? authoritativeWorld : latestSnapshot;
   if (!world) return;
-  ui.scorePejuang.textContent = Math.floor(world.scores?.pejuang || 0);
-  ui.scoreKolonial.textContent = Math.floor(world.scores?.kolonial || 0);
-  ui.matchTimer.textContent = formatTime(world.timeLeft);
-  ui.matchState.textContent = world.overtime ? "BABAK TAMBAHAN" : world.totalControl?.team
+  const pejuangScore = Math.floor(world.scores?.pejuang || 0);
+  const kolonialScore = Math.floor(world.scores?.kolonial || 0);
+  const matchTime = formatTime(world.timeLeft);
+  const matchState = world.overtime ? "BABAK TAMBAHAN" : world.totalControl?.team
     ? `KUASAI PENUH ${Math.max(0, Math.ceil(TOTAL_CONTROL_SECONDS - world.totalControl.seconds))}`
     : "PERTANDINGAN";
+  ui.scorePejuang.textContent = pejuangScore;
+  ui.stageScorePejuang.textContent = pejuangScore;
+  ui.scoreKolonial.textContent = kolonialScore;
+  ui.stageScoreKolonial.textContent = kolonialScore;
+  ui.matchTimer.textContent = matchTime;
+  ui.stageMatchTimer.textContent = matchTime;
+  ui.matchState.textContent = matchState;
+  ui.stageMatchState.textContent = matchState;
   const player = world.players?.[currentUser?.uid];
   if (!player) return;
   ui.playerReadout.textContent = player.dead
@@ -1830,6 +1842,11 @@ canvas.addEventListener("pointermove", updatePointer);
 canvas.addEventListener("pointerenter", updatePointer);
 canvas.addEventListener("pointerleave", () => { pointer.inside = false; pointer.fire = false; });
 canvas.addEventListener("pointerdown", (event) => {
+  if (event.pointerType !== "mouse") {
+    event.preventDefault();
+    pointer.fire = false;
+    return;
+  }
   if (event.button !== 0) return;
   updatePointer(event);
   pointer.fire = true;

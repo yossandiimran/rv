@@ -179,6 +179,7 @@ let matchStartPending = false;
 let lastMatchmakingSecond = -1;
 let toastTimer = 0;
 let nativeFrameFullscreen = false;
+let landscapeLockSucceeded = false;
 let roomUnsubscribers = [];
 let disconnectRegistrations = [];
 
@@ -207,6 +208,18 @@ function fullscreenActive() {
     || ui.gameStage.classList.contains("frame-fullscreen");
 }
 
+function forcedLandscapeRotationActive() {
+  return ui.gameStage.classList.contains("force-landscape-rotation");
+}
+
+function syncLandscapeFallback() {
+  const shouldRotate = fullscreenActive()
+    && !landscapeLockSucceeded
+    && mobileInputQuery.matches
+    && window.matchMedia("(orientation: portrait)").matches;
+  ui.gameStage.classList.toggle("force-landscape-rotation", shouldRotate);
+}
+
 function updateFullscreenButton() {
   const active = fullscreenActive();
   const label = ui.fullscreenButton.querySelector("small");
@@ -226,6 +239,8 @@ async function lockLandscape() {
 
 async function exitFrameFullscreen() {
   const fullscreenElement = nativeFullscreenElement();
+  landscapeLockSucceeded = false;
+  ui.gameStage.classList.remove("force-landscape-rotation");
   ui.gameStage.classList.remove("frame-fullscreen");
   document.body.classList.remove("game-cinema-active");
   nativeFrameFullscreen = false;
@@ -249,6 +264,7 @@ async function toggleMobileFullscreen() {
 
   // Enter the frame-sized CSS mode synchronously. This keeps the button useful
   // on mobile browsers that expose, but reject, the native Fullscreen API.
+  landscapeLockSucceeded = false;
   ui.gameStage.classList.add("frame-fullscreen");
   document.body.classList.add("game-cinema-active");
   updateFullscreenButton();
@@ -265,8 +281,11 @@ async function toggleMobileFullscreen() {
     nativeFrameFullscreen = false;
   }
 
-  const locked = await lockLandscape();
-  if (!locked && matchMedia("(orientation: portrait)").matches) showToast("Putar HP ke posisi landscape untuk tampilan terbaik.", 3);
+  landscapeLockSucceeded = await lockLandscape();
+  syncLandscapeFallback();
+  if (!landscapeLockSucceeded && forcedLandscapeRotationActive()) {
+    showToast("Landscape Safari aktif. Kontrol tetap mengikuti arah layar.", 3);
+  }
   updateFullscreenButton();
 }
 
@@ -2103,6 +2122,33 @@ function bindFloatingStick(elementId, knobId, onMove, onRelease) {
   let centerY = 0;
 
   const place = (event) => {
+    if (forcedLandscapeRotationActive()) {
+      const viewport = window.visualViewport;
+      const viewportLeft = viewport?.offsetLeft || 0;
+      const viewportTop = viewport?.offsetTop || 0;
+      const viewportWidth = viewport?.width || window.innerWidth;
+      const viewportHeight = viewport?.height || window.innerHeight;
+      const viewportCenterX = viewportLeft + viewportWidth / 2;
+      const viewportCenterY = viewportTop + viewportHeight / 2;
+      const stageWidth = ui.gameStage.offsetWidth;
+      const stageHeight = ui.gameStage.offsetHeight;
+      const half = element.offsetWidth / 2;
+      const localX = stageWidth <= half * 2
+        ? stageWidth / 2
+        : Math.max(half, Math.min(stageWidth - half, stageWidth / 2 + event.clientY - viewportCenterY));
+      const localY = stageHeight <= half * 2
+        ? stageHeight / 2
+        : Math.max(half, Math.min(stageHeight - half, stageHeight / 2 - event.clientX + viewportCenterX));
+
+      // CSS rotates the stage clockwise. Keep the pointer origin in viewport
+      // coordinates, but position the floating stick in the inverse local space.
+      centerX = viewportCenterX - (localY - stageHeight / 2);
+      centerY = viewportCenterY + (localX - stageWidth / 2);
+      element.style.left = `${localX}px`;
+      element.style.top = `${localY}px`;
+      return;
+    }
+
     const bounds = ui.gameStage.getBoundingClientRect();
     const half = element.offsetWidth / 2;
     centerX = bounds.width <= half * 2
@@ -2119,8 +2165,10 @@ function bindFloatingStick(elementId, knobId, onMove, onRelease) {
     if (event.pointerId !== activePointer) return;
     event.preventDefault();
     const max = element.offsetWidth * 0.32;
-    let dx = event.clientX - centerX;
-    let dy = event.clientY - centerY;
+    const pointerDx = event.clientX - centerX;
+    const pointerDy = event.clientY - centerY;
+    let dx = forcedLandscapeRotationActive() ? pointerDy : pointerDx;
+    let dy = forcedLandscapeRotationActive() ? -pointerDx : pointerDy;
     const length = Math.hypot(dx, dy);
     if (length > max) {
       dx = (dx / length) * max;
@@ -2231,14 +2279,27 @@ ui.fullscreenButton.addEventListener("click", () => toggleMobileFullscreen().cat
 const handleFullscreenChange = () => {
   if (!nativeFullscreenElement() && nativeFrameFullscreen) {
     nativeFrameFullscreen = false;
+    landscapeLockSucceeded = false;
+    ui.gameStage.classList.remove("force-landscape-rotation");
     ui.gameStage.classList.remove("frame-fullscreen");
     document.body.classList.remove("game-cinema-active");
     window.screen.orientation?.unlock?.();
   }
+  syncLandscapeFallback();
   updateFullscreenButton();
 };
 document.addEventListener("fullscreenchange", handleFullscreenChange);
 document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+
+const handleViewportOrientationChange = () => {
+  const wasRotated = forcedLandscapeRotationActive();
+  syncLandscapeFallback();
+  if (wasRotated !== forcedLandscapeRotationActive()) resetMoveStick();
+};
+window.addEventListener("orientationchange", handleViewportOrientationChange);
+window.addEventListener("resize", handleViewportOrientationChange, { passive: true });
+window.visualViewport?.addEventListener("resize", handleViewportOrientationChange, { passive: true });
+window.screen.orientation?.addEventListener?.("change", handleViewportOrientationChange);
 
 ui.autoMatch.addEventListener("click", () => autoMatch().catch(console.error));
 ui.createRoom.addEventListener("click", createRoom);

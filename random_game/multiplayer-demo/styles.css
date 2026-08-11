@@ -749,6 +749,29 @@ canvas {
   transform: translate(-50%, -50%);
 }
 
+/* Safari iOS can expose fullscreen while refusing Screen Orientation lock.
+   Swap the viewport axes and rotate the complete game frame as a fallback. */
+.game-stage:fullscreen.force-landscape-rotation,
+.game-stage.frame-fullscreen.force-landscape-rotation {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: 100vh;
+  width: 100dvh;
+  height: 100vw;
+  max-height: none;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center;
+}
+
+.game-stage:fullscreen.force-landscape-rotation canvas,
+.game-stage.frame-fullscreen.force-landscape-rotation canvas {
+  width: min(100vh, calc(100vw * 16 / 9));
+  width: min(100dvh, calc(100vw * 16 / 9));
+  height: min(100vw, calc(100vh * 9 / 16));
+  height: min(100vw, calc(100dvh * 9 / 16));
+}
+
 .game-stage:fullscreen .fullscreen-button,
 .game-stage.frame-fullscreen .fullscreen-button {
   position: fixed;

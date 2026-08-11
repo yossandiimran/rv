@@ -22,6 +22,11 @@ body {
   min-height: 100%;
 }
 
+body.game-cinema-active {
+  overflow: hidden;
+  padding: 0;
+}
+
 body {
   margin: 0;
   padding: 22px;
@@ -596,6 +601,75 @@ canvas {
   cursor: crosshair;
 }
 
+.fullscreen-button {
+  position: absolute;
+  z-index: 7;
+  right: 10px;
+  bottom: 118px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  border: 1px solid rgba(232, 207, 157, 0.42);
+  border-radius: 999px;
+  padding: 0 10px;
+  background: rgba(15, 18, 14, 0.82);
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.34);
+  color: #ead5a9;
+  backdrop-filter: blur(4px);
+}
+
+.fullscreen-button span {
+  font: 800 1rem/1 system-ui, sans-serif;
+}
+
+.fullscreen-button small {
+  font: 800 0.48rem/1 system-ui, sans-serif;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.game-screen:fullscreen,
+.game-screen.mobile-cinema-mode {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  width: 100vw;
+  height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  background: #090c09;
+}
+
+.game-screen:fullscreen .game-stage,
+.game-screen.mobile-cinema-mode .game-stage {
+  width: min(100vw, calc(100dvh * 16 / 9));
+  height: min(100dvh, calc(100vw * 9 / 16));
+  border: 0;
+  border-radius: 0;
+}
+
+.game-screen:fullscreen .scoreboard,
+.game-screen.mobile-cinema-mode .scoreboard {
+  position: absolute;
+  z-index: 7;
+  top: max(7px, env(safe-area-inset-top));
+  left: 50%;
+  width: min(560px, 64vw);
+  transform: translateX(-50%);
+  border: 1px solid rgba(234, 217, 181, 0.22);
+  border-radius: 9px;
+  background: rgba(13, 16, 13, 0.72);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+.game-screen:fullscreen .game-footer,
+.game-screen.mobile-cinema-mode .game-footer {
+  display: none;
+}
+
 .game-overlay {
   position: absolute;
   z-index: 8;
@@ -841,6 +915,10 @@ kbd {
   }
 
   #mobile-controls {
+    display: flex;
+  }
+
+  .fullscreen-button {
     display: flex;
   }
 

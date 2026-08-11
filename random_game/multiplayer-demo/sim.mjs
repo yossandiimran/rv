@@ -483,6 +483,10 @@ function updatePlayers(world, inputs, dt) {
       startReload(player);
     }
 
+    if (player.ammo <= 0 && player.reserve > 0 && player.reloadTimer <= 0 && player.bandageTimer <= 0) {
+      startReload(player);
+    }
+
     const meleeSeq = Number(input.meleeSeq) || 0;
     if (meleeSeq !== player.handledMeleeSeq) {
       player.handledMeleeSeq = meleeSeq;

@@ -13,6 +13,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import {
   CAPTURE_SECONDS,
+  STATIC_RECTS,
   TEAMS,
   TOTAL_CONTROL_SECONDS,
   WORLD_HEIGHT,
@@ -72,6 +73,7 @@ const ui = {
   leaveRoom: document.querySelector("#leave-room"),
   readyButton: document.querySelector("#ready-button"),
   startMatch: document.querySelector("#start-match"),
+  fullscreenButton: document.querySelector("#fullscreen-button"),
   gameLoading: document.querySelector("#game-loading"),
   resultOverlay: document.querySelector("#result-overlay"),
   resultKicker: document.querySelector("#result-kicker"),
@@ -115,6 +117,7 @@ const pointer = { x: 480, y: 270, inside: false, fire: false };
 const touchMove = { x: 0, y: 0 };
 const touchActions = { fire: false, capture: false };
 const mobileInputQuery = window.matchMedia("(pointer: coarse), (max-width: 820px)");
+const camera = { x: WORLD_WIDTH / 2, y: WORLD_HEIGHT / 2, zoom: 1, ready: false };
 
 let currentUser = null;
 let authReady = false;
@@ -167,12 +170,71 @@ function showToast(text, seconds = 2.4) {
   toastTimer = seconds;
 }
 
+function fullscreenActive() {
+  return document.fullscreenElement === ui.gameScreen
+    || document.webkitFullscreenElement === ui.gameScreen
+    || ui.gameScreen.classList.contains("mobile-cinema-mode");
+}
+
+function updateFullscreenButton() {
+  const active = fullscreenActive();
+  const label = ui.fullscreenButton.querySelector("small");
+  if (label) label.textContent = active ? "Keluar" : "Landscape";
+  ui.fullscreenButton.setAttribute("aria-label", active ? "Keluar dari layar penuh" : "Aktifkan layar penuh landscape");
+}
+
+async function lockLandscape() {
+  if (!window.screen.orientation?.lock) return false;
+  try {
+    await window.screen.orientation.lock("landscape");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function toggleMobileFullscreen() {
+  if (fullscreenActive()) {
+    ui.gameScreen.classList.remove("mobile-cinema-mode");
+    document.body.classList.remove("game-cinema-active");
+    if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+    else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+    updateFullscreenButton();
+    return;
+  }
+
+  let nativeFullscreen = false;
+  try {
+    if (ui.gameScreen.requestFullscreen) {
+      await ui.gameScreen.requestFullscreen();
+      nativeFullscreen = true;
+    } else if (ui.gameScreen.webkitRequestFullscreen) {
+      ui.gameScreen.webkitRequestFullscreen();
+      nativeFullscreen = true;
+    }
+  } catch {
+    nativeFullscreen = false;
+  }
+  if (!nativeFullscreen) {
+    ui.gameScreen.classList.add("mobile-cinema-mode");
+    document.body.classList.add("game-cinema-active");
+  }
+  const locked = await lockLandscape();
+  if (!locked && matchMedia("(orientation: portrait)").matches) showToast("Putar HP ke posisi landscape untuk tampilan terbaik.", 3);
+  updateFullscreenButton();
+}
+
 function showScreen(next) {
   screen = next;
   ui.lobbyScreen.classList.toggle("hidden", next !== "lobby");
   ui.roomScreen.classList.toggle("hidden", next !== "room");
   ui.gameScreen.classList.toggle("hidden", next !== "game");
   if (next === "game") canvas.focus();
+  else if (fullscreenActive()) {
+    ui.gameScreen.classList.remove("mobile-cinema-mode");
+    document.body.classList.remove("game-cinema-active");
+    if (document.fullscreenElement === ui.gameScreen) document.exitFullscreen?.().catch(() => {});
+  }
 }
 
 function selectedTeam() {
@@ -522,6 +584,10 @@ async function enterRoom(code, team, slot) {
   lastMatchmakingSecond = -1;
   predictedLocal = null;
   renderPlayers.clear();
+  camera.x = WORLD_WIDTH / 2;
+  camera.y = WORLD_HEIGHT / 2;
+  camera.zoom = 1;
+  camera.ready = false;
   ui.roomCodeLabel.textContent = code;
   ui.gameRoomCode.textContent = code;
   ui.roomCodeInput.value = code;
@@ -964,6 +1030,95 @@ function drawTileRegion(image, column, row, x, y, width, height, alpha = 1) {
   return true;
 }
 
+function updateCamera(world, dt) {
+  const mobile = mobileInputQuery.matches;
+  const local = renderPlayers.get(currentUser?.uid) || world?.players?.[currentUser?.uid];
+  const targetZoom = mobile ? 1.38 : 1;
+  if (mobile && local && !local.dead) {
+    if (!camera.ready) {
+      camera.x = local.x;
+      camera.y = local.y;
+      camera.zoom = targetZoom;
+      camera.ready = true;
+    } else {
+      const follow = Math.min(1, dt * 12);
+      camera.x += (local.x - camera.x) * follow;
+      camera.y += (local.y - camera.y) * follow;
+      camera.zoom += (targetZoom - camera.zoom) * Math.min(1, dt * 8);
+    }
+  } else {
+    camera.x += (WORLD_WIDTH / 2 - camera.x) * Math.min(1, dt * 8);
+    camera.y += (WORLD_HEIGHT / 2 - camera.y) * Math.min(1, dt * 8);
+    camera.zoom += (1 - camera.zoom) * Math.min(1, dt * 8);
+    camera.ready = false;
+  }
+}
+
+function applyWorldCamera() {
+  ctx.translate(WORLD_WIDTH / 2, WORLD_HEIGHT / 2);
+  ctx.scale(camera.zoom, camera.zoom);
+  ctx.translate(-camera.x, -camera.y);
+}
+
+function screenToWorld(screenX, screenY) {
+  return {
+    x: camera.x + (screenX - WORLD_WIDTH / 2) / camera.zoom,
+    y: camera.y + (screenY - WORLD_HEIGHT / 2) / camera.zoom,
+  };
+}
+
+function worldToScreen(worldX, worldY) {
+  return {
+    x: WORLD_WIDTH / 2 + (worldX - camera.x) * camera.zoom,
+    y: WORLD_HEIGHT / 2 + (worldY - camera.y) * camera.zoom,
+  };
+}
+
+function drawOuterForestFloor() {
+  ctx.fillStyle = "#20281c";
+  ctx.fillRect(-480, -320, WORLD_WIDTH + 960, WORLD_HEIGHT + 640);
+  const viewWidth = WORLD_WIDTH / camera.zoom;
+  const viewHeight = WORLD_HEIGHT / camera.zoom;
+  const minX = Math.floor((camera.x - viewWidth / 2 - 64) / 64) * 64;
+  const maxX = Math.ceil((camera.x + viewWidth / 2 + 64) / 64) * 64;
+  const minY = Math.floor((camera.y - viewHeight / 2 - 64) / 64) * 64;
+  const maxY = Math.ceil((camera.y + viewHeight / 2 + 64) / 64) * 64;
+  for (let y = minY; y <= maxY; y += 64) {
+    for (let x = minX; x <= maxX; x += 64) {
+      drawAtlasCell(images.terrain, 4, 4, (Math.abs(x + y) / 64) % 2 ? 2 : 1, 0, x, y, 64, 64, 0.56);
+    }
+  }
+  ctx.fillStyle = "rgba(7, 12, 8, 0.38)";
+  ctx.fillRect(-480, -320, WORLD_WIDTH + 960, WORLD_HEIGHT + 640);
+}
+
+function drawOuterForestTrees() {
+  const drawForestTree = (x, y, seed, alpha = 1) => {
+    const column = seed % 4;
+    const row = seed % 5 === 0 ? 1 : 0;
+    const size = 128 + (seed % 3) * 12;
+    drawAtlasCell(images.trees, 4, 3, column, row, x - size / 2, y - size + 24, size, size, alpha);
+  };
+
+  let seed = 0;
+  for (let x = -380; x <= WORLD_WIDTH + 380; x += 104) {
+    drawForestTree(x, -72, seed += 1, 0.9);
+    drawForestTree(x + 42, -164, seed += 1, 0.82);
+    drawForestTree(x, WORLD_HEIGHT + 84, seed += 1, 0.94);
+    drawForestTree(x + 45, WORLD_HEIGHT + 176, seed += 1, 0.82);
+  }
+  for (let y = 18; y <= WORLD_HEIGHT; y += 94) {
+    drawForestTree(-76, y, seed += 1, 0.94);
+    drawForestTree(-172, y + 38, seed += 1, 0.82);
+    drawForestTree(WORLD_WIDTH + 76, y, seed += 1, 0.94);
+    drawForestTree(WORLD_WIDTH + 174, y + 38, seed += 1, 0.82);
+  }
+
+  ctx.strokeStyle = "rgba(219, 198, 150, 0.12)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(17, 21, WORLD_WIDTH - 34, WORLD_HEIGHT - 39);
+}
+
 function drawGround() {
   ctx.fillStyle = "#4c543b";
   ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
@@ -1379,54 +1534,177 @@ function drawAutoAimLock(world, local) {
   ctx.restore();
 }
 
+function drawMinimap(world) {
+  if (!world) return;
+  const mobile = mobileInputQuery.matches;
+  const width = mobile ? 158 : 172;
+  const height = mobile ? 94 : 102;
+  const x = WORLD_WIDTH - width - 14;
+  const y = 14;
+  const innerX = x + 7;
+  const innerY = y + 19;
+  const innerWidth = width - 14;
+  const innerHeight = height - 26;
+  const mapX = (value) => innerX + (value / WORLD_WIDTH) * innerWidth;
+  const mapY = (value) => innerY + (value / WORLD_HEIGHT) * innerHeight;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(12, 16, 12, 0.9)";
+  ctx.fillRect(x, y, width, height);
+  ctx.strokeStyle = "rgba(232, 211, 169, 0.38)";
+  ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
+  ctx.fillStyle = "rgba(229, 210, 168, 0.8)";
+  ctx.font = "800 8px system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("PETA BENTENG", x + 8, y + 6);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(innerX, innerY, innerWidth, innerHeight);
+  ctx.clip();
+  ctx.fillStyle = "#465137";
+  ctx.fillRect(innerX, innerY, innerWidth, innerHeight);
+  ctx.fillStyle = "rgba(123, 101, 53, 0.34)";
+  ctx.fillRect(mapX(0), mapY(326), innerWidth * 0.37, innerHeight * 0.36);
+  ctx.fillStyle = "rgba(67, 72, 63, 0.42)";
+  ctx.fillRect(mapX(610), mapY(26), innerWidth * 0.34, innerHeight * 0.37);
+  ctx.fillRect(mapX(610), mapY(316), innerWidth * 0.34, innerHeight * 0.37);
+  ctx.fillStyle = "rgba(82, 50, 36, 0.62)";
+  ctx.fillRect(mapX(384), mapY(136), innerWidth * 0.2, innerHeight * 0.47);
+
+  ctx.fillStyle = "rgba(23, 27, 21, 0.68)";
+  for (const rect of STATIC_RECTS) {
+    ctx.fillRect(mapX(rect.x), mapY(rect.y), (rect.w / WORLD_WIDTH) * innerWidth, (rect.h / WORLD_HEIGHT) * innerHeight);
+  }
+
+  for (const point of world.points || []) {
+    ctx.fillStyle = teamColor(point.owner, point.owner ? 0.96 : 0.68);
+    ctx.beginPath();
+    ctx.arc(mapX(point.x), mapY(point.y), point.contested ? 4.2 : 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    if (point.contested) {
+      ctx.strokeStyle = "rgba(241, 198, 81, 0.9)";
+      ctx.stroke();
+    }
+  }
+
+  for (const player of Object.values(world.players || {})) {
+    if (player.dead) continue;
+    const isLocal = player.uid === currentUser?.uid;
+    ctx.fillStyle = isLocal ? "#f6df9d" : teamColor(player.team, 1);
+    ctx.beginPath();
+    ctx.arc(mapX(player.x), mapY(player.y), isLocal ? 3.8 : 2.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const viewWidth = WORLD_WIDTH / camera.zoom;
+  const viewHeight = WORLD_HEIGHT / camera.zoom;
+  ctx.strokeStyle = "rgba(244, 224, 180, 0.62)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(
+    mapX(camera.x - viewWidth / 2),
+    mapY(camera.y - viewHeight / 2),
+    (viewWidth / WORLD_WIDTH) * innerWidth,
+    (viewHeight / WORLD_HEIGHT) * innerHeight,
+  );
+  ctx.restore();
+  ctx.restore();
+}
+
+function drawMobilePlayerHud(world) {
+  if (!mobileInputQuery.matches) return;
+  const player = world?.players?.[currentUser?.uid];
+  if (!player) return;
+  const x = 14;
+  const y = 14;
+  const width = 190;
+  ctx.fillStyle = "rgba(12, 16, 12, 0.88)";
+  ctx.fillRect(x, y, width, 65);
+  ctx.strokeStyle = "rgba(232, 211, 169, 0.32)";
+  ctx.strokeRect(x + 0.5, y + 0.5, width - 1, 64);
+  ctx.fillStyle = teamColor(player.team, 0.95);
+  ctx.fillRect(x, y, 4, 65);
+  ctx.fillStyle = "#ead8b4";
+  ctx.font = "800 9px system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(player.name.toUpperCase(), x + 12, y + 9);
+  ctx.fillStyle = "#342a22";
+  ctx.fillRect(x + 12, y + 26, 112, 8);
+  ctx.fillStyle = player.hp > 35 ? "#a84b38" : "#d96a45";
+  ctx.fillRect(x + 12, y + 26, 112 * Math.max(0, player.hp / 100), 8);
+  ctx.fillStyle = "#d5c39d";
+  ctx.font = "700 8px system-ui, sans-serif";
+  ctx.fillText(`HP ${Math.ceil(player.hp)}`, x + 130, y + 25);
+  ctx.fillText(`PELURU ${player.ammo}/${player.reserve}`, x + 12, y + 43);
+  ctx.fillText(`PERBAN ${player.bandages ?? 0}`, x + 104, y + 43);
+  if (player.reloadTimer > 0) {
+    ctx.fillStyle = "rgba(225, 177, 91, 0.9)";
+    ctx.fillText("AUTO RELOAD", x + 12, y + 54);
+  }
+}
+
 function drawWorld(dt) {
   const world = isHost && authoritativeWorld ? authoritativeWorld : latestSnapshot;
+  updateRenderPlayers(world, dt);
+  updateCamera(world, dt);
+
+  ctx.save();
+  const localState = world?.players?.[currentUser?.uid];
+  const worldShake = localState?.hitTimer > 0 ? 3.5 * Math.min(1, localState.hitTimer / 0.12) : 0;
+  if (worldShake > 0) ctx.translate((Math.random() - 0.5) * worldShake, (Math.random() - 0.5) * worldShake);
+  applyWorldCamera();
+  drawOuterForestFloor();
   drawGround();
+  drawOuterForestTrees();
   drawFortifications();
   for (const point of world?.points || []) drawCapturePoint(point);
   for (const pickup of world?.pickups || []) drawPickup(pickup);
-  updateRenderPlayers(world, dt);
   const ordered = [...renderPlayers.entries()].sort((a, b) => a[1].y - b[1].y);
   for (const [uid, player] of ordered) drawPlayer(player, uid);
-
   for (const bullet of world?.bullets || []) drawBullet(bullet);
   for (const effect of world?.effects || []) drawCombatEffect(effect);
 
   const local = renderPlayers.get(currentUser?.uid);
+  if (local && !local.dead) drawAutoAimLock(world, local);
+  ctx.restore();
+
+  const vignette = ctx.createRadialGradient(480, 270, 190, 480, 270, 590);
+  vignette.addColorStop(0, "rgba(8, 10, 8, 0)");
+  vignette.addColorStop(1, mobileInputQuery.matches ? "rgba(8, 10, 8, 0.4)" : "rgba(8, 10, 8, 0.52)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
   if (local && !local.dead) {
-    drawAutoAimLock(world, local);
     const nearby = (world?.points || []).find((point) => Math.hypot(local.x - point.x, local.y - point.y) <= 58);
     if (nearby && nearby.owner !== local.team) {
+      const promptY = mobileInputQuery.matches ? 380 : 480;
       ctx.fillStyle = "rgba(15, 18, 14, 0.88)";
-      ctx.fillRect(350, 480, 260, 32);
+      ctx.fillRect(350, promptY, 260, 32);
       ctx.fillStyle = "#ead8b4";
       ctx.font = "750 11px system-ui, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(nearby.contested ? "TITIK DIPEREBUTKAN" : "TAHAN C / BENDERA UNTUK MENGUASAI TITIK", 480, 490);
+      ctx.fillText(nearby.contested ? "TITIK DIPEREBUTKAN" : "TAHAN C / BENDERA UNTUK MENGUASAI TITIK", 480, promptY + 10);
     }
   }
 
   drawLocalActionProgress(world);
+  drawMobilePlayerHud(world);
+  drawMinimap(world);
 
-  const vignette = ctx.createRadialGradient(480, 270, 190, 480, 270, 590);
-  vignette.addColorStop(0, "rgba(8, 10, 8, 0)");
-  vignette.addColorStop(1, "rgba(8, 10, 8, 0.52)");
-  ctx.fillStyle = vignette;
-  ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-
-  if (pointer.inside) {
+  if (pointer.inside && !mobileInputQuery.matches) {
+    const screenPointer = worldToScreen(pointer.x, pointer.y);
     ctx.strokeStyle = "rgba(239, 220, 178, 0.82)";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.arc(pointer.x, pointer.y, 7, 0, Math.PI * 2);
-    ctx.moveTo(pointer.x - 12, pointer.y);
-    ctx.lineTo(pointer.x - 4, pointer.y);
-    ctx.moveTo(pointer.x + 4, pointer.y);
-    ctx.lineTo(pointer.x + 12, pointer.y);
-    ctx.moveTo(pointer.x, pointer.y - 12);
-    ctx.lineTo(pointer.x, pointer.y - 4);
-    ctx.moveTo(pointer.x, pointer.y + 4);
-    ctx.lineTo(pointer.x, pointer.y + 12);
+    ctx.arc(screenPointer.x, screenPointer.y, 7, 0, Math.PI * 2);
+    ctx.moveTo(screenPointer.x - 12, screenPointer.y);
+    ctx.lineTo(screenPointer.x - 4, screenPointer.y);
+    ctx.moveTo(screenPointer.x + 4, screenPointer.y);
+    ctx.lineTo(screenPointer.x + 12, screenPointer.y);
+    ctx.moveTo(screenPointer.x, screenPointer.y - 12);
+    ctx.lineTo(screenPointer.x, screenPointer.y - 4);
+    ctx.moveTo(screenPointer.x, screenPointer.y + 4);
+    ctx.lineTo(screenPointer.x, screenPointer.y + 12);
     ctx.stroke();
   }
 }
@@ -1448,11 +1726,7 @@ function updateHud() {
 }
 
 function render(dt) {
-  const world = isHost && authoritativeWorld ? authoritativeWorld : latestSnapshot;
-  const local = world?.players?.[currentUser?.uid];
-  const shake = local?.hitTimer > 0 ? 3.5 * Math.min(1, local.hitTimer / 0.12) : 0;
   ctx.save();
-  if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
   drawWorld(dt);
   ctx.restore();
   updateHud();
@@ -1476,8 +1750,11 @@ function loop(now) {
 
 function updatePointer(event) {
   const rect = canvas.getBoundingClientRect();
-  pointer.x = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
-  pointer.y = ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT;
+  const screenX = ((event.clientX - rect.left) / rect.width) * WORLD_WIDTH;
+  const screenY = ((event.clientY - rect.top) / rect.height) * WORLD_HEIGHT;
+  const worldPoint = screenToWorld(screenX, screenY);
+  pointer.x = worldPoint.x;
+  pointer.y = worldPoint.y;
   pointer.inside = true;
 }
 
@@ -1587,6 +1864,17 @@ for (const button of document.querySelectorAll("[data-touch-action]")) {
   button.addEventListener("pointercancel", release);
   button.addEventListener("lostpointercapture", release);
 }
+
+ui.fullscreenButton.addEventListener("click", () => toggleMobileFullscreen().catch(console.error));
+const handleFullscreenChange = () => {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement && !ui.gameScreen.classList.contains("mobile-cinema-mode")) {
+    document.body.classList.remove("game-cinema-active");
+    window.screen.orientation?.unlock?.();
+  }
+  updateFullscreenButton();
+};
+document.addEventListener("fullscreenchange", handleFullscreenChange);
+document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
 
 ui.autoMatch.addEventListener("click", () => autoMatch().catch(console.error));
 ui.createRoom.addEventListener("click", createRoom);

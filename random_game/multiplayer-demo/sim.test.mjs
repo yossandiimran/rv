@@ -72,6 +72,19 @@ function advance(world, inputs, seconds) {
 
 {
   const world = createWorld(members, 1);
+  Object.assign(world.players.p1, { ammo: 1, reserve: 6, aimX: 1, aimY: 0 });
+  stepWorld(world, { p1: { ax: 1, ay: 0, fire: true } }, 0.05);
+  assert.equal(world.players.p1.ammo, 0);
+  assert.equal(world.players.p1.reloadTimer, 0);
+  stepWorld(world, { p1: { ax: 1, ay: 0, fire: false } }, 0.05);
+  assert.equal(world.players.p1.reloadTimer, 1.05, "Magasin kosong harus memulai auto reload.");
+  advance(world, {}, 1.1);
+  assert.equal(world.players.p1.ammo, 5);
+  assert.equal(world.players.p1.reserve, 1);
+}
+
+{
+  const world = createWorld(members, 1);
   const startX = world.players.p1.x;
   stepWorld(world, { p1: { mx: 1, my: 0, dodgeSeq: 1 } }, 0.05);
   assert.equal(world.players.p1.dodgeTimer, 0.24);

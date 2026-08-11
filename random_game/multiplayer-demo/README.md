@@ -22,7 +22,8 @@ Demo terpisah untuk mode dua Pejuang Republik melawan dua Pasukan Kolonial. Demo
 - Enam titik bendera dengan neutralize, capture, contested state, dan percepatan ketika dua rekan berada di titik.
 - Target 200 poin, batas tujuh menit, overtime, dan kemenangan langsung jika enam titik dikuasai selama 12 detik.
 - Kontrol desktop dengan mouse serta analog gerak + auto aim untuk browser HP.
-- Input aksi dikirim segera, snapshot host dikoaleskan pada 15 Hz, dan pemain remote memakai interpolasi/extrapolasi ringan agar Firebase tidak terasa tersendat.
+- Input aksi dikirim segera, snapshot host dipublikasikan pada 20 Hz tanpa menunggu ACK write sebelumnya, dan pemain remote memakai interpolasi/extrapolasi ringan.
+- Pemain non-host mendapat prediksi lokal untuk gerak, tembakan, peluru, muzzle flash, pukulan, dodge, amunisi, dan status reload; hasil damage tetap divalidasi host.
 
 ## Alur auto matchmaking
 

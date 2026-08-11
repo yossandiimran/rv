@@ -795,6 +795,7 @@ export function createSnapshot(world) {
     })),
     bullets: world.bullets.map((bullet) => ({
       id: bullet.id,
+      ownerUid: bullet.ownerUid,
       team: bullet.team,
       x: round(bullet.x),
       y: round(bullet.y),

@@ -21,11 +21,12 @@ import {
   createBotInputs,
   createSnapshot,
   createWorld,
+  collidesWorld,
   finishByForfeit,
   hasClearLineOfSight,
   moveActor,
   stepWorld,
-} from "./sim.mjs?v=20260811-9";
+} from "./sim.mjs?v=20260811-10";
 import {
   AUTO_MATCH_SECONDS,
   AUTO_MATCH_SHARDS,
@@ -125,8 +126,8 @@ const touchActions = { fire: false, capture: false };
 const mobileInputQuery = window.matchMedia("(pointer: coarse), (max-width: 820px)");
 const AUTO_AIM_RANGE = 270;
 const INPUT_CHANGE_INTERVAL = 1 / 30;
-const INPUT_HEARTBEAT_INTERVAL = 1 / 15;
-const SNAPSHOT_INTERVAL = 1 / 15;
+const INPUT_HEARTBEAT_INTERVAL = 1 / 20;
+const SNAPSHOT_INTERVAL = 1 / 20;
 const camera = { x: WORLD_WIDTH / 2, y: WORLD_HEIGHT / 2, zoom: 1, ready: false };
 
 let currentUser = null;
@@ -145,6 +146,19 @@ let inputsCache = {};
 let predictedLocal = null;
 let renderPlayers = new Map();
 let autoAimTargetUid = "";
+let predictedBullets = [];
+let predictedEffects = [];
+let predictedShotSeq = 0;
+let predictedFireCooldown = 0;
+let predictedMeleeCooldown = 0;
+let predictedDodgeTimer = 0;
+let predictedReloadTimer = 0;
+let predictedReloadPending = false;
+let predictedAmmo = null;
+let lastPredictedServerAmmo = null;
+let lastPredictedReloadSeq = 0;
+let lastPredictedMeleeSeq = 0;
+let lastPredictedDodgeSeq = 0;
 let screen = "lobby";
 let ready = false;
 let busy = false;
@@ -157,9 +171,6 @@ let inputAccumulator = 0;
 let snapshotAccumulator = 0;
 let lastSentInput = null;
 let lastSnapshotReceivedAt = performance.now();
-let queuedSnapshotPublication = null;
-let snapshotWriteInFlight = false;
-let snapshotFlushPromise = Promise.resolve();
 let lastFrame = performance.now();
 let elapsed = 0;
 let lastEventSeq = -1;
@@ -605,6 +616,11 @@ async function enterRoom(code, team, slot) {
   currentRoom = code;
   currentTeam = team;
   currentSlot = slot;
+  reloadSeq = 0;
+  meleeSeq = 0;
+  bandageSeq = 0;
+  dodgeSeq = 0;
+  inputSeq = 0;
   ready = false;
   roomMeta = null;
   previousRoomStatus = null;
@@ -616,6 +632,7 @@ async function enterRoom(code, team, slot) {
   matchStartPending = false;
   lastMatchmakingSecond = -1;
   predictedLocal = null;
+  resetClientCombatPrediction();
   lastSentInput = null;
   inputAccumulator = 0;
   snapshotAccumulator = 0;
@@ -657,6 +674,8 @@ function handleMetaSnapshot(snapshot) {
   ui.copyRoom.classList.toggle("hidden", roomMeta.autoMatch === true);
 
   if (roomMeta.status === "lobby") {
+    predictedLocal = null;
+    resetClientCombatPrediction();
     if (previousRoomStatus === "finished") {
       ready = false;
       update(ref(db, roomPath(`members/${currentUser.uid}`)), { ready: false }).catch(console.error);
@@ -664,6 +683,8 @@ function handleMetaSnapshot(snapshot) {
     ui.resultOverlay.classList.add("hidden");
     showScreen("room");
   } else if (roomMeta.status === "starting") {
+    predictedLocal = null;
+    resetClientCombatPrediction();
     showScreen("room");
     ui.roomStatus.textContent = "Lineup dikunci · menyiapkan bot dan arena...";
   } else if (roomMeta.status === "playing" || roomMeta.status === "finished") {
@@ -1066,32 +1087,170 @@ function updatePrediction(dt, packet) {
   predictedLocal.y += (serverPlayer.y - predictedLocal.y) * correction;
   if (serverPlayer.dead || serverPlayer.bandageTimer > 0) return;
   if (moveLength <= 0.03) return;
-  const speed = serverPlayer.dodgeTimer > 0 ? 235 : 128;
+  const speed = Math.max(serverPlayer.dodgeTimer || 0, predictedDodgeTimer) > 0 ? 235 : 128;
   moveActor(predictedLocal, packet.mx * speed * dt, packet.my * speed * dt);
 }
 
-function startSnapshotFlush() {
-  if (snapshotWriteInFlight || !queuedSnapshotPublication) return snapshotFlushPromise;
-  snapshotWriteInFlight = true;
-  snapshotFlushPromise = (async () => {
-    while (queuedSnapshotPublication) {
-      const publication = queuedSnapshotPublication;
-      queuedSnapshotPublication = null;
-      await set(
-        ref(db, `gameMatches/${publication.roomCode}/state/snapshot`),
-        publication.snapshot,
-      );
-    }
-  })().finally(() => {
-    snapshotWriteInFlight = false;
-    if (queuedSnapshotPublication) startSnapshotFlush().catch(console.error);
-  });
-  return snapshotFlushPromise;
+function resetClientCombatPrediction() {
+  predictedBullets = [];
+  predictedEffects = [];
+  predictedShotSeq = 0;
+  predictedFireCooldown = 0;
+  predictedMeleeCooldown = 0;
+  predictedDodgeTimer = 0;
+  predictedReloadTimer = 0;
+  predictedReloadPending = false;
+  predictedAmmo = null;
+  lastPredictedServerAmmo = null;
+  lastPredictedReloadSeq = reloadSeq;
+  lastPredictedMeleeSeq = meleeSeq;
+  lastPredictedDodgeSeq = dodgeSeq;
 }
 
-function publishSnapshot(snapshot) {
-  queuedSnapshotPublication = { roomCode: currentRoom, snapshot };
-  return startSnapshotFlush();
+function addPredictedEffect(type, x, y, player, ttl = 0.24) {
+  predictedShotSeq += 1;
+  predictedEffects.push({
+    id: -100_000 - predictedShotSeq,
+    type,
+    x,
+    y,
+    team: player.team,
+    direction: player.direction,
+    ttl,
+    predicted: true,
+  });
+}
+
+function syncPredictedAmmo(serverPlayer) {
+  if (predictedAmmo === null || lastPredictedServerAmmo === null) {
+    predictedAmmo = serverPlayer.ammo;
+  } else if (serverPlayer.ammo > lastPredictedServerAmmo) {
+    predictedAmmo = serverPlayer.ammo;
+    predictedReloadPending = false;
+    predictedReloadTimer = 0;
+  } else {
+    predictedAmmo = Math.min(predictedAmmo, serverPlayer.ammo);
+  }
+  lastPredictedServerAmmo = serverPlayer.ammo;
+  if (serverPlayer.reloadTimer > 0 && !predictedReloadPending) {
+    predictedReloadPending = true;
+    predictedReloadTimer = serverPlayer.reloadTimer;
+  }
+}
+
+function spawnPredictedBullet(serverPlayer, packet) {
+  const origin = predictedLocal || serverPlayer;
+  const length = Math.hypot(packet.ax, packet.ay) || 1;
+  const aimX = packet.ax / length;
+  const aimY = packet.ay / length;
+  predictedShotSeq += 1;
+  predictedBullets.push({
+    id: -predictedShotSeq,
+    ownerUid: currentUser.uid,
+    team: serverPlayer.team,
+    x: origin.x + aimX * 15,
+    y: origin.y - 12 + aimY * 15,
+    vx: aimX * 360,
+    vy: aimY * 360,
+    life: 0.8,
+    radius: 2.2,
+    predicted: true,
+  });
+  addPredictedEffect(
+    "muzzle",
+    origin.x + aimX * 24,
+    origin.y - 12 + aimY * 24,
+    serverPlayer,
+    0.2,
+  );
+}
+
+function updatePredictedProjectiles(dt, world) {
+  for (const bullet of predictedBullets) {
+    if (bullet.life <= 0) continue;
+    bullet.x += bullet.vx * dt;
+    bullet.y += bullet.vy * dt;
+    bullet.life -= dt;
+    const hitWorld = bullet.x < 0
+      || bullet.x > WORLD_WIDTH
+      || bullet.y < 0
+      || bullet.y > WORLD_HEIGHT
+      || collidesWorld(bullet.x, bullet.y, bullet.radius);
+    const hitPlayer = Object.values(world?.players || {}).some(
+      (player) => !player.dead
+        && player.team !== bullet.team
+        && Math.hypot(bullet.x - player.x, bullet.y - (player.y - 10)) <= 17,
+    );
+    if (hitWorld || hitPlayer) {
+      bullet.life = 0;
+      addPredictedEffect("impact", bullet.x, bullet.y, { team: bullet.team, direction: 0 }, 0.2);
+    }
+  }
+  predictedBullets = predictedBullets.filter((bullet) => bullet.life > 0);
+  for (const effect of predictedEffects) effect.ttl -= dt;
+  predictedEffects = predictedEffects.filter((effect) => effect.ttl > 0);
+}
+
+function updateClientCombatPrediction(dt, packet) {
+  if (isHost) return;
+  const world = latestSnapshot;
+  const serverPlayer = world?.players?.[currentUser?.uid];
+  updatePredictedProjectiles(dt, world);
+  predictedFireCooldown = Math.max(0, predictedFireCooldown - dt);
+  predictedMeleeCooldown = Math.max(0, predictedMeleeCooldown - dt);
+  predictedDodgeTimer = Math.max(0, predictedDodgeTimer - dt);
+  predictedReloadTimer = Math.max(0, predictedReloadTimer - dt);
+  if (!serverPlayer || serverPlayer.dead) {
+    predictedAmmo = serverPlayer?.ammo ?? null;
+    return;
+  }
+
+  syncPredictedAmmo(serverPlayer);
+  if (packet.reloadSeq !== lastPredictedReloadSeq) {
+    lastPredictedReloadSeq = packet.reloadSeq;
+    if (predictedAmmo < 5 && serverPlayer.reserve > 0 && !predictedReloadPending) {
+      predictedReloadPending = true;
+      predictedReloadTimer = 1.05;
+    }
+  }
+  if (packet.meleeSeq !== lastPredictedMeleeSeq) {
+    lastPredictedMeleeSeq = packet.meleeSeq;
+    if (predictedMeleeCooldown <= 0 && !predictedReloadPending) {
+      const origin = predictedLocal || serverPlayer;
+      addPredictedEffect(
+        "melee",
+        origin.x + packet.ax * 28,
+        origin.y - 8 + packet.ay * 22,
+        serverPlayer,
+        0.3,
+      );
+      predictedMeleeCooldown = 0.66;
+    }
+  }
+  if (packet.dodgeSeq !== lastPredictedDodgeSeq) {
+    lastPredictedDodgeSeq = packet.dodgeSeq;
+    if (Math.hypot(packet.mx, packet.my) > 0.1) predictedDodgeTimer = 0.24;
+  }
+
+  const canFire = packet.fire
+    && predictedFireCooldown <= 0
+    && predictedAmmo > 0
+    && !predictedReloadPending
+    && serverPlayer.bandageTimer <= 0
+    && !packet.capture;
+  if (canFire) {
+    spawnPredictedBullet(serverPlayer, packet);
+    predictedAmmo -= 1;
+    predictedFireCooldown = 0.28;
+    if (predictedAmmo <= 0 && serverPlayer.reserve > 0) {
+      predictedReloadPending = true;
+      predictedReloadTimer = 1.05;
+    }
+  }
+}
+
+function publishSnapshot(snapshot, roomCode = currentRoom) {
+  return set(ref(db, `gameMatches/${roomCode}/state/snapshot`), snapshot);
 }
 
 function hostStep(dt, packet) {
@@ -1116,7 +1275,7 @@ function hostStep(dt, packet) {
     const finishedRoom = currentRoom;
     const finalSnapshot = createSnapshot(authoritativeWorld);
     latestSnapshot = finalSnapshot;
-    publishSnapshot(finalSnapshot)
+    publishSnapshot(finalSnapshot, finishedRoom)
       .then(() => update(ref(db, `gameMatches/${finishedRoom}/meta`), {
         status: "finished",
         result: authoritativeWorld.result,
@@ -1132,6 +1291,7 @@ function updateGame(dt) {
   inputAccumulator += dt;
   if (shouldSendInput(packet)) sendInput(packet);
   hostStep(dt, packet);
+  updateClientCombatPrediction(dt, packet);
   updatePrediction(dt, packet);
 }
 
@@ -1468,6 +1628,10 @@ function updateRenderPlayers(world, dt) {
     if (uid === currentUser?.uid && !isHost && predictedLocal && !player.dead) {
       display.x = predictedLocal.x;
       display.y = predictedLocal.y;
+      display.fireCooldown = Math.max(display.fireCooldown || 0, predictedFireCooldown);
+      display.meleeCooldown = Math.max(display.meleeCooldown || 0, predictedMeleeCooldown);
+      display.dodgeTimer = Math.max(display.dodgeTimer || 0, predictedDodgeTimer);
+      display.reloadTimer = Math.max(display.reloadTimer || 0, predictedReloadTimer);
     }
   }
   for (const uid of renderPlayers.keys()) {
@@ -1503,7 +1667,7 @@ function drawBullet(bullet) {
   const length = Math.hypot(bullet.vx, bullet.vy) || 1;
   const trailX = (bullet.vx / length) * 17;
   const trailY = (bullet.vy / length) * 17;
-  const snapshotAge = isHost ? 0 : Math.min(
+  const snapshotAge = isHost || bullet.predicted ? 0 : Math.min(
     Math.max(0, bullet.life || 0),
     Math.min(0.12, Math.max(0, (performance.now() - lastSnapshotReceivedAt) / 1000)),
   );
@@ -1770,6 +1934,8 @@ function drawMobilePlayerHud(world) {
   if (!mobileInputQuery.matches) return;
   const player = world?.players?.[currentUser?.uid];
   if (!player) return;
+  const displayAmmo = !isHost && predictedAmmo !== null ? predictedAmmo : player.ammo;
+  const displayReload = player.reloadTimer > 0 || (!isHost && predictedReloadPending);
   const x = 14;
   const y = 14;
   const width = 190;
@@ -1790,9 +1956,9 @@ function drawMobilePlayerHud(world) {
   ctx.fillStyle = "#d5c39d";
   ctx.font = "700 8px system-ui, sans-serif";
   ctx.fillText(`HP ${Math.ceil(player.hp)}`, x + 130, y + 25);
-  ctx.fillText(`PELURU ${player.ammo}/${player.reserve}`, x + 12, y + 43);
+  ctx.fillText(`PELURU ${displayAmmo}/${player.reserve}`, x + 12, y + 43);
   ctx.fillText(`PERBAN ${player.bandages ?? 0}`, x + 104, y + 43);
-  if (player.reloadTimer > 0) {
+  if (displayReload) {
     ctx.fillStyle = "rgba(225, 177, 91, 0.9)";
     ctx.fillText("AUTO RELOAD", x + 12, y + 54);
   }
@@ -1816,8 +1982,14 @@ function drawWorld(dt) {
   for (const pickup of world?.pickups || []) drawPickup(pickup);
   const ordered = [...renderPlayers.entries()].sort((a, b) => a[1].y - b[1].y);
   for (const [uid, player] of ordered) drawPlayer(player, uid);
-  for (const bullet of world?.bullets || []) drawBullet(bullet);
+  const suppressLocalAuthoritativeBullets = !isHost && predictedBullets.length > 0;
+  for (const bullet of world?.bullets || []) {
+    if (suppressLocalAuthoritativeBullets && bullet.ownerUid === currentUser?.uid) continue;
+    drawBullet(bullet);
+  }
+  for (const bullet of predictedBullets) drawBullet(bullet);
   for (const effect of world?.effects || []) drawCombatEffect(effect);
+  for (const effect of predictedEffects) drawCombatEffect(effect);
 
   const local = renderPlayers.get(currentUser?.uid);
   if (local && !local.dead) drawAutoAimLock(world, local);
@@ -1883,9 +2055,11 @@ function updateHud() {
   ui.stageMatchState.textContent = matchState;
   const player = world.players?.[currentUser?.uid];
   if (!player) return;
+  const displayAmmo = !isHost && predictedAmmo !== null ? predictedAmmo : player.ammo;
+  const displayReload = player.reloadTimer > 0 || (!isHost && predictedReloadPending);
   ui.playerReadout.textContent = player.dead
     ? `Tumbang · respawn ${Math.max(0, Math.ceil(player.respawnTimer))} detik`
-    : `HP ${Math.max(0, Math.ceil(player.hp))} · Peluru ${player.ammo}/${player.reserve} · Perban ${player.bandages ?? 0}${player.reloadTimer > 0 ? " · mengisi..." : player.bandageTimer > 0 ? " · merawat..." : ""}`;
+    : `HP ${Math.max(0, Math.ceil(player.hp))} · Peluru ${displayAmmo}/${player.reserve} · Perban ${player.bandages ?? 0}${displayReload ? " · mengisi..." : player.bandageTimer > 0 ? " · merawat..." : ""}`;
 }
 
 function render(dt) {

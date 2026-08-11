@@ -44,6 +44,7 @@ function advance(world, inputs, seconds) {
   const firingSnapshot = createSnapshot(world);
   assert.equal(firingSnapshot.players.p1.fireCooldown, 0.28);
   assert.ok(firingSnapshot.effects.some((effect) => effect.type === "muzzle"), "Muzzle VFX harus ikut snapshot.");
+  assert.equal(firingSnapshot.bullets[0].ownerUid, "p1", "Owner projectile dibutuhkan untuk rekonsiliasi prediksi client.");
   advance(world, { p1: { ax: 1, ay: 0, fire: false } }, 0.3);
   assert.equal(world.players.p1.ammo, 4);
   assert.equal(world.players.k1.hp, 74, "Projectile demo pertama harus memberi 26 damage.");

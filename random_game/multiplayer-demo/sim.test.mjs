@@ -152,4 +152,33 @@ function advance(world, inputs, seconds) {
   assert.equal(createSnapshot(world).players["bot-pejuang-1"].isBot, true);
 }
 
+{
+  const world = createWorld({
+    human: { name: "Pemain", team: TEAMS.PEJUANG, slot: 0 },
+    bot: { name: "Patroli BOT", team: TEAMS.KOLONIAL, slot: 0, isBot: true },
+  }, 1);
+  Object.assign(world.players.human, { x: 430, y: 150, spawnShield: 10 });
+  Object.assign(world.players.bot, { x: 550, y: 150, spawnShield: 0 });
+  const initialInput = createBotInputs(world).bot;
+  assert.equal(initialInput.fire, false, "Bot harus memiliki jeda reaksi sebelum menembak.");
+  assert.ok(Math.hypot(initialInput.mx, initialInput.my) <= 0.83, "Gerak bot harus lebih lambat dari pemain.");
+
+  let fireFrames = 0;
+  let firingWithAimError = 0;
+  for (let step = 0; step < 80; step += 1) {
+    Object.assign(world.players.human, { x: 430, y: 150, hp: 100, dead: false, spawnShield: 10 });
+    Object.assign(world.players.bot, { x: 550, y: 150, dead: false, spawnShield: 0 });
+    const input = createBotInputs(world).bot;
+    if (input.fire) {
+      fireFrames += 1;
+      if (Math.abs(input.ay) >= 0.03) firingWithAimError += 1;
+    }
+    stepWorld(world, { bot: input }, 0.05);
+  }
+
+  assert.ok(fireFrames > 0 && fireFrames <= 8, "Bot harus menembak dalam burst pendek, bukan terus-menerus.");
+  assert.ok(world.bulletSeq >= 2 && world.bulletSeq <= 4, "Bot maksimal menembak sekitar sekali per siklus reaksi.");
+  assert.equal(firingWithAimError, fireFrames, "Bidikan bot harus memiliki deviasi agar tidak menjadi aimbot.");
+}
+
 process.stdout.write("PASS: movement, combat/VFX, capture, bot AI, scoring, forfeit, dan snapshot multiplayer\n");

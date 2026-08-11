@@ -24,7 +24,7 @@ import {
   finishByForfeit,
   moveActor,
   stepWorld,
-} from "./sim.mjs";
+} from "./sim.mjs?v=20260811-4";
 import {
   AUTO_MATCH_SECONDS,
   AUTO_MATCH_SHARDS,
@@ -1837,7 +1837,10 @@ canvas.addEventListener("pointerdown", (event) => {
 });
 canvas.addEventListener("pointerup", () => { pointer.fire = false; });
 canvas.addEventListener("pointercancel", () => { pointer.fire = false; });
-canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+for (const eventName of ["contextmenu", "selectstart", "dragstart"]) {
+  ui.gameStage.addEventListener(eventName, (event) => event.preventDefault());
+}
 
 window.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;

@@ -40,6 +40,10 @@ const SPAWNS = Object.freeze({
   ],
 });
 
+const BOT_MOVE_SCALE = 0.82;
+const BOT_AWARENESS_RANGE = 215;
+const BOT_FIRE_RANGE = 205;
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
@@ -189,6 +193,37 @@ function steerBot(player, x, y) {
   return { x: desired.y * turn, y: -desired.x * turn };
 }
 
+function botSeed(uid) {
+  let seed = 0;
+  for (const character of String(uid || "bot")) seed = (seed * 31 + character.charCodeAt(0)) % 997;
+  return seed;
+}
+
+function botCombatTiming(world, player) {
+  const seed = botSeed(player.uid);
+  const elapsed = Math.max(0, MATCH_DURATION - world.timeLeft);
+  const duration = 1.22 + (seed % 4) * 0.08;
+  const clock = elapsed;
+  return {
+    seed,
+    cycle: Math.floor(clock / duration),
+    position: clock % duration,
+    reactionDelay: 0.38 + (seed % 3) * 0.08,
+    fireStart: 0.58 + (seed % 5) * 0.05,
+  };
+}
+
+function botAimWithError(player, opponent, timing) {
+  const exact = normalize(opponent.x - player.x, opponent.y - player.y, player.aimX, player.aimY);
+  const error = Math.sin((timing.cycle + 1) * (timing.seed % 13 + 3) * 1.618) * 0.16;
+  return normalize(
+    exact.x - exact.y * error,
+    exact.y + exact.x * error,
+    exact.x,
+    exact.y,
+  );
+}
+
 export function createBotInputs(world) {
   const botInputs = {};
   if (!world || world.result) return botInputs;
@@ -222,28 +257,49 @@ export function createBotInputs(world) {
       .sort((a, b) => Math.hypot(a.x - player.x, a.y - player.y) - Math.hypot(b.x - player.x, b.y - player.y));
     const opponent = opponents[0];
     const opponentDistance = opponent ? Math.hypot(opponent.x - player.x, opponent.y - player.y) : Infinity;
+    const timing = botCombatTiming(world, player);
+    const reactionReady = Boolean(
+      opponent
+      && opponentDistance <= BOT_AWARENESS_RANGE
+      && timing.position >= timing.reactionDelay,
+    );
     let aim = normalize(targetPoint.x - player.x, targetPoint.y - player.y, player.aimX, player.aimY);
 
-    if (opponent && opponentDistance <= 255) {
-      aim = normalize(opponent.x - player.x, opponent.y - player.y, player.aimX, player.aimY);
-      if (opponentDistance < 72 && pointDistance > 45) movement = steerBot(player, player.x - opponent.x, player.y - opponent.y);
+    if (reactionReady) {
+      aim = botAimWithError(player, opponent, timing);
+      if (opponentDistance < 62 && pointDistance > 45) movement = steerBot(player, player.x - opponent.x, player.y - opponent.y);
     }
 
     if (player.ammo <= 0 && player.reloadTimer <= 0) player.botReloadSeq += 1;
-    if (opponentDistance <= 42 && player.meleeCooldown <= 0) player.botMeleeSeq += 1;
-    if (player.hp <= 45 && player.bandages > 0 && player.bandageTimer <= 0 && opponentDistance > 110) {
+    if (
+      opponentDistance <= 38
+      && player.meleeCooldown <= 0
+      && timing.position >= 0.76
+      && timing.position < 0.88
+    ) {
+      player.botMeleeSeq += 1;
+    }
+    if (player.hp <= 38 && player.bandages > 0 && player.bandageTimer <= 0 && opponentDistance > 140) {
       player.botBandageSeq += 1;
     }
-    if (opponentDistance < 190 && player.dodgeCooldown <= 0 && world.tick % (67 + player.slot * 11) === 0) {
+    const dodgeInterval = 5.4 + player.slot * 0.6;
+    const dodgeClock = (MATCH_DURATION - world.timeLeft + (timing.seed % 7) * 0.43) % dodgeInterval;
+    if (opponentDistance < 165 && player.dodgeCooldown <= 0 && dodgeClock < 0.08) {
       player.botDodgeSeq += 1;
     }
 
     botInputs[uid] = {
-      mx: round(movement.x, 2),
-      my: round(movement.y, 2),
+      mx: round(movement.x * BOT_MOVE_SCALE, 2),
+      my: round(movement.y * BOT_MOVE_SCALE, 2),
       ax: round(aim.x, 2),
       ay: round(aim.y, 2),
-      fire: Boolean(opponent && opponentDistance <= 230 && pointDistance > 47),
+      fire: Boolean(
+        reactionReady
+        && opponentDistance <= BOT_FIRE_RANGE
+        && pointDistance > 47
+        && timing.position >= timing.fireStart
+        && timing.position < timing.fireStart + 0.12
+      ),
       capture: pointDistance <= 53 && targetPoint.owner !== player.team,
       reloadSeq: player.botReloadSeq,
       meleeSeq: player.botMeleeSeq,

@@ -695,10 +695,10 @@ canvas {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 34px;
+  min-height: 40px;
   border: 1px solid rgba(237, 195, 101, 0.72);
   border-radius: 999px;
-  padding: 0 10px;
+  padding: 0 12px;
   background: rgba(87, 50, 29, 0.92);
   box-shadow: 0 7px 20px rgba(0, 0, 0, 0.46), inset 0 0 12px rgba(235, 182, 80, 0.1);
   color: #f4dda9;
@@ -708,11 +708,11 @@ canvas {
 }
 
 .fullscreen-button span {
-  font: 800 1rem/1 system-ui, sans-serif;
+  font: 800 1.12rem/1 system-ui, sans-serif;
 }
 
 .fullscreen-button small {
-  font: 800 0.48rem/1 system-ui, sans-serif;
+  font: 800 0.52rem/1 system-ui, sans-serif;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -883,9 +883,9 @@ kbd {
 
 .touch-stick {
   position: relative;
-  width: 104px;
-  height: 104px;
-  flex: 0 0 104px;
+  width: 116px;
+  height: 116px;
+  flex: 0 0 116px;
   border: 1px solid rgba(234, 217, 181, 0.3);
   border-radius: 50%;
   background: radial-gradient(circle, rgba(234, 217, 181, 0.07) 0 34%, transparent 35%), rgba(13, 16, 13, 0.62);
@@ -907,9 +907,9 @@ kbd {
   z-index: 2;
   top: 50%;
   left: 50%;
-  width: 44px;
-  height: 44px;
-  margin: -22px 0 0 -22px;
+  width: 50px;
+  height: 50px;
+  margin: -25px 0 0 -25px;
   border: 1px solid rgba(234, 217, 181, 0.56);
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #83775e, #363a31 72%);
@@ -930,8 +930,8 @@ kbd {
 
 .mobile-actions {
   display: grid;
-  grid-template: repeat(2, 45px) / repeat(3, 48px);
-  gap: 6px;
+  grid-template: repeat(2, 56px) / repeat(3, 56px);
+  gap: 8px;
   pointer-events: auto;
 }
 
@@ -940,7 +940,7 @@ kbd {
   border-radius: 50%;
   background: rgba(18, 21, 17, 0.76);
   color: #e9d8b5;
-  font: 750 0.56rem/1 system-ui, sans-serif;
+  font: 750 0.62rem/1 system-ui, sans-serif;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -1000,7 +1000,7 @@ kbd {
 
   .game-stage {
     aspect-ratio: auto;
-    padding-bottom: 118px;
+    padding-bottom: 132px;
   }
 
   canvas {
@@ -1104,29 +1104,29 @@ kbd {
   }
 
   .touch-stick {
+    width: 108px;
+    height: 108px;
+    flex-basis: 108px;
+  }
+
+  .mobile-actions {
+    grid-template: repeat(2, 52px) / repeat(3, 52px);
+    gap: 6px;
+  }
+}
+
+@media (max-width: 370px) {
+  .touch-stick {
     width: 96px;
     height: 96px;
     flex-basis: 96px;
   }
 
   .mobile-actions {
-    grid-template: repeat(2, 42px) / repeat(3, 48px);
-    gap: 4px;
-  }
-}
-
-@media (max-width: 370px) {
-  .touch-stick {
-    width: 84px;
-    height: 84px;
-    flex-basis: 84px;
-  }
-
-  .mobile-actions {
-    grid-template: repeat(2, 39px) / repeat(3, 43px);
+    grid-template: repeat(2, 46px) / repeat(3, 49px);
   }
 
   .mobile-actions button {
-    font-size: 0.5rem;
+    font-size: 0.54rem;
   }
 }

@@ -42,7 +42,7 @@ const SPAWNS = Object.freeze({
 
 const BOT_MOVE_SCALE = 0.82;
 const BOT_AWARENESS_RANGE = 215;
-const BOT_FIRE_RANGE = 205;
+const BOT_FIRE_RANGE = 185;
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -202,20 +202,20 @@ function botSeed(uid) {
 function botCombatTiming(world, player) {
   const seed = botSeed(player.uid);
   const elapsed = Math.max(0, MATCH_DURATION - world.timeLeft);
-  const duration = 1.22 + (seed % 4) * 0.08;
+  const duration = 1.55 + (seed % 4) * 0.1;
   const clock = elapsed;
   return {
     seed,
     cycle: Math.floor(clock / duration),
     position: clock % duration,
-    reactionDelay: 0.38 + (seed % 3) * 0.08,
-    fireStart: 0.58 + (seed % 5) * 0.05,
+    reactionDelay: 0.55 + (seed % 3) * 0.1,
+    fireStart: 0.82 + (seed % 5) * 0.06,
   };
 }
 
 function botAimWithError(player, opponent, timing) {
   const exact = normalize(opponent.x - player.x, opponent.y - player.y, player.aimX, player.aimY);
-  const error = Math.sin((timing.cycle + 1) * (timing.seed % 13 + 3) * 1.618) * 0.16;
+  const error = Math.sin((timing.cycle + 1) * (timing.seed % 13 + 3) * 1.618) * 0.18;
   return normalize(
     exact.x - exact.y * error,
     exact.y + exact.x * error,
@@ -258,8 +258,12 @@ export function createBotInputs(world) {
     const opponent = opponents[0];
     const opponentDistance = opponent ? Math.hypot(opponent.x - player.x, opponent.y - player.y) : Infinity;
     const timing = botCombatTiming(world, player);
-    const reactionReady = Boolean(
+    const hasLineOfSight = Boolean(
       opponent
+      && !segmentHitsWorld(player.x, player.y - 12, opponent.x, opponent.y - 10, 2),
+    );
+    const reactionReady = Boolean(
+      hasLineOfSight
       && opponentDistance <= BOT_AWARENESS_RANGE
       && timing.position >= timing.reactionDelay,
     );
@@ -568,7 +572,7 @@ function updatePlayers(world, inputs, dt) {
 
     const move = normalize(Number(input.mx) || 0, Number(input.my) || 0, 0, 0);
     const rawMoveLength = clamp(Math.hypot(Number(input.mx) || 0, Number(input.my) || 0), 0, 1);
-    const canMove = player.reloadTimer <= 0 && player.bandageTimer <= 0;
+    const canMove = player.bandageTimer <= 0;
     player.moving = canMove && rawMoveLength > 0.04;
     if (player.moving) {
       const speed = player.dodgeTimer > 0 ? 235 : 128;

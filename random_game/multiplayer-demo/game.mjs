@@ -24,7 +24,7 @@ import {
   finishByForfeit,
   moveActor,
   stepWorld,
-} from "./sim.mjs?v=20260811-4";
+} from "./sim.mjs?v=20260811-7";
 import {
   AUTO_MATCH_SECONDS,
   AUTO_MATCH_SHARDS,

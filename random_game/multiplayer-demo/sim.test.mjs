@@ -62,9 +62,11 @@ function advance(world, inputs, seconds) {
 
 {
   const world = createWorld(members, 1);
+  const reloadStartX = world.players.p1.x;
   Object.assign(world.players.p1, { ammo: 0, reserve: 25 });
-  stepWorld(world, { p1: { reloadSeq: 1 } }, 0.05);
+  stepWorld(world, { p1: { mx: 1, my: 0, reloadSeq: 1 } }, 0.05);
   assert.equal(world.players.p1.reloadTimer, 1.05, "Reload demo pertama harus berlangsung 1,05 detik.");
+  assert.ok(world.players.p1.x > reloadStartX, "Pemain harus tetap bisa bergerak sambil reload.");
   advance(world, {}, 1.1);
   assert.equal(world.players.p1.ammo, 5);
   assert.equal(world.players.p1.reserve, 20);
@@ -179,6 +181,23 @@ function advance(world, inputs, seconds) {
   assert.ok(fireFrames > 0 && fireFrames <= 8, "Bot harus menembak dalam burst pendek, bukan terus-menerus.");
   assert.ok(world.bulletSeq >= 2 && world.bulletSeq <= 4, "Bot maksimal menembak sekitar sekali per siklus reaksi.");
   assert.equal(firingWithAimError, fireFrames, "Bidikan bot harus memiliki deviasi agar tidak menjadi aimbot.");
+}
+
+{
+  const world = createWorld({
+    human: { name: "Pemain", team: TEAMS.PEJUANG, slot: 0 },
+    bot: { name: "Patroli BOT", team: TEAMS.KOLONIAL, slot: 0, isBot: true },
+  }, 1);
+  let attemptedBlockedShot = false;
+  for (let step = 0; step < 60; step += 1) {
+    Object.assign(world.players.human, { x: 400, y: 270, hp: 100, dead: false, spawnShield: 10 });
+    Object.assign(world.players.bot, { x: 560, y: 270, dead: false, spawnShield: 0 });
+    const input = createBotInputs(world).bot;
+    attemptedBlockedShot ||= input.fire;
+    stepWorld(world, { bot: input }, 0.05);
+  }
+  assert.equal(attemptedBlockedShot, false, "Bot tidak boleh menembak asal jika lawan tertutup bangunan.");
+  assert.equal(world.bulletSeq, 0, "Dinding harus mencegah bot membuat proyektil.");
 }
 
 process.stdout.write("PASS: movement, combat/VFX, capture, bot AI, scoring, forfeit, dan snapshot multiplayer\n");

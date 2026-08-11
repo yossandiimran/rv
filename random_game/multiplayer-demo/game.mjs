@@ -73,6 +73,7 @@ const ui = {
   leaveRoom: document.querySelector("#leave-room"),
   readyButton: document.querySelector("#ready-button"),
   startMatch: document.querySelector("#start-match"),
+  gameStage: document.querySelector("#game-stage"),
   fullscreenButton: document.querySelector("#fullscreen-button"),
   gameLoading: document.querySelector("#game-loading"),
   resultOverlay: document.querySelector("#result-overlay"),
@@ -151,6 +152,7 @@ let resultCommitted = false;
 let matchStartPending = false;
 let lastMatchmakingSecond = -1;
 let toastTimer = 0;
+let nativeFrameFullscreen = false;
 let roomUnsubscribers = [];
 let disconnectRegistrations = [];
 
@@ -170,16 +172,19 @@ function showToast(text, seconds = 2.4) {
   toastTimer = seconds;
 }
 
+function nativeFullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
 function fullscreenActive() {
-  return document.fullscreenElement === ui.gameScreen
-    || document.webkitFullscreenElement === ui.gameScreen
-    || ui.gameScreen.classList.contains("mobile-cinema-mode");
+  return nativeFullscreenElement() === ui.gameStage
+    || ui.gameStage.classList.contains("frame-fullscreen");
 }
 
 function updateFullscreenButton() {
   const active = fullscreenActive();
   const label = ui.fullscreenButton.querySelector("small");
-  if (label) label.textContent = active ? "Keluar" : "Landscape";
+  if (label) label.textContent = active ? "Keluar" : "Fullscreen";
   ui.fullscreenButton.setAttribute("aria-label", active ? "Keluar dari layar penuh" : "Aktifkan layar penuh landscape");
 }
 
@@ -193,32 +198,47 @@ async function lockLandscape() {
   }
 }
 
+async function exitFrameFullscreen() {
+  const fullscreenElement = nativeFullscreenElement();
+  ui.gameStage.classList.remove("frame-fullscreen");
+  document.body.classList.remove("game-cinema-active");
+  nativeFrameFullscreen = false;
+
+  try {
+    if (fullscreenElement === ui.gameStage && document.exitFullscreen) await document.exitFullscreen();
+    else if (fullscreenElement === ui.gameStage && document.webkitExitFullscreen) document.webkitExitFullscreen();
+  } catch {
+    // CSS mode has already been closed, even if the native API refuses to exit.
+  }
+
+  window.screen.orientation?.unlock?.();
+  updateFullscreenButton();
+}
+
 async function toggleMobileFullscreen() {
   if (fullscreenActive()) {
-    ui.gameScreen.classList.remove("mobile-cinema-mode");
-    document.body.classList.remove("game-cinema-active");
-    if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
-    else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
-    updateFullscreenButton();
+    await exitFrameFullscreen();
     return;
   }
 
-  let nativeFullscreen = false;
+  // Enter the frame-sized CSS mode synchronously. This keeps the button useful
+  // on mobile browsers that expose, but reject, the native Fullscreen API.
+  ui.gameStage.classList.add("frame-fullscreen");
+  document.body.classList.add("game-cinema-active");
+  updateFullscreenButton();
+
   try {
-    if (ui.gameScreen.requestFullscreen) {
-      await ui.gameScreen.requestFullscreen();
-      nativeFullscreen = true;
-    } else if (ui.gameScreen.webkitRequestFullscreen) {
-      ui.gameScreen.webkitRequestFullscreen();
-      nativeFullscreen = true;
+    if (ui.gameStage.requestFullscreen) {
+      await ui.gameStage.requestFullscreen({ navigationUI: "hide" });
+      nativeFrameFullscreen = true;
+    } else if (ui.gameStage.webkitRequestFullscreen) {
+      ui.gameStage.webkitRequestFullscreen();
+      nativeFrameFullscreen = true;
     }
   } catch {
-    nativeFullscreen = false;
+    nativeFrameFullscreen = false;
   }
-  if (!nativeFullscreen) {
-    ui.gameScreen.classList.add("mobile-cinema-mode");
-    document.body.classList.add("game-cinema-active");
-  }
+
   const locked = await lockLandscape();
   if (!locked && matchMedia("(orientation: portrait)").matches) showToast("Putar HP ke posisi landscape untuk tampilan terbaik.", 3);
   updateFullscreenButton();
@@ -231,9 +251,7 @@ function showScreen(next) {
   ui.gameScreen.classList.toggle("hidden", next !== "game");
   if (next === "game") canvas.focus();
   else if (fullscreenActive()) {
-    ui.gameScreen.classList.remove("mobile-cinema-mode");
-    document.body.classList.remove("game-cinema-active");
-    if (document.fullscreenElement === ui.gameScreen) document.exitFullscreen?.().catch(() => {});
+    exitFrameFullscreen().catch(console.error);
   }
 }
 
@@ -1540,7 +1558,7 @@ function drawMinimap(world) {
   const width = mobile ? 158 : 172;
   const height = mobile ? 94 : 102;
   const x = WORLD_WIDTH - width - 14;
-  const y = 14;
+  const y = 58;
   const innerX = x + 7;
   const innerY = y + 19;
   const innerWidth = width - 14;
@@ -1867,7 +1885,9 @@ for (const button of document.querySelectorAll("[data-touch-action]")) {
 
 ui.fullscreenButton.addEventListener("click", () => toggleMobileFullscreen().catch(console.error));
 const handleFullscreenChange = () => {
-  if (!document.fullscreenElement && !document.webkitFullscreenElement && !ui.gameScreen.classList.contains("mobile-cinema-mode")) {
+  if (!nativeFullscreenElement() && nativeFrameFullscreen) {
+    nativeFrameFullscreen = false;
+    ui.gameStage.classList.remove("frame-fullscreen");
     document.body.classList.remove("game-cinema-active");
     window.screen.orientation?.unlock?.();
   }

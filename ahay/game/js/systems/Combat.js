@@ -36,7 +36,9 @@ export function applyHit(att, def, move, dmg, fx, from = att) {
     fx.hitstop(move.knock > 8 ? 6 : 3);
   }
   if (def.hp <= 0) { def.hp = 0; def.state = "ko"; def.t = 0; fx.shake(10); }
-  return blocking ? "block" : "hit";
+  const result = blocking ? "block" : "hit";
+  fx.hit?.(att, def, blocking ? dmg * BLOCK_CHIP : dmg, result, move);
+  return result;
 }
 
 // Called every tick for fighters in an attack's active frames (melee).

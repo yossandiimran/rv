@@ -1,7 +1,7 @@
 export const W = 960, H = 540;
 export const ARENA = { minX: 70, maxX: 890, minY: 345, maxY: 490, scaleNear: 1.12, scaleFar: 0.86 };
 export const ROUND_SECONDS = 60;
-export const SPRITE_SIZE = 290; // drawn size of one pose cell at scale 1
+export const PX = 3; // screen pixels per art pixel (integer keeps pixels square)
 export const FEET = 0.83 / 0.9; // feet position inside a cropped pose canvas (fraction of height)
 
 // Frame data @60 Hz. pose = index into the 8-state combat sheet.

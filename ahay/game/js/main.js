@@ -151,5 +151,20 @@ const loop = new GameLoop(
   loop.start();
   // dev hook: index.html#fight=<stage> jumps straight into a fight
   const m = location.hash.match(/fight=(\d+)/);
-  if (m) { chosen = CHARACTERS[0]; startFight(Math.min(+m[1], BOSSES.length - 1)); }
+  if (m) {
+    chosen = CHARACTERS[0];
+    await startFight(Math.min(+m[1], BOSSES.length - 1));
+    // &sim=N runs N scripted ticks synchronously (headless screenshots can't advance rAF)
+    const sim = location.hash.match(/sim=(\d+)/);
+    if (sim && battle) {
+      for (let i = 0; i < +sim[1]; i++) {
+        const { boss: b, player: p } = battle;
+        if (Math.abs(b.x - p.x) > 85) input.held.add(b.x > p.x ? "right" : "left");
+        else { input.held.delete("left"); input.held.delete("right"); }
+        if (i % 14 === 0) input.pressed.add("punch"); else if (i % 53 === 0) input.pressed.add("kick");
+        battle.update();
+      }
+      input.clear();
+    }
+  }
 })();

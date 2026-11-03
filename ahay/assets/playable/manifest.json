@@ -1,0 +1,32 @@
+{
+  "id": "rakyat-last-stand-playable-roster-v1",
+  "facing": "right",
+  "format": "transparent-png",
+  "masterAtlas": "playable-roster-master-v1.png",
+  "characters": [
+    {
+      "id": "office-worker",
+      "name": "Pegawai Kantoran",
+      "archetype": "balanced",
+      "file": "01-office-worker-v1.png"
+    },
+    {
+      "id": "university-student",
+      "name": "Mahasiswi",
+      "archetype": "combo",
+      "file": "02-university-student-v1.png"
+    },
+    {
+      "id": "mother",
+      "name": "Emak-Emak",
+      "archetype": "heavy",
+      "file": "03-mother-v1.png"
+    },
+    {
+      "id": "street-vendor",
+      "name": "Pedagang Kaki Lima",
+      "archetype": "defensive",
+      "file": "04-street-vendor-v1.png"
+    }
+  ]
+}

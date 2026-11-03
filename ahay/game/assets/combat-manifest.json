@@ -1,0 +1,1208 @@
+{
+  "id": "rakyat-last-stand-combat-v1",
+  "note": "Angka damage/timing placeholder; serangan = metafora arcade fiksi, bukan klaim faktual.",
+  "stateOrder": [
+    "light",
+    "heavy",
+    "guard-counter",
+    "dodge",
+    "special-startup",
+    "special-active",
+    "ultimate",
+    "hit-ko"
+  ],
+  "playable": [
+    {
+      "id": "office-worker",
+      "name": "Pegawai Kantoran",
+      "archetype": "balanced",
+      "facing": "right",
+      "sheet": "skills/playable-office-worker-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Tap Kartu Absen",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Lembur Smash",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Cuti Mendadak Block",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Resign Dash",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Laporan Revisi",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Deadline Slam",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Mogok Kerja Massal",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Kena PHK",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "university-student",
+      "name": "Mahasiswi",
+      "archetype": "combo",
+      "facing": "right",
+      "sheet": "skills/playable-university-student-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Toa Jab",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Lempar Spanduk",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Almamater Parry",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Bubar Barisan",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Orasi Warm-up",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Orasi Menggelegar",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Aksi Seribu Massa",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Dibubarkan",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "mother",
+      "name": "Emak-Emak",
+      "archetype": "heavy",
+      "facing": "right",
+      "sheet": "skills/playable-mother-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Cubit Kilat",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Serok Bogem",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Panci Guard",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Selip Dapur",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Sambal Charge",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Ulekan Meledak",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Arisan Rebut",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Daster Tumbang",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "street-vendor",
+      "name": "Pedagang Kaki Lima",
+      "archetype": "defensive",
+      "facing": "right",
+      "sheet": "skills/playable-street-vendor-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Sodok Spatula",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Dorong Gerobak",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Terpal Counter",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Geser Lapak",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Panaskan Wajan",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Minyak Panas",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Gerobak Sapu Jagat",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Lapak Digusur",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    }
+  ],
+  "enemies": [
+    {
+      "id": "buzzer",
+      "name": "Buzzer",
+      "theme": "opini-publik",
+      "facing": "left",
+      "sheet": "skills/enemy-buzzer-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Retweet Jab",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Trending Smash",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Fake Fact Guard",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Bot Teleport",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Hashtag Charge",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Spam Storm",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Viral Overload",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Akun Suspend",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "dody-hanggodo",
+      "name": "Dody Hanggodo",
+      "theme": "birokrasi-komunikasi",
+      "facing": "left",
+      "sheet": "skills/enemy-dody-hanggodo-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Stempel Cepat",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Tumpukan Berkas",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Surat Edaran Block",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Disposisi Dodge",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Rapat Koordinasi",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Pita Merah",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Reorganisasi Total",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Dimutasi",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "nusron-wahid",
+      "name": "Nusron Wahid",
+      "theme": "pertanahan-dokumen",
+      "facing": "left",
+      "sheet": "skills/enemy-nusron-wahid-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Sertifikat Slap",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Patok Tanah",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Map Berlapis",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Geser Batas",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Peta Persil",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Sengketa Lahan",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Birokrasi Berlapis",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Dokumen Hilang",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "natalius-pigai",
+      "name": "Natalius Pigai",
+      "theme": "retorika-debat",
+      "facing": "left",
+      "sheet": "skills/enemy-natalius-pigai-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Interupsi",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Tunjuk Argumen",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Counter Argumen",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Mundur Elegan",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Tarik Napas Panjang",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Pidato Menggelegar",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Debat Tanpa Akhir",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Mic Mati",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "rudy-masud",
+      "name": "Rudy Mas'ud",
+      "theme": "kekuasaan-daerah-anggaran",
+      "facing": "left",
+      "sheet": "skills/enemy-rudy-masud-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Palu Anggaran",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Proposal Hantam",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Perisai Protokol",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Panggil Ajudan",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Panggil Staf",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Cairkan Dana",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Anggaran Ketok Palu",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Dicopot",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "syarifah-suraidah",
+      "name": "Syarifah Suraidah",
+      "theme": "privilege-gaya-selangit",
+      "facing": "left",
+      "sheet": "skills/enemy-syarifah-suraidah-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Kipas Mewah",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Tas Hantam",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Couture Shield",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Kilau Dodge",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Pamer Perhiasan",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Aura Emas",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Panggung Selangit",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Makeup Luntur",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "bahlil-lahadalia",
+      "name": "Bahlil Lahadalia",
+      "theme": "energi-sumber-daya",
+      "facing": "left",
+      "sheet": "skills/enemy-bahlil-lahadalia-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Hantam Pipa",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Drum Minyak",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Subsidi Block",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Geser Kuota",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Tekan Valve",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Semburan Energi",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Krisis Energi",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Blackout",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "hashim-djojohadikusumo",
+      "name": "Hashim Djojohadikusumo",
+      "theme": "pengaruh-ekonomi",
+      "facing": "left",
+      "sheet": "skills/enemy-hashim-djojohadikusumo-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Koin Jentik",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Tongkat Catur",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Aset Beku",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Pindah Papan",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Atur Bidak",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Jaring Jaringan",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Skakmat Ekonomi",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Bangkrut",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "teddy-indra-wijaya",
+      "name": "Teddy Indra Wijaya",
+      "theme": "lingkar-kekuasaan",
+      "facing": "left",
+      "sheet": "skills/enemy-teddy-indra-wijaya-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Walkie Jab",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Lempar Memo",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Protokol Block",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Jadwal Dodge",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Atur Jadwal",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Memo Berputar",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Protokol Total",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Baterai Habis",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "prabowo-subianto",
+      "name": "Prabowo Subianto",
+      "theme": "final-confrontation",
+      "facing": "left",
+      "sheet": "skills/enemy-prabowo-subianto-combat-v1.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Tinju Komando",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Palu Kekuasaan",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Garuda Guard",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Maju Mundur",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Pidato Pembuka",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Fase Garuda",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Last Stand",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Tumbang",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    }
+  ]
+}

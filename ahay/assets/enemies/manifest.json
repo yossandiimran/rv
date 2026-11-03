@@ -1,0 +1,81 @@
+{
+  "id": "rakyat-last-stand-enemy-roster-v3",
+  "title": "RAKYAT: LAST STAND",
+  "format": "transparent-png",
+  "view": "side-fighting",
+  "masterAtlas": "enemy-roster-master-v3.png",
+  "artDirection": "editorial-caricature-pixel-art",
+  "characters": [
+    {
+      "order": "1",
+      "id": "buzzer",
+      "name": "Buzzer",
+      "file": "01-buzzer-v3.png",
+      "theme": "opini-publik"
+    },
+    {
+      "order": "2",
+      "id": "dody-hanggodo",
+      "name": "Dody Hanggodo",
+      "file": "02-dody-hanggodo-v3.png",
+      "theme": "birokrasi-komunikasi"
+    },
+    {
+      "order": "3",
+      "id": "nusron-wahid",
+      "name": "Nusron Wahid",
+      "file": "03-nusron-wahid-v3.png",
+      "theme": "pertanahan-dokumen"
+    },
+    {
+      "order": "4",
+      "id": "natalius-pigai",
+      "name": "Natalius Pigai",
+      "file": "04-natalius-pigai-v3.png",
+      "theme": "retorika-debat"
+    },
+    {
+      "order": "5a",
+      "id": "rudy-masud",
+      "name": "Rudy Mas'ud",
+      "file": "05-rudy-masud-v3.png",
+      "theme": "kekuasaan-daerah"
+    },
+    {
+      "order": "5b",
+      "id": "syarifah-suraidah",
+      "name": "Syarifah Suraidah",
+      "file": "05b-syarifah-suraidah-v3.png",
+      "theme": "support-arena"
+    },
+    {
+      "order": "6",
+      "id": "bahlil-lahadalia",
+      "name": "Bahlil Lahadalia",
+      "file": "06-bahlil-lahadalia-v3.png",
+      "theme": "energi-sumber-daya"
+    },
+    {
+      "order": "7",
+      "id": "hashim-djojohadikusumo",
+      "name": "Hashim Djojohadikusumo",
+      "file": "07-hashim-djojohadikusumo-v3.png",
+      "theme": "pengaruh-ekonomi"
+    },
+    {
+      "order": "8a",
+      "id": "teddy-indra-wijaya",
+      "name": "Teddy Indra Wijaya",
+      "file": "08a-teddy-indra-wijaya-v3.png",
+      "theme": "lingkar-kekuasaan"
+    },
+    {
+      "order": "8b",
+      "id": "prabowo-subianto",
+      "name": "Prabowo Subianto",
+      "file": "08b-prabowo-subianto-v3.png",
+      "theme": "final-confrontation"
+    }
+  ],
+  "contentNote": "Karakter adalah karikatur fiksi untuk satire video game dan bukan representasi faktual atas tindakan atau sifat pribadi tokoh nyata."
+}

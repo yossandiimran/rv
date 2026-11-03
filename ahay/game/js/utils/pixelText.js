@@ -34,13 +34,19 @@ export function buildPixelText(text, size, color, outline) {
   const w = Math.ceil(probe.measureText(text).width) + 10, h = size + 9;
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const g = c.getContext("2d");
-  if (outline) g.drawImage(layer(text, font, size, w, h, outline, 40, [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1], [0, 2], [1, 2], [-1, 2]]), 0, 0);
+  const o = Math.max(1, Math.round(size / 10)); // outline thickness follows the source size
+  const ring = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1], [0, 2], [1, 2], [-1, 2]].map(([dx, dy]) => [dx * o, dy * o]);
+  if (outline) g.drawImage(layer(text, font, size, w, h, outline, 40, ring), 0, 0);
   g.drawImage(layer(text, font, size, w, h, color, heavy ? 150 : 120, [[0, 0]], heavy ? 0 : size * 0.07), 0, 0);
   return c;
 }
 
 // y is the top of the text. px = screen pixels per art pixel.
 export function pixelText(ctx, text, x, y, { px = 3, size = 10, color = "#fff", outline = "#000", align = "center", alpha = 1 } = {}) {
+  // Text drawn at 2x is rendered from a font twice as big at 1x: identical on-screen size, but each letter has 4x the pixels,
+  // so it stays pixel-styled yet readable when the canvas is scaled to a phone screen.
+  const k = px === 2 ? 2 : 1;
+  size *= k; px /= k;
   const key = `${text}|${size}|${color}|${outline}`;
   let c = cache.get(key);
   if (!c) { c = buildPixelText(text, size, color, outline); if (cache.size > 400) cache.clear(); cache.set(key, c); }

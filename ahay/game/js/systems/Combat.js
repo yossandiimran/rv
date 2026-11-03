@@ -1,4 +1,4 @@
-import { DEPTH_TOLERANCE, BLOCK_CHIP, MOVES } from "../data/config.js";
+import { DEPTH_TOLERANCE, BLOCK_CHIP, MOVES, W } from "../data/config.js";
 
 const HALF_BODY = 38;
 
@@ -65,7 +65,7 @@ export function updateProjectiles(list, fighters, fx) {
     const p = list[i];
     p.x += p.vx; p.life--;
     const foe = fighters.find((f) => f !== p.owner);
-    let remove = p.life <= 0 || p.x < 0 || p.x > 960;
+    let remove = p.life <= 0 || p.x < 0 || p.x > W;
     if (foe.alive && Math.abs(p.y - foe.y) <= DEPTH_TOLERANCE && Math.abs(p.x - foe.x) < HALF_BODY + 14) {
       const r = applyHit(p.owner, foe, p.move, p.dmg, fx, p);
       if (r !== "miss") remove = true;

@@ -1,4 +1,4 @@
-import { W, H } from "./data/config.js";
+import { W, H, WORLD_MIN_W, WORLD_MAX_W, setWorldWidth } from "./data/config.js";
 import { CHARACTERS } from "./data/characters.js";
 import { BOSSES, TRAINING_DUMMY } from "./data/bosses.js";
 import { GameLoop } from "./core/GameLoop.js";
@@ -41,13 +41,28 @@ function showMenu() {
   show("menu");
 }
 
-// ---- layout: --u = 1% of stage width so HTML UI scales with the canvas ----
+// ---- layout: the stage fills the screen; the world width follows the aspect so fullscreen has no black bars ----
+// --u is "1% of the width of a 16:9 stage" (= stage height / 56.25) so the HTML UI keeps the same size on any aspect.
 function layout() {
+  const app = $("app"), cs = getComputedStyle(app);
+  const availW = innerWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const availH = innerHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const worldW = Math.max(WORLD_MIN_W, Math.min(WORLD_MAX_W, Math.round((H * availW / availH) / 4) * 4));
+  const stageH = Math.min(availH, (availW * H) / worldW), stageW = (stageH * worldW) / H;
   const st = $("stage");
-  document.documentElement.style.setProperty("--u", st.clientWidth / 100 + "px");
+  st.style.width = stageW + "px"; st.style.height = stageH + "px";
+  document.documentElement.style.setProperty("--u", stageH / 56.25 + "px");
+  if (worldW !== W) {
+    const oldW = W;
+    setWorldWidth(worldW);
+    canvas.width = worldW; // resets the 2D context state; Battle.render sets what it needs each frame
+    menuBg = null;
+    battle?.onWorldResize(oldW, worldW);
+  }
   const portrait = innerHeight > innerWidth && isTouch;
   $("rotate").classList.toggle("hidden", !portrait);
 }
+
 // ---- fullscreen (not available on iPhone Safari: shows an "add to home screen" hint instead) ----
 const fsRoot = document.documentElement;
 const fsRequest = fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen;
@@ -71,7 +86,7 @@ function setupFullscreenUi() {
   $("btn-fs").onclick = toggleFullscreen;
   $("btn-fs2").onclick = toggleFullscreen;
 }
-for (const ev of ["fullscreenchange", "webkitfullscreenchange"]) document.addEventListener(ev, layout);
+for (const ev of ["fullscreenchange", "webkitfullscreenchange"]) document.addEventListener(ev, () => { layout(); setTimeout(layout, 250); setTimeout(layout, 800); }); // the viewport settles a moment after the event
 addEventListener("resize", layout);
 addEventListener("orientationchange", layout);
 
@@ -96,17 +111,19 @@ function htmlText(el, text) {
 function pixelize(el) {
   const text = el.dataset.text ?? el.textContent.trim();
   el.dataset.text = text; el.setAttribute("aria-label", text);
-  if (+el.dataset.px < PIXEL_TEXT_MIN) { htmlText(el, text); return; }
+  const isControl = el.tagName === "BUTTON" || el.classList.contains("key"); // buttons keep their pixel-text look
+  if (!isControl && +el.dataset.px < PIXEL_TEXT_MIN) { htmlText(el, text); return; }
   el.classList.remove("ht");
+  const SRC = isControl ? 10 : 14; // source font size: titles use a finer grid so letters keep their gaps
   const color = el.dataset.color || "#fff", outline = el.dataset.outline || "#000";
-  const parts = wrapText(text, +el.dataset.wrap || 999).map((l) => buildPixelText(l, 14, color, outline)); // 14px source = more detail, so big titles keep their letter gaps
+  const parts = wrapText(text, +el.dataset.wrap || 999).map((l) => buildPixelText(l, SRC, color, outline));
   const w = Math.max(...parts.map((c) => c.width)), lh = parts[0].height - 2;
   const c = document.createElement("canvas");
   c.width = w; c.height = lh * parts.length + 2;
   const g = c.getContext("2d");
   parts.forEach((p, i) => g.drawImage(p, Math.round((w - p.width) / 2), i * lh));
   c.className = "pxt";
-  c.style.width = `calc(var(--u) * ${(el.dataset.px * 10 / 14).toFixed(4)} * ${w})`; // data-px was tuned for a 10px source
+  c.style.width = `calc(var(--u) * ${(el.dataset.px * 10 / SRC).toFixed(4)} * ${w})`; // data-px is tuned for a 10px source
   el.replaceChildren(c);
 }
 function setPx(el, text) { el.dataset.text = text; pixelize(el); }

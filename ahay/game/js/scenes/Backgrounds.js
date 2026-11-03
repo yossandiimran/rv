@@ -10,7 +10,10 @@ export const VENUES = [
 ];
 export const venueFor = (stageNo) => VENUES.find((v) => v.stages.includes(stageNo)) ?? VENUES[0];
 
-const S = 4, LW = W / S, LH = H / S;
+// Venues are designed on a 240x135 grid. For wider worlds the design is centred (translate by X) and every full-width
+// layer (sky, skyline, ground, fences) is extended to cover the extra width on both sides.
+const S = 4, LH = H / S, DESIGN_W = 240, CX = DESIGN_W / 2;
+let LW = DESIGN_W, X = 0;
 const hsl = (h, s, l) => `hsl(${h},${s}%,${l}%)`;
 const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -23,8 +26,8 @@ function ctxTools(g, seed0) {
     const col = (i) => hsl(Math.round(lerp(top[0], bot[0], i / (bands - 1))) % 360, Math.round(lerp(top[1], bot[1], i / (bands - 1))), Math.round(lerp(top[2], bot[2], i / (bands - 1))));
     for (let i = 0; i < bands; i++) {
       const y0 = Math.round((i * yEnd) / bands), y1 = Math.round(((i + 1) * yEnd) / bands);
-      R(0, y0, LW, y1 - y0, col(i));
-      if (i < bands - 1) { g.fillStyle = col(i + 1); for (let x = i % 2; x < LW; x += 2) g.fillRect(x, y1 - 1, 1, 1); }
+      R(-X, y0, LW, y1 - y0, col(i));
+      if (i < bands - 1) { g.fillStyle = col(i + 1); for (let x = -X + (i % 2); x < LW - X; x += 2) g.fillRect(x, y1 - 1, 1, 1); }
     }
   };
   // filled half-ellipse (dome) with banded shading; cx,baseY centre of the flat bottom
@@ -39,7 +42,7 @@ function ctxTools(g, seed0) {
   };
   // buildings silhouette row
   const skyline = (base, minH, maxH, color, lit = "#ffd980", seedAdd = 0) => {
-    for (let x = -4; x < LW; ) {
+    for (let x = -X - 4; x < LW - X; ) {
       const bw = 10 + Math.floor(rnd() * 16), bh = minH + Math.floor(rnd() * (maxH - minH));
       R(x, base - bh, bw, bh, color);
       g.fillStyle = lit;
@@ -52,7 +55,7 @@ function ctxTools(g, seed0) {
     g.fillStyle = color;
     for (let i = -9; i <= 9; i++) for (let y = y0 + 1; y < LH; y++) {
       const t = (y - y0) / (LH - y0);
-      g.fillRect(Math.round(LW / 2 + i * step + i * spread * t), y, 1, 1);
+      g.fillRect(Math.round(CX + i * step + i * spread * t), y, 1, 1);
     }
   };
   const flag = (x, top, len = 12) => { R(x, top, 1, 60, "#d8d8d8"); R(x + 1, top, len, 3, "#d32f2f"); R(x + 1, top + 3, len, 3, "#ffffff"); };
@@ -64,15 +67,15 @@ function drawStreet(g, stageNo) {
   const { rnd, R, sky, skyline, perspective } = ctxTools(g, stageNo * 9301 + 49297);
   const hue = (stageNo * 37 + 200) % 360;
   sky(76, [hue, 50, 16], [(hue + 32) % 360, 50, 44]);
-  g.fillStyle = "#fff"; for (let i = 0; i < 30; i++) g.fillRect(Math.floor(rnd() * LW), Math.floor(rnd() * 40), 1, 1);
+  g.fillStyle = "#fff"; for (let i = 0; i < 30; i++) g.fillRect(Math.floor(rnd() * LW - X), Math.floor(rnd() * 40), 1, 1);
   R(190, 10, 12, 12, "#f5e9b8"); R(192, 12, 6, 6, "#fff8d8");
   skyline(78, 22, 62, hsl(hue, 30, 14));
   skyline(78, 22, 48, hsl(hue, 30, 9));
-  R(0, 75, LW, 11, "#4a4a56"); g.fillStyle = "#3a3a46"; for (let x = 0; x < LW; x += 20) g.fillRect(x, 75, 1, 11);
-  R(0, 75, LW, 1, "#33333f"); R(0, 84, LW, 2, "#8a8a96");
-  [["#34343e", 86, 100], ["#2c2c36", 100, 114], ["#24242d", 114, LH]].forEach(([c, a, b]) => R(0, a, LW, b - a, c));
+  R(-X, 75, LW, 11, "#4a4a56"); g.fillStyle = "#3a3a46"; for (let x = 0 - Math.ceil((X + 0) / 20) * 20; x < LW - X; x += 20) g.fillRect(x, 75, 1, 11);
+  R(-X, 75, LW, 1, "#33333f"); R(-X, 84, LW, 2, "#8a8a96");
+  [["#34343e", 86, 100], ["#2c2c36", 100, 114], ["#24242d", 114, LH]].forEach(([c, a, b]) => R(-X, a, LW, b - a, c));
   perspective(86, "#4b4b57");
-  g.fillStyle = "#d9b840"; [96, 108, 122].forEach((y) => { for (let x = 6; x < LW; x += 14) g.fillRect(x, y, 8, 1); });
+  g.fillStyle = "#d9b840"; [96, 108, 122].forEach((y) => { for (let x = 6 - Math.ceil((X + 6) / 14) * 14; x < LW - X; x += 14) g.fillRect(x, y, 8, 1); });
   const signs = [["DENGAR", "RAKYAT"], ["TURUNKAN", "HARGA"], ["BUBAR", "BUZZER"], ["KAMI BUKAN", "DATA"]];
   const cols = ["#f5f0e1", "#ffd60a", "#ff8a80", "#9ad1ff"];
   [26, 88, 150, 212].forEach((x, i) => {
@@ -107,10 +110,10 @@ function drawHI(g, stageNo) {
   g.fillStyle = "#fff"; for (let i = 0; i < 40; i++) g.fillRect(70 + Math.floor(rnd() * 100), 79 + Math.floor(rnd() * 6), 2, 1);
   [66, 86, 154, 174].forEach((x) => { for (let y = 62; y < 78; y += 2) R(x, y, 1, 1, "#e8f4ff"); R(x - 2, 60, 5, 1, "#e8f4ff"); R(x - 3, 61, 1, 1, "#e8f4ff"); R(x + 3, 61, 1, 1, "#e8f4ff"); }); // spray
   // road + zebra crossing
-  [["#34343e", 86, 100], ["#2c2c36", 100, 114], ["#24242d", 114, LH]].forEach(([c, a, b]) => R(0, a, LW, b - a, c));
+  [["#34343e", 86, 100], ["#2c2c36", 100, 114], ["#24242d", 114, LH]].forEach(([c, a, b]) => R(-X, a, LW, b - a, c));
   perspective(86, "#4b4b57", 22, 10);
-  for (let x = 4; x < LW; x += 10) R(x, 125, 6, 8, "#e8e8e8");
-  g.fillStyle = "#d9b840"; for (let x = 8; x < LW; x += 18) g.fillRect(x, 106, 8, 1);
+  for (let x = 4 - Math.ceil((X + 4) / 10) * 10; x < LW - X; x += 10) R(x, 125, 6, 8, "#e8e8e8");
+  g.fillStyle = "#d9b840"; for (let x = 8 - Math.ceil((X + 8) / 18) * 18; x < LW - X; x += 18) g.fillRect(x, 106, 8, 1);
   // street lamps with glow
   [34, 206].forEach((x) => { R(x, 44, 1, 42, "#1a1a22"); R(x - 3, 43, 8, 2, "#1a1a22"); R(x - 2, 45, 6, 2, "#ffe9a8"); g.fillStyle = "rgba(255,233,168,.15)"; g.fillRect(x - 8, 47, 18, 10); });
 }
@@ -119,7 +122,7 @@ function drawHI(g, stageNo) {
 function drawMPR(g, stageNo) {
   const { rnd, R, sky, dome, perspective, flag } = ctxTools(g, 4242 + stageNo);
   sky(78, [212, 22, 36], [205, 24, 70]);                      // hazy overcast
-  g.fillStyle = "rgba(255,255,255,.22)"; for (let i = 0; i < 7; i++) g.fillRect(Math.floor(rnd() * LW), 10 + Math.floor(rnd() * 30), 24 + Math.floor(rnd() * 30), 3);
+  g.fillStyle = "rgba(255,255,255,.22)"; for (let i = 0; i < 7; i++) g.fillRect(Math.floor(rnd() * LW - X), 10 + Math.floor(rnd() * 30), 24 + Math.floor(rnd() * 30), 3);
   // long white wings with window rows
   R(4, 48, 232, 30, "#e9e7e0"); R(4, 46, 232, 2, "#b9b6ae"); R(4, 76, 232, 2, "#a8a59c");
   for (let x = 8; x < 232; x += 6) { R(x, 53, 3, 6, "#4a5b6e"); R(x, 64, 3, 6, "#4a5b6e"); }
@@ -133,12 +136,12 @@ function drawMPR(g, stageNo) {
   R(94, 76, 52, 2, "#b9b6ae"); R(90, 78, 60, 2, "#a8a59c");
   flag(14, 16); flag(220, 16);
   // plaza + barricade + protest banner
-  R(0, 80, LW, 6, "#8d8a84");
-  R(0, 86, LW, LH - 86, "#77746f");
-  for (let y = 100; y < LH; y += 14) R(0, y, LW, 1, "#8b8883");
+  R(-X, 80, LW, 6, "#8d8a84");
+  R(-X, 86, LW, LH - 86, "#77746f");
+  for (let y = 100; y < LH; y += 14) R(-X, y, LW, 1, "#8b8883");
   perspective(86, "#8b8883", 26, 10);
-  for (let x = 0; x < LW; x += 10) { R(x, 79, 5, 4, "#ff8a1f"); R(x + 5, 79, 5, 4, "#f5f5f5"); }
-  R(0, 83, LW, 1, "#444");
+  for (let x = 0 - Math.ceil((X + 0) / 10) * 10; x < LW - X; x += 10) { R(x, 79, 5, 4, "#ff8a1f"); R(x + 5, 79, 5, 4, "#f5f5f5"); }
+  R(-X, 83, LW, 1, "#444");
   [30, 80, 160, 210].forEach((x) => R(x, 83, 1, 3, "#444"));
   R(56, 72, 128, 9, "#111"); R(57, 73, 126, 7, "#f5f0e1");
   g.fillStyle = "#b32d2d"; g.font = "bold 6px monospace"; g.textBaseline = "top"; g.textAlign = "center"; g.fillText("DENGARKAN RAKYAT!", 120, 74);
@@ -155,7 +158,7 @@ function drawPalace(g, stageNo) {
     for (let k = -6; k <= 6; k += 3) { R(x + k - 3, top + Math.abs(k) / 2, 8, 2, "#1f6b2a"); R(x + k - 2, top + 2 + Math.abs(k) / 2, 6, 1, "#2f8a3a"); }
   });
   // lawn
-  R(0, 66, LW, 20, "#3f7f3f"); for (let y = 66; y < 86; y += 4) R(0, y, LW, 2, "#46893f");
+  R(-X, 66, LW, 20, "#3f7f3f"); for (let y = 66; y < 86; y += 4) R(-X, y, LW, 2, "#46893f");
   // palace body, wings and roof
   R(34, 46, 172, 28, "#f4f1e8"); R(32, 44, 176, 3, "#8d8a85"); R(34, 72, 172, 3, "#cfc9b8");
   for (let x = 38; x < 206; x += 7) { if (x > 90 && x < 150) continue; R(x, 52, 3, 8, "#566b86"); R(x, 63, 3, 8, "#566b86"); }
@@ -166,21 +169,23 @@ function drawPalace(g, stageNo) {
   R(92, 74, 56, 2, "#cfc9b8"); R(88, 76, 64, 2, "#bdb6a2"); R(84, 78, 72, 2, "#a8a18c");
   flag(120, 4, 16);
   // iron fence with gold tips
-  R(0, 83, LW, 1, "#111"); R(0, 85, LW, 1, "#111");
-  for (let x = 1; x < LW; x += 4) { R(x, 77, 1, 9, "#111"); R(x, 76, 1, 1, "#e6c34a"); }
+  R(-X, 83, LW, 1, "#111"); R(-X, 85, LW, 1, "#111");
+  for (let x = 1 - Math.ceil((X + 1) / 4) * 4; x < LW - X; x += 4) { R(x, 77, 1, 9, "#111"); R(x, 76, 1, 1, "#e6c34a"); }
   // ground: pavers + red carpet in perspective
-  R(0, 86, LW, LH - 86, "#b9a98d");
-  for (let y = 94; y < LH; y += 8) R(0, y, LW, 1, "#a1906f");
-  for (let i = -9; i <= 9; i++) for (let y = 87; y < LH; y++) { const t = (y - 86) / (LH - 86); R(LW / 2 + i * 8 + i * 22 * t, y, 1, 1, "#a1906f"); }
-  for (let y = 86; y < LH; y++) { const t = (y - 86) / (LH - 86), half = 12 + t * 34; R(LW / 2 - half, y, half * 2, 1, y % 6 < 1 ? "#7d1f1f" : "#a32b2b"); }
-  R(LW / 2 - 14, 86, 1, LH - 86, "#d9b840");
+  R(-X, 86, LW, LH - 86, "#b9a98d");
+  for (let y = 94; y < LH; y += 8) R(-X, y, LW, 1, "#a1906f");
+  for (let i = -9; i <= 9; i++) for (let y = 87; y < LH; y++) { const t = (y - 86) / (LH - 86); R(CX + i * 8 + i * 22 * t, y, 1, 1, "#a1906f"); }
+  for (let y = 86; y < LH; y++) { const t = (y - 86) / (LH - 86), half = 12 + t * 34; R(CX - half, y, half * 2, 1, y % 6 < 1 ? "#7d1f1f" : "#a32b2b"); }
+  R(CX - 14, 86, 1, LH - 86, "#d9b840");
 }
 
 const DRAW = { street: drawStreet, hi: drawHI, mpr: drawMPR, palace: drawPalace };
 
 export function makeBackground(stageNo) {
+  LW = W / S; X = Math.round((LW - DESIGN_W) / 2);
   const c = document.createElement("canvas"); c.width = LW; c.height = LH;
   const g = c.getContext("2d");
+  g.translate(X, 0);
   DRAW[venueFor(stageNo).id](g, stageNo);
   const out = document.createElement("canvas"); out.width = W; out.height = H;
   const o = out.getContext("2d");

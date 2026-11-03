@@ -22,8 +22,8 @@ const END_DELAY = 170; // ticks after the final blow before the result screen (s
 export class Battle {
   constructor(playerDef, bossDef, playerPoses, bossPoses, input, { stageNo, onEnd, touch = false, training = false }) {
     this.input = input; this.onEnd = onEnd; this.stageNo = stageNo; this.touch = touch; this.training = training;
-    this.player = new Fighter(playerDef, { x: 300, y: 430, facing: 1, poses: playerPoses });
-    this.boss = new Fighter(bossDef, { x: 660, y: 430, facing: -1, poses: bossPoses, isBoss: true });
+    this.player = new Fighter(playerDef, { x: W / 2 - 180, y: 430, facing: 1, poses: playerPoses });
+    this.boss = new Fighter(bossDef, { x: W / 2 + 180, y: 430, facing: -1, poses: bossPoses, isBoss: true });
     this.fighters = [this.player, this.boss];
     this.ai = new BossAI(this.boss);
     this.barkCd = 0; this.desperate = false;
@@ -51,6 +51,14 @@ export class Battle {
   }
 
   setPaused(p) { this.paused = p; }
+
+  // Screen aspect changed (fullscreen, rotation): keep the fight centred and redraw the backdrop at the new width.
+  onWorldResize(oldW, newW) {
+    const dx = (newW - oldW) / 2;
+    for (const f of this.fighters) { f.x += dx; f.clamp(); }
+    for (const p of this.projectiles) p.x += dx;
+    this.bg = makeBackground(this.stageNo);
+  }
 
   onAttackStart(f, name, combo) {
     const color = f.def.color ?? "#fff";

@@ -1,4 +1,9 @@
-export const W = 960, H = 540;
+// The world is 540 tall; its width follows the screen aspect (960 = 16:9 up to 1280 = ~21:9) so fullscreen on tall phones
+// has no black bars. `W` is a live binding: setWorldWidth() updates it for every importing module.
+export let W = 960;
+export const H = 540;
+export const WORLD_MIN_W = 960, WORLD_MAX_W = 1280;
+export function setWorldWidth(w) { W = w; ARENA.maxX = w - 70; }
 export const ARENA = { minX: 70, maxX: 890, minY: 345, maxY: 490, scaleNear: 1.12, scaleFar: 0.86 };
 export const ROUND_SECONDS = 60;
 export const PX = 3; // screen pixels per art pixel (integer keeps pixels square)

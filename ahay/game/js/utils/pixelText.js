@@ -12,7 +12,7 @@ function layer(text, font, w, h, color, thr, offsets) {
   return c;
 }
 
-function build(text, size, color, outline) {
+export function buildPixelText(text, size, color, outline) {
   const font = `900 ${size}px 'Arial Black', Impact, Arial, sans-serif`;
   const probe = document.createElement('canvas').getContext('2d');
   probe.font = font;
@@ -28,7 +28,7 @@ function build(text, size, color, outline) {
 export function pixelText(ctx, text, x, y, { px = 3, size = 10, color = "#fff", outline = "#000", align = "center", alpha = 1 } = {}) {
   const key = `${text}|${size}|${color}|${outline}`;
   let c = cache.get(key);
-  if (!c) { c = build(text, size, color, outline); if (cache.size > 400) cache.clear(); cache.set(key, c); }
+  if (!c) { c = buildPixelText(text, size, color, outline); if (cache.size > 400) cache.clear(); cache.set(key, c); }
   const w = c.width * px;
   const left = align === "center" ? x - w / 2 : align === "right" ? x - w : x;
   const prev = ctx.imageSmoothingEnabled, pa = ctx.globalAlpha;

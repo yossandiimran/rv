@@ -14,52 +14,88 @@
       <div id="stage">
         <canvas id="game" width="960" height="540" aria-label="Arena pertarungan"></canvas>
 
-        <!-- Menu -->
+        <!-- Menu. Elements with data-px are rendered as pixel text by main.js (px = CSS units per art pixel). -->
         <section id="menu" class="screen">
-          <h1>RAKYAT<small>LAST STAND</small></h1>
-          <p class="tag">Game fighting satir · rakyat biasa lawan para penguasa</p>
-          <div class="menu-buttons">
-            <button id="btn-continue" class="btn hidden">Lanjutkan</button>
-            <button id="btn-campaign" class="btn primary">Campaign</button>
-            <button id="btn-arcade" class="btn">Arcade</button>
+          <div class="title">
+            <span class="t1" data-px="0.78" data-color="#ffd60a" data-outline="#9d1f1f">RAKYAT</span>
+            <span class="t2" data-px="0.34" data-color="#ffffff" data-outline="#000000">LAST STAND</span>
           </div>
-          <p class="fine">Fiksi satir. Semua serangan adalah metafora arcade, bukan klaim faktual tentang individu nyata.</p>
+          <p data-px="0.125" data-color="#d8d8e8" data-wrap="64">Game fighting satir. Rakyat biasa melawan para penguasa.</p>
+          <div class="menu-grid">
+            <button id="btn-continue" class="btn wide hidden" data-px="0.18">LANJUTKAN</button>
+            <button id="btn-campaign" class="btn primary" data-px="0.18">CAMPAIGN</button>
+            <button id="btn-arcade" class="btn" data-px="0.18">ARCADE</button>
+            <button id="btn-tutorial" class="btn" data-px="0.18">TUTORIAL</button>
+            <button id="btn-about" class="btn" data-px="0.18">TENTANG</button>
+            <button id="btn-fs" class="btn small wide hidden" data-px="0.13">LAYAR PENUH</button>
+          </div>
+          <p id="fs-hint" class="fine hidden" data-px="0.1" data-color="#ffd60a" data-wrap="80">Layar penuh di iPhone: tombol Bagikan lalu Tambah ke Layar Utama.</p>
+          <p class="fine" data-px="0.1" data-color="#8a8aa0" data-wrap="80">Fiksi satir. Serangan hanyalah metafora arcade, bukan klaim faktual tentang individu nyata.</p>
         </section>
 
         <!-- Character select -->
         <section id="select" class="screen hidden">
-          <h2>Pilih Petarung</h2>
+          <h2 data-px="0.3" data-color="#ffd60a" data-outline="#9d1f1f">PILIH PETARUNG</h2>
           <div id="char-grid" class="grid"></div>
-          <button class="btn small back" data-back="menu">‹ Kembali</button>
+          <button class="btn small back" data-back="menu" data-px="0.14">&lt; KEMBALI</button>
         </section>
 
         <!-- Arcade opponent select -->
         <section id="opponents" class="screen hidden">
-          <h2>Pilih Lawan</h2>
+          <h2 data-px="0.3" data-color="#ffd60a" data-outline="#9d1f1f">PILIH LAWAN</h2>
           <div id="boss-grid" class="grid boss"></div>
-          <button class="btn small back" data-back="select">‹ Kembali</button>
+          <button class="btn small back" data-back="select" data-px="0.14">&lt; KEMBALI</button>
+        </section>
+
+        <!-- Tutorial (pages built in main.js) -->
+        <section id="tutorial" class="screen hidden">
+          <h2 id="tut-title" data-px="0.3" data-color="#ffd60a" data-outline="#9d1f1f">TUTORIAL</h2>
+          <div id="tut-body"></div>
+          <div class="menu-buttons row tut-nav">
+            <button id="tut-prev" class="btn small" data-px="0.13">&lt; SEBELUMNYA</button>
+            <span id="tut-page" data-px="0.12" data-color="#bdb5d8">1 / 4</span>
+            <button id="tut-next" class="btn small primary" data-px="0.13">BERIKUTNYA &gt;</button>
+            <button id="tut-train" class="btn small primary hidden" data-px="0.13">COBA LATIHAN</button>
+          </div>
+          <button class="btn small back" data-back="menu" data-px="0.14">&lt; KEMBALI</button>
+        </section>
+
+        <!-- About -->
+        <section id="about" class="screen hidden">
+          <h2 data-px="0.3" data-color="#ffd60a" data-outline="#9d1f1f">TENTANG</h2>
+          <div class="about-card">
+            <span data-px="0.2" data-color="#ffd60a" data-outline="#9d1f1f">RAKYAT: LAST STAND</span>
+            <span data-px="0.1" data-color="#bdb5d8">VERSI 0.2 · DEMO</span>
+            <span class="gap" data-px="0.12" data-color="#ffffff">DIBUAT OLEH</span>
+            <span data-px="0.3" data-color="#ffd60a" data-outline="#9d1f1f">YOSSANDI IMRAN</span>
+            <span class="gap" data-px="0.1" data-color="#cfcfcf" data-wrap="60">GAME FIGHTING SATIR. DIBANGUN DENGAN JAVASCRIPT DAN HTML5 CANVAS, JALAN DI BROWSER HP MAUPUN DESKTOP.</span>
+            <span data-px="0.09" data-color="#8a8aa0" data-wrap="78">FIKSI SATIR. KUTIPAN TOKOH DIAMBIL DARI PEMBERITAAN PUBLIK; SELEBIHNYA TEMBAKAN ARCADE, BUKAN KLAIM FAKTUAL TENTANG INDIVIDU NYATA.</span>
+          </div>
+          <button class="btn small back" data-back="menu" data-px="0.14">&lt; KEMBALI</button>
         </section>
 
         <!-- Result -->
         <section id="result" class="screen overlay hidden">
-          <h2 id="result-title"></h2>
-          <p id="result-copy"></p>
+          <h2 id="result-title" data-px="0.4" data-color="#ffd60a" data-outline="#9d1f1f"></h2>
+          <p id="result-copy" data-px="0.14" data-color="#e8e8f0" data-wrap="52"></p>
           <div class="menu-buttons row">
-            <button id="btn-next" class="btn primary"></button>
-            <button id="btn-quit" class="btn">Menu</button>
+            <button id="btn-next" class="btn primary" data-px="0.18"></button>
+            <button id="btn-quit" class="btn" data-px="0.18">MENU</button>
           </div>
         </section>
 
         <!-- Pause -->
         <section id="pause" class="screen overlay hidden">
-          <h2>Dijeda</h2>
+          <h2 data-px="0.4" data-color="#ffd60a" data-outline="#9d1f1f">DIJEDA</h2>
+          <p data-px="0.1" data-color="#bdb5d8" data-wrap="90">A = PUKUL   B = TENDANG   ULTI = TOMBOL SPESIAL SAAT ENERGI PENUH</p>
+          <div id="combo-list"></div>
           <div class="menu-buttons row">
-            <button id="btn-resume" class="btn primary">Lanjut</button>
-            <button id="btn-quit2" class="btn">Keluar</button>
+            <button id="btn-resume" class="btn primary" data-px="0.18">LANJUT</button>
+            <button id="btn-quit2" class="btn" data-px="0.18">KELUAR</button>
           </div>
         </section>
 
-        <div id="loading" class="screen overlay hidden"><p>Memuat petarung…</p></div>
+        <div id="loading" class="screen overlay hidden"><p data-px="0.18" data-color="#ffd60a">MEMUAT...</p></div>
 
         <!-- Touch controls (shown on touch devices during a fight) -->
         <div id="touch" class="hidden">
@@ -67,19 +103,18 @@
             <span class="ring"></span><span id="joystick-knob" class="knob"></span>
           </div>
           <div class="pad">
-            <button class="tb punch" data-action="punch">Pukul</button>
-            <button class="tb kick" data-action="kick">Tendang</button>
-            <button class="tb special" data-action="special">Spesial</button>
-            <button class="tb block" data-action="block">Tahan</button>
-            <button class="tb dodge" data-action="dodge">Hindar</button>
+            <button class="tb punch" data-action="punch" data-px="0.13" data-wrap="6">A PUKUL</button>
+            <button class="tb kick" data-action="kick" data-px="0.13" data-wrap="6">B TENDANG</button>
+            <button class="tb special" data-action="special" data-px="0.13">SPESIAL</button>
+            <button class="tb block" data-action="block" data-px="0.13">TAHAN</button>
+            <button class="tb dodge" data-action="dodge" data-px="0.13">HINDAR</button>
           </div>
-          <button id="btn-pause" class="tb pause" aria-label="Jeda">II</button>
+          <button id="btn-pause" class="tb pause" aria-label="Jeda" data-px="0.2">II</button>
+          <button id="btn-fs2" class="tb fs hidden" aria-label="Layar penuh" data-px="0.12" data-wrap="5">LAYAR</button>
         </div>
       </div>
 
-      <div id="rotate" class="hidden">
-        <p>Putar HP ke mode landscape untuk bermain</p>
-      </div>
+      <div id="rotate" class="hidden"><p>Putar HP ke mode landscape untuk bermain</p></div>
     </div>
     <script type="module" src="js/main.js"></script>
   </body>

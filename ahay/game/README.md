@@ -14,12 +14,21 @@ Dev shortcut: `index.html#fight=4` jumps into stage 5 with the office worker.
 | Action | Keyboard | Touch |
 |---|---|---|
 | Move (X + depth) | WASD / arrows | left joystick |
-| Punch / Kick / Special | J / K / L | Pukul / Tendang / Spesial |
+| A (punch) / B (kick) / Special | J / K / L | A Pukul / B Tendang / Spesial |
 | Block (hold) | Shift | Tahan |
 | Dodge | Space | Hindar |
 | Pause | Esc | II |
 
-Special costs 40 meter (filled by hitting and being hit). Dodge costs stamina.
+Special costs 40 meter (filled by hitting and being hit). With a full meter the Special button fires the Ultimate. Dodge costs stamina.
+
+## Modes & menus
+Campaign, Arcade, Tutorial (4 pages + Training mode vs a dummy that never fights back), About.
+
+## Combos
+Chain A/B inputs (cancel on hit, or late in recovery); the last hit becomes a finisher with its own damage. Each character has four finisher styles (slam, launcher, multi-hit, wave/rush; see `js/data/characters.js`), listed in the pause menu and on the select cards.
+
+## Fullscreen
+Button on the menu and in the touch HUD (Android/desktop). iPhone Safari has no fullscreen API: use Share > Add to Home Screen.
 
 ## Layout
 - `js/core` loop, input (keyboard + multi-touch), asset slicing

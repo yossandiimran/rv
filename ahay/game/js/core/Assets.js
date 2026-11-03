@@ -15,8 +15,8 @@ function loadImage(src) {
   });
 }
 
-function pixelate(img, sx, sy, sw, sh) {
-  const w = PIXEL_W, h = Math.round(w * sh / sw);
+function pixelate(img, sx, sy, sw, sh, w = PIXEL_W, vfx = false) {
+  const h = Math.round(w * sh / sw);
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const g = c.getContext("2d", { willReadFrequently: true });
   g.imageSmoothingQuality = "high"; // smooth only for the one-time downscale
@@ -26,6 +26,11 @@ function pixelate(img, sx, sy, sw, sh) {
   const fg = flash.getContext("2d");
   const fd = fg.createImageData(w, h);
   for (let i = 0; i < p.length; i += 4) {
+    if (vfx) { // big-VFX poses: fade glow toward the cell edge so the sheet boundary never shows as a hard rectangle
+      const px = (i / 4) % w, py = Math.floor(i / 4 / w);
+      const d = Math.hypot((px / w - 0.5) / 0.5, (py / h - 0.55) / 0.55);
+      p[i + 3] *= Math.max(0, Math.min(1, (1 - d) * 3.5));
+    }
     if (p[i + 3] < ALPHA_CUT) { p[i + 3] = 0; continue; }
     p[i + 3] = 255;
     for (let k = 0; k < 3; k++) p[i + k] = Math.min(255, Math.round(p[i + k] / STEP) * STEP);
@@ -46,12 +51,22 @@ function pixelate(img, sx, sy, sw, sh) {
   return c;
 }
 
+// Whole image as a small pixel canvas (menu thumbnails).
+export async function loadPixelImage(src, w = 64) {
+  const key = src + "#" + w;
+  if (cache.has(key)) return cache.get(key);
+  const img = await loadImage(src);
+  const c = pixelate(img, 0, 0, img.width, img.height, w);
+  cache.set(key, c);
+  return c;
+}
+
 export async function loadPoses(src) {
   if (cache.has(src)) return cache.get(src);
   const img = await loadImage(src);
   const cw = img.width / 4, ch = img.height / 2;
   const poses = [];
-  for (let i = 0; i < 8; i++) poses.push(pixelate(img, (i % 4) * cw, Math.floor(i / 4) * ch, cw, ch * CROP));
+  for (let i = 0; i < 8; i++) poses.push(pixelate(img, (i % 4) * cw, Math.floor(i / 4) * ch, cw, ch * CROP, PIXEL_W, i >= 4 && i <= 6));
   cache.set(src, poses);
   return poses;
 }

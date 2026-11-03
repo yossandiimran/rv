@@ -3,10 +3,10 @@ import { DEPTH_TOLERANCE, BLOCK_CHIP, MOVES } from "../data/config.js";
 const HALF_BODY = 38;
 
 export class Projectile {
-  constructor(owner, dmg, color) {
+  constructor(owner, dmg, color, move = MOVES.special) {
     this.owner = owner; this.dmg = dmg; this.color = color;
-    this.x = owner.x + owner.facing * 70; this.y = owner.y; this.vx = owner.facing * 6.5; this.life = 130;
-    this.move = MOVES.special;
+    this.x = owner.x + owner.facing * 70; this.y = owner.y; this.vx = owner.facing * (move.speed ?? 6.5); this.life = 130;
+    this.move = move;
   }
 }
 
@@ -20,7 +20,7 @@ export function applyHit(att, def, move, dmg, fx, from = att) {
   const dir = from.x <= def.x ? 1 : -1;
   const blocking = def.state === "block" && def.facing === -dir;
   if (blocking) {
-    def.hp -= dmg * BLOCK_CHIP;
+    def.hp -= dmg * (move.pierce ?? BLOCK_CHIP);
     def.vx = dir * move.knock * 0.35;
     def.meter = Math.min(100, def.meter + 2);
     fx.spark(def.x - dir * 20, def.y - 90, "#9ad1ff", 6);
@@ -29,13 +29,19 @@ export function applyHit(att, def, move, dmg, fx, from = att) {
     def.hp -= dmg;
     def.vx = dir * move.knock;
     def.state = "hit"; def.t = move.stun; def.move = null; def.flash = 8;
+    def.air = move.launch ?? 0; def.airMax = def.air;
     att.meter = Math.min(100, att.meter + move.meter);
     def.meter = Math.min(100, def.meter + dmg * 0.6);
     fx.spark(def.x - dir * 16, def.y - 100, "#ffe66b", 10);
     fx.shake(move.knock > 8 ? 7 : 3);
-    fx.hitstop(move.knock > 8 ? 6 : 3);
+    fx.hitstop(move.ultimate ? 12 : move.knock > 8 ? 7 : 3);
+    def.chain = ""; def.queued = null; def.chainT = 0;
   }
-  if (def.hp <= 0) { def.hp = 0; def.state = "ko"; def.t = 0; fx.shake(10); }
+  if (def.hp <= 0) { // KO: launch the loser backwards, long hit-stop for the finishing blow
+    def.hp = 0; def.state = "ko"; def.t = 0; def.move = null;
+    def.vx = dir * Math.max(move.knock * 1.6, 16);
+    fx.shake(14); fx.hitstop(18);
+  }
   const result = blocking ? "block" : "hit";
   fx.hit?.(att, def, blocking ? dmg * BLOCK_CHIP : dmg, result, move);
   return result;
@@ -46,6 +52,7 @@ export function meleeCheck(att, def, fx) {
   const m = att.move;
   if (!att.inActive || att.hitDone || !def.alive) return;
   if (att.moveName === "special" && att.def.specialType === "projectile") return;
+  if (m.proj) return; // wave finishers hit through their projectile
   if (Math.abs(att.y - def.y) > DEPTH_TOLERANCE) return;
   const dx = (def.x - att.x) * att.facing;
   if (dx < -20 || dx > m.range + HALF_BODY) return;

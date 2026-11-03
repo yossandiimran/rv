@@ -24,3 +24,9 @@ export const SPECIAL_COST = 40;
 export const ULTIMATE_COST = 100;
 export const CHAIN_WINDOW = 45;  // frames to continue an A/B chain after an attack starts
 export const DEPTH_TOLERANCE = 42; // attacks only connect when depth (Y) lines up
+
+// Framing of a combat sheet. The first 14 sheets leave margin: character ~65% of the panel, feet at ~83%, so the loader
+// drops the bottom 10% (VFX from the row below bleeds in there). The v3 sheets (Windah, Ferry, Jokowi, Dedi) fill ~90% of
+// the panel with feet at ~96%: no crop, feet anchor lower, art scaled down so characters match the others on screen,
+// and a gentle border-only fade for the big-VFX poses (the elliptical mask would erase their feet/limbs). Per-character override: `fit` in the data files.
+export const FIT_FULL_PANEL = { crop: 1, feet: 0.955, scale: 0.74, mask: "edge" };

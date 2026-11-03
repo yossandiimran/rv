@@ -4,6 +4,7 @@ import { BossAI } from "../systems/AI.js";
 import { Projectile, meleeCheck, updateProjectiles, damageFor } from "../systems/Combat.js";
 import { attackName } from "../core/Assets.js";
 import { pixelText } from "../utils/pixelText.js";
+import { COL } from "../utils/symbols.js";
 import { makeBackground, venueFor } from "./Backgrounds.js";
 
 // Combat-sheet pose per state. Dedicated idle/walk frames don't exist yet, so pose 0 is reused with bob.
@@ -28,7 +29,7 @@ export class Battle {
     this.ai = new BossAI(this.boss);
     this.barkCd = 0; this.desperate = false;
     this.words = []; this.lines = []; this.confetti = []; this.tint = null; this.letterbox = 0; this.invertT = 0;
-    this.bubbles = []; this.projectiles = []; this.sparks = []; this.bursts = []; this.floaters = []; this.rings = [];
+    this.clock = 0; this.bubbles = []; this.projectiles = []; this.sparks = []; this.bursts = []; this.floaters = []; this.rings = [];
     this.trails = [[], []]; // afterimages per fighter
     this.phase = "intro"; this.t = 0; this.endT = 0; this.ended = false; this.paused = false;
     this.timeLeft = training ? Infinity : ROUND_SECONDS * 60;
@@ -108,7 +109,9 @@ export class Battle {
 
   // Boss speech bubble: a random line from the pool, no immediate repeats, never talking over a combo shout.
   bark(f, kind, force = false) {
-    const pool = kind === "hit" ? f.def.barks : REACT[kind];
+    // hurt: mostly the boss's own reported lines, sometimes a generic grunt
+    const own = kind === "hurt" && f.def.hurt?.length && Math.random() < 0.8;
+    const pool = kind === "hit" ? f.def.barks : own ? f.def.hurt : REACT[kind];
     if (!pool || !pool.length) return;
     if (!force && this.barkCd > 0) return;
     if (this.bubbles.some((b) => b.f === f && b.life - b.t > 25 && b.life > 70)) return; // a combo quote is still on screen
@@ -124,10 +127,12 @@ export class Battle {
   onHit(att, def, dmg, result, move) {
     const dir = att.x <= def.x ? 1 : -1;
     // the boss talks: when its attack lands (jabs, kicks, specials; combo finishers already shout their quote), gets blocked, or gets hurt
-    if (att.isBoss) {
+    const talker = (f) => f.isBoss || f.def.barks?.length; // arcade can put a boss under player control: it keeps its lines
+    if (talker(att)) {
       if (result === "hit" && att.moveName !== "combo") this.bark(att, "hit");
       else if (result === "block") this.bark(att, "block");
-    } else if (def.isBoss && result === "hit" && def.alive && Math.random() < 0.3) this.bark(def, "hurt");
+    }
+    if (talker(def) && result === "hit" && def.alive && Math.random() < 0.55) this.bark(def, "hurt");
     if (result === "block") {
       this.floaters.push({ x: def.x, y: def.y - 160, text: "BLOK", t: 0, color: "#9ad1ff", px: 3 });
       this.rings.push({ x: def.x - dir * 30, y: def.y - 90, t: 0, color: "#9ad1ff", small: true });
@@ -182,7 +187,7 @@ export class Battle {
 
   update() {
     if (this.paused) { this.input.endTick(); return; }
-    this.t++;
+    this.t++; this.clock++;
     if (this.phase === "end") { // own timer: must keep counting through hit-stop and slow-mo
       this.endT++;
       if (!this.ended && this.endT >= END_DELAY) { this.ended = true; this.onEnd(this.result, { hpLeft: this.player.hp / this.player.maxHp }); }
@@ -195,7 +200,7 @@ export class Battle {
     if (this.tint) { this.tint.a *= 0.86; if (this.tint.a < 0.02) this.tint = null; }
     if (this.invertT > 0) this.invertT--;
     if (this.phase === "end" && this.result === "win" && this.endT > 16 && this.endT % 2 === 0) { // victory confetti
-      const cols = ["#ffd60a", "#ff5a4f", "#ffffff", "#4cd964", "#4aa8ff"];
+      const cols = ["#ffd60a", "#ffffff", COL.pink, COL.green, COL.pink, COL.green]; // Brave Pink / Hero Green
       for (let i = 0; i < 3; i++) this.confetti.push({ x: Math.random() * W, y: -10, vy: 2 + Math.random() * 2, vx: (Math.random() - 0.5) * 1.5, c: cols[Math.floor(Math.random() * cols.length)], ph: Math.random() * 6 });
     }
     const cineNow = this.cine && this.cine.f.state === "attack" && this.cine.f.moveName === "ultimate" && this.cine.f.inStartup;
@@ -323,6 +328,7 @@ export class Battle {
       ctx.translate(Math.round((Math.random() - 0.5) * a * 2), Math.round((Math.random() - 0.5) * a * 2));
     }
     ctx.drawImage(this.bg, 0, 0);
+    this.drawHaze(ctx);
     if (this.cineA > 0.02) this.drawCineBackdrop(ctx);
     this.fighters.forEach((f) => this.drawShadow(ctx, f));
     const list = [
@@ -390,6 +396,23 @@ export class Battle {
     pixelText(ctx, w.text, w.x + jx, w.y - w.t * 0.8, { size: 12, px: w.px * pop, color: w.color, alpha: Math.min(1, (30 - w.t) / 8) });
   }
 
+  // Kabut asap: the 2026 forest-fire haze. An orange wash plus slow drifting smoke bands behind the fighters.
+  drawHaze(ctx) {
+    const a = { street: 0.15, hi: 0.24, mpr: 0.28, palace: 0.2 }[venueFor(this.stageNo).id] ?? 0.15;
+    ctx.fillStyle = `rgba(214,128,52,${a})`; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 14; i++) {
+      const w = 180 + ((i * 37) % 160), h = 14 + ((i * 13) % 22), y = 80 + ((i * 61) % 230);
+      const x = ((i * 173 + this.clock * 0.25 * (1 + (i % 3) * 0.4)) % (W + w)) - w;
+      ctx.fillStyle = `rgba(176,112,66,${0.08 + 0.04 * (i % 3)})`;
+      ctx.fillRect(Math.round(x / 4) * 4, Math.round(y / 4) * 4, w, h);
+    }
+    for (let i = 0; i < 12; i++) { // embers rising through the smoke
+      const ex = (i * 211 + Math.sin(this.clock / 40 + i) * 20 + 40) % W, ey = H - ((this.clock * (0.6 + (i % 4) * 0.25) + i * 97) % (H - 60));
+      ctx.fillStyle = i % 3 ? "rgba(255,140,40,.8)" : "rgba(255,210,90,.9)";
+      ctx.fillRect(Math.round(ex / 4) * 4, Math.round(ey / 4) * 4, 4, 4);
+    }
+  }
+
   // Ultimate wind-up: darken the street and streak speed lines behind the fighters.
   drawCineBackdrop(ctx) {
     ctx.fillStyle = `rgba(0,0,0,${this.cineA})`;
@@ -428,7 +451,7 @@ export class Battle {
     ctx.globalAlpha = alpha;
     ctx.translate(Math.round(x), Math.round(y));
     ctx.scale(facing, 1); // sheets are drawn facing right
-    ctx.drawImage(white ? img.flash : img, -Math.round(w / 2), -Math.round(h * FEET), w, h);
+    ctx.drawImage(white ? img.flash : img, -Math.round(w / 2), -Math.round(h * (poses.feet ?? FEET)), w, h);
     ctx.restore();
     return h;
   }

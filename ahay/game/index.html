@@ -26,8 +26,9 @@
             <button id="btn-campaign" class="btn primary" data-px="0.18">CAMPAIGN</button>
             <button id="btn-arcade" class="btn" data-px="0.18">ARCADE</button>
             <button id="btn-tutorial" class="btn" data-px="0.18">TUTORIAL</button>
+            <button id="btn-profiles" class="btn" data-px="0.18">KONTEN</button>
             <button id="btn-about" class="btn" data-px="0.18">TENTANG</button>
-            <button id="btn-fs" class="btn small wide hidden" data-px="0.13">LAYAR PENUH</button>
+            <button id="btn-fs" class="btn small hidden" data-px="0.13">LAYAR PENUH</button>
           </div>
           <p id="fs-hint" class="fine hidden" data-px="0.1" data-color="#ffd60a" data-wrap="80">Layar penuh di iPhone: tombol Bagikan lalu Tambah ke Layar Utama.</p>
           <p class="fine" data-px="0.1" data-color="#8a8aa0" data-wrap="80">Fiksi satir. Serangan hanyalah metafora arcade, bukan klaim faktual tentang individu nyata.</p>
@@ -36,6 +37,10 @@
         <!-- Character select -->
         <section id="select" class="screen hidden">
           <h2 data-px="0.3" data-color="#ffd60a" data-outline="#9d1f1f">PILIH PETARUNG</h2>
+          <div id="char-tabs" class="tabs hidden">
+            <button id="tab-rakyat" class="btn small primary" data-px="0.14">RAKYAT</button>
+            <button id="tab-penguasa" class="btn small" data-px="0.14">PENGUASA</button>
+          </div>
           <div id="char-grid" class="grid"></div>
           <button class="btn small back" data-back="menu" data-px="0.14">&lt; KEMBALI</button>
         </section>
@@ -43,7 +48,7 @@
         <!-- Arcade opponent select -->
         <section id="opponents" class="screen hidden">
           <h2 data-px="0.3" data-color="#ffd60a" data-outline="#9d1f1f">PILIH LAWAN</h2>
-          <div id="boss-grid" class="grid boss"></div>
+          <div id="boss-grid" class="grid boss opp"></div>
           <button class="btn small back" data-back="select" data-px="0.14">&lt; KEMBALI</button>
         </section>
 
@@ -71,6 +76,28 @@
             <span class="gap" data-px="0.1" data-color="#cfcfcf" data-wrap="60">GAME FIGHTING SATIR. DIBANGUN DENGAN JAVASCRIPT DAN HTML5 CANVAS, JALAN DI BROWSER HP MAUPUN DESKTOP.</span>
             <span data-px="0.09" data-color="#8a8aa0" data-wrap="78">FIKSI SATIR. KUTIPAN TOKOH DIAMBIL DARI PEMBERITAAN PUBLIK; SELEBIHNYA TEMBAKAN ARCADE, BUKAN KLAIM FAKTUAL TENTANG INDIVIDU NYATA.</span>
           </div>
+          <button class="btn small back" data-back="menu" data-px="0.14">&lt; KEMBALI</button>
+        </section>
+
+        <!-- KONTEN: satirical dossiers of the penguasa roster + protest symbols (tabs) -->
+        <section id="profiles" class="screen hidden">
+          <h2 data-px="0.22" data-color="#ffd60a" data-outline="#9d1f1f">KONTEN</h2>
+          <div class="tabs">
+            <button id="kt-profil" class="btn small primary" data-px="0.12">PROFIL PENGUASA</button>
+            <button id="kt-simbol" class="btn small" data-px="0.12">SIMBOL AKSI</button>
+            <button id="kt-tuntutan" class="btn small" data-px="0.12">TUNTUTAN</button>
+          </div>
+          <div id="konten-profil" class="konten-pane">
+            <div id="prof-tabs"></div>
+            <div id="prof-card" class="pcard"></div>
+          </div>
+          <div id="konten-simbol" class="konten-pane hidden">
+            <div id="sym-grid"></div>
+          </div>
+          <div id="konten-tuntutan" class="konten-pane hidden">
+            <div id="dem-grid"></div>
+          </div>
+          <p id="konten-note" data-px="0.085" data-color="#8a8aa0" data-wrap="110">x</p>
           <button class="btn small back" data-back="menu" data-px="0.14">&lt; KEMBALI</button>
         </section>
 

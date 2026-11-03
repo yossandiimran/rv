@@ -28,8 +28,14 @@ function pixelate(img, sx, sy, sw, sh, w = PIXEL_W, vfx = false) {
   for (let i = 0; i < p.length; i += 4) {
     if (vfx) { // big-VFX poses: fade glow toward the cell edge so the sheet boundary never shows as a hard rectangle
       const px = (i / 4) % w, py = Math.floor(i / 4 / w);
-      const d = Math.hypot((px / w - 0.5) / 0.5, (py / h - 0.55) / 0.55);
-      p[i + 3] *= Math.max(0, Math.min(1, (1 - d) * 3.5));
+      if (vfx === 'edge') { // gentle: only the left/right/top border fades; the bottom fades only over its last 3% so feet stay solid
+        const e = Math.min(px / w, (w - 1 - px) / w, py / h) / 0.1;
+        const eb = (h - 1 - py) / h / 0.03; // bottom fades over only 3% so the shoes (at ~95%) stay solid
+        p[i + 3] *= Math.max(0, Math.min(1, e, eb));
+      } else {
+        const d = Math.hypot((px / w - 0.5) / 0.5, (py / h - 0.55) / 0.55);
+        p[i + 3] *= Math.max(0, Math.min(1, (1 - d) * 3.5));
+      }
     }
     if (p[i + 3] < ALPHA_CUT) { p[i + 3] = 0; continue; }
     p[i + 3] = 255;
@@ -61,13 +67,19 @@ export async function loadPixelImage(src, w = 64) {
   return c;
 }
 
-export async function loadPoses(src) {
-  if (cache.has(src)) return cache.get(src);
+const DEFAULT_FIT = { crop: CROP, feet: 0.83 / CROP, scale: 1, mask: true };
+// fit: { crop, feet, scale, mask } — see FIT_FULL_PANEL in data/config.js. scale < 1 lowers the art resolution of the pose
+// (fewer art pixels at the same on-screen pixel size), so every character keeps square, equal-sized pixels.
+export async function loadPoses(src, fit = null) {
+  const f = { ...DEFAULT_FIT, ...(fit ?? {}) };
+  const key = `${src}|${f.crop}|${f.scale}|${f.mask}`;
+  if (cache.has(key)) return cache.get(key);
   const img = await loadImage(src);
   const cw = img.width / 4, ch = img.height / 2;
   const poses = [];
-  for (let i = 0; i < 8; i++) poses.push(pixelate(img, (i % 4) * cw, Math.floor(i / 4) * ch, cw, ch * CROP, PIXEL_W, i >= 4 && i <= 6));
-  cache.set(src, poses);
+  for (let i = 0; i < 8; i++) poses.push(pixelate(img, (i % 4) * cw, Math.floor(i / 4) * ch, cw, ch * f.crop, Math.round(PIXEL_W * f.scale), f.mask && i >= 4 && i <= 6));
+  poses.feet = f.feet; // where the feet sit inside a pose canvas (fraction of its height)
+  cache.set(key, poses);
   return poses;
 }
 

@@ -1,12 +1,14 @@
 import { W, H, WORLD_MIN_W, WORLD_MAX_W, setWorldWidth } from "./data/config.js";
 import { CHARACTERS } from "./data/characters.js";
-import { BOSSES, TRAINING_DUMMY } from "./data/bosses.js";
+import { BOSSES, ARCADE_BOSSES, TRAINING_DUMMY } from "./data/bosses.js";
 import { GameLoop } from "./core/GameLoop.js";
 import { Input } from "./core/Input.js";
 import { loadPoses, loadPixelImage, loadManifest } from "./core/Assets.js";
 import { Battle } from "./scenes/Battle.js";
 import { makeBackground } from "./scenes/Backgrounds.js";
 import { buildPixelText } from "./utils/pixelText.js";
+import { ICONS } from "./utils/symbols.js";
+import { PROFILES } from "./data/profiles.js";
 
 const $ = (id) => document.getElementById(id);
 const canvas = $("game");
@@ -25,7 +27,7 @@ const save = {
 };
 
 // ---- state ----
-const screens = ["menu", "select", "opponents", "result", "pause", "loading", "tutorial", "about"];
+const screens = ["menu", "select", "opponents", "result", "pause", "loading", "tutorial", "about", "profiles"];
 let mode = "campaign";       // campaign | arcade | training
 let chosen = null;           // playable def
 let stageIdx = 0;
@@ -143,35 +145,75 @@ function hydrate(root = document) {
 // ---- menus ----
 const stat = (label, v, max) =>
   `<span data-px="0.09" data-color="#bdb5d8">${label}</span><span class="pipbar"><i style="width:${(v / max) * 100}%"></i></span>`;
+// Fighters flagged `pending` have no art yet. At startup we HEAD-request their PNGs; until both exist the card reads
+// "SEGERA HADIR" and can't be picked. Dropping the files into game/assets is all it takes (see ASSET_PROMPTS.md).
+const isReady = (d) => !d.pending || d.ready === true;
+async function probeAssets() {
+  await Promise.all([...CHARACTERS, ...ARCADE_BOSSES].filter((d) => d.pending).map(async (d) => {
+    try {
+      const [a, b] = await Promise.all([fetch(d.sheet, { method: "HEAD" }), fetch(d.thumb, { method: "HEAD" })]);
+      d.ready = a.ok && b.ok;
+    } catch { d.ready = false; }
+  }));
+}
+const thumbHtml = (d) => isReady(d) ? `<span class="thumb" data-thumb="${d.thumb}"></span>` : `<span class="thumb"><i class="soon">?</i></span>`;
+const penguasaList = () => [...BOSSES, ...ARCADE_BOSSES];
+
+// Character select. Campaign is rakyat-only; arcade and training also offer the "penguasa" (boss) roster.
+let charTab = "rakyat";
 function buildCharGrid() {
-  $("char-grid").innerHTML = CHARACTERS.map((c, i) => `
-    <button class="card" data-i="${i}">
-      <span class="thumb" data-thumb="${c.thumb}"></span>
+  const grid = $("char-grid");
+  const tabs = mode !== "campaign";
+  $("char-tabs").classList.toggle("hidden", !tabs);
+  if (!tabs) charTab = "rakyat";
+  $("tab-rakyat").classList.toggle("primary", charTab === "rakyat");
+  $("tab-penguasa").classList.toggle("primary", charTab === "penguasa");
+  const list = charTab === "rakyat" ? CHARACTERS : penguasaList();
+  grid.classList.toggle("boss", charTab !== "rakyat");
+  grid.classList.toggle("six", charTab !== "rakyat");
+  const soon = '<span data-px="0.1" data-color="#ffd60a">SEGERA HADIR</span>';
+  grid.innerHTML = charTab === "rakyat" ? CHARACTERS.map((c, i) => `
+    <button class="card ${isReady(c) ? "" : "locked"}" data-i="${i}">
+      ${thumbHtml(c)}
       <b data-px="0.13" data-wrap="12">${c.name.toUpperCase()}</b>
       <span data-px="0.1" data-color="#ffd60a">${c.archetype.toUpperCase()}</span>
       <span data-px="0.1" data-color="#9ad1ff" data-wrap="16">${c.special.toUpperCase()}</span>
       <span data-px="0.09" data-color="#f0a0a0">KOMBO: ${(c.combos ?? []).map((k) => k.seq).join(" / ")}</span>
-      <span class="statrow">${stat("HP", c.stats.hp, 120)}${stat("ATK", c.stats.attack, 11)}${stat("DEF", c.stats.defense, 10)}${stat("SPD", c.stats.speed, 10)}</span>
+      ${isReady(c) ? `<span class="statrow">${stat("HP", c.stats.hp, 120)}${stat("ATK", c.stats.attack, 11)}${stat("DEF", c.stats.defense, 10)}${stat("SPD", c.stats.speed, 10)}</span>` : soon}
+    </button>`).join("") : penguasaList().map((c, i) => `
+    <button class="card ${isReady(c) ? "" : "locked"}" data-i="${i}">
+      ${thumbHtml(c)}
+      <b data-px="0.09" data-wrap="13">${c.name.toUpperCase()}</b>
+      ${isReady(c) ? `<span data-px="0.08" data-color="#bdb5d8">HP ${c.stats.hp} · ATK ${c.stats.attack}</span>` : soon}
     </button>`).join("");
-  hydrate($("char-grid"));
-  $("char-grid").querySelectorAll(".card").forEach((el) =>
+  hydrate(grid);
+  grid.querySelectorAll(".card").forEach((el) =>
     el.addEventListener("click", () => {
-      chosen = CHARACTERS[+el.dataset.i];
-      if (mode === "arcade") { buildBossGrid(); show("opponents"); }
+      if (!isReady(list[+el.dataset.i])) return; // art not delivered yet
+      chosen = list[+el.dataset.i];
+      if (mode === "arcade") { buildOppGrid(); show("opponents"); }
       else if (mode === "training") startFight(0);
       else startFight(save.read().cleared > 0 && fromContinue ? Math.min(save.read().cleared, BOSSES.length - 1) : 0);
     }));
 }
-function buildBossGrid() {
-  const cleared = save.read().cleared ?? 0;
-  $("boss-grid").innerHTML = BOSSES.map((b, i) => `
-    <button class="card ${i > cleared ? "locked" : ""}" data-i="${i}">
-      <span class="thumb" data-thumb="${b.thumb}"></span>
-      <b data-px="0.095" data-wrap="13" ${i > cleared ? 'data-color="#8a8aa0"' : ""}>${i + 1}. ${b.name.toUpperCase()}</b>
+$("tab-rakyat").onclick = () => { charTab = "rakyat"; buildCharGrid(); };
+$("tab-penguasa").onclick = () => { charTab = "penguasa"; buildCharGrid(); };
+
+// Opponent select (arcade): the whole roster, nothing locked. Boss opponents keep their own stage background.
+function buildOppGrid() {
+  const all = [
+    ...CHARACTERS.map((d) => ({ d, stage: 1, rk: true })),
+    ...BOSSES.map((d, i) => ({ d, stage: i + 1, rk: false })),
+    ...ARCADE_BOSSES.map((d) => ({ d, stage: d.stage ?? 1, rk: false })),
+  ];
+  $("boss-grid").innerHTML = all.map((o, i) => `
+    <button class="card ${o.rk ? "rk" : ""} ${isReady(o.d) ? "" : "locked"}" data-i="${i}">
+      ${thumbHtml(o.d)}
+      <b data-px="0.085" data-wrap="12">${o.d.name.toUpperCase()}</b>
     </button>`).join("");
   hydrate($("boss-grid"));
   $("boss-grid").querySelectorAll(".card").forEach((el) =>
-    el.addEventListener("click", () => { if (!el.classList.contains("locked")) startFight(+el.dataset.i); }));
+    el.addEventListener("click", () => { const o = all[+el.dataset.i]; if (isReady(o.d)) startFight(o.stage - 1, o.d, o.stage); }));
 }
 
 // ---- tutorial + about ----
@@ -230,13 +272,103 @@ function renderTutorial() {
 $("btn-tutorial").onclick = () => { tutPage = 0; renderTutorial(); show("tutorial"); };
 $("tut-prev").onclick = () => { tutPage = Math.max(0, tutPage - 1); renderTutorial(); };
 $("tut-next").onclick = () => { tutPage = Math.min(TUTORIAL.length - 1, tutPage + 1); renderTutorial(); };
-$("tut-train").onclick = () => { mode = "training"; fromContinue = false; show("select"); };
+$("tut-train").onclick = () => { mode = "training"; fromContinue = false; buildCharGrid(); show("select"); };
 $("btn-about").onclick = () => show("about");
 
+// ---- profil penguasa: satirical dossiers (data/profiles.js) ----
+let profIdx = 0;
+function renderProfile(i) {
+  profIdx = i;
+  const list = penguasaList(), d = list[i], p = PROFILES[d.id] ?? { jabatan: "", julukan: "", fakta: [], quotes: [], satir: "" };
+  $("prof-tabs").querySelectorAll(".ptab").forEach((t, k) => t.classList.toggle("on", k === i));
+  const jurus = (d.combos ?? []).slice(0, 4).map((c) => c.name).join(" · ");
+  const quotes = p.quotes.map((q) => `"${q}"`).join("   ");
+  $("prof-card").innerHTML = `
+    <div class="pthumb">${thumbHtml(d)}
+      <span data-px="0.085" data-color="#bdb5d8">HP ${d.stats.hp} · ATK ${d.stats.attack}</span>
+      <span data-px="0.085" data-color="#bdb5d8">DEF ${d.stats.defense} · SPD ${d.stats.speed}</span></div>
+    <div class="ptext">
+      <span data-px="0.17" data-color="#ffd60a" data-outline="#9d1f1f">${d.name.toUpperCase()}</span>
+      <span data-px="0.088" data-color="#bdb5d8">${p.jabatan}</span>
+      <span data-px="0.1" data-color="#ff9d3b">JULUKAN GAME: ${p.julukan.toUpperCase()}</span>
+      ${p.fakta.map((f) => `<span class="pfact" data-px="0.086" data-color="#e8e8f2">${f}</span>`).join("")}
+      ${quotes ? `<span data-px="0.088" data-color="#9ad1ff">KALIMAT KHAS: ${quotes}</span>` : ""}
+      ${jurus ? `<span data-px="0.088" data-color="#f0a0a0">JURUS ANDALAN: ${jurus}</span>` : ""}
+      <span data-px="0.088" data-color="#ffe9a8">SATIR: ${p.satir}</span>
+    </div>`;
+  $("prof-card").scrollTop = 0;
+  hydrate($("prof-card"));
+}
+function buildProfiles() {
+  const list = penguasaList();
+  $("prof-tabs").innerHTML = list.map((d, i) => `<button class="ptab ${isReady(d) ? "" : "off"}" data-i="${i}" title="${d.name}" aria-label="${d.name}">${isReady(d) ? `<span class="thumb" data-thumb="${d.thumb}"></span>` : '<i class="soon">?</i>'}</button>`).join("");
+  hydrate($("prof-tabs"));
+  $("prof-tabs").querySelectorAll(".ptab").forEach((t) => (t.onclick = () => renderProfile(+t.dataset.i)));
+  renderProfile(Math.min(profIdx, list.length - 1));
+}
+// KONTEN: one screen, three tabs (profile dossiers / protest symbols / current demands)
+let kontenTab = "profil";
+const KONTEN_NOTE = {
+  profil: "SATIR: julukan dan catatan adalah karangan game. Fakta dan kutipan mengacu pada pemberitaan (sumber di QUOTES.md), bukan tuduhan.",
+  simbol: "Simbol-simbol ini muncul di arena. Penjelasan dan sumbernya ada di QUOTES.md.",
+  tuntutan: "Tuntutan aksi akhir Okt 2026 dan kutipan tanggapan pemerintah, dari pemberitaan (sumber di QUOTES.md). Kabut asap di arena merujuk ke karhutla.",
+};
+function openKonten(tab = kontenTab) {
+  kontenTab = tab;
+  for (const [t, btn] of [["profil", "kt-profil"], ["simbol", "kt-simbol"], ["tuntutan", "kt-tuntutan"]]) {
+    $(btn).classList.toggle("primary", tab === t);
+    $("konten-" + t).classList.toggle("hidden", tab !== t);
+  }
+  setPx($("konten-note"), KONTEN_NOTE[tab]);
+  if (tab === "profil") buildProfiles(); else if (tab === "simbol") buildSymbols(); else buildDemands();
+  show("profiles");
+}
+$("btn-profiles").onclick = () => openKonten();
+$("kt-profil").onclick = () => openKonten("profil");
+$("kt-simbol").onclick = () => openKonten("simbol");
+$("kt-tuntutan").onclick = () => openKonten("tuntutan");
+
+// Current demands (late Oct 2026), with what is on record about the response. Sources: QUOTES.md.
+const DEMANDS = [
+  { icon: "fire", name: "PADAMKAN API (KARHUTLA)", note: "Kebakaran hutan dan lahan belum teratasi sekitar 3 bulan; Kemenkes mencatat 333.470 kasus ISPA hingga 21 Okt 2026. Tuntutan: tetapkan bencana nasional, tindak korporasi pelakunya, pulihkan ekosistem. Prabowo (22 Okt): \"Siapa pun kalau dia melanggar, sudahlah, cabut saja\", dan minta polisi hutan ditambah sampai 70 ribu personel." },
+  { icon: "coin", name: "TURUNKAN BIAYA HIDUP", note: "Survei yang dikutip: 78% menyebut harga kebutuhan pokok isu paling mendesak (Okt 2026). Demo Juni 2026 menuntut harga BBM turun. Spanduk Greenpeace: \"Hidup makin susah, apa kerja pemerintah?\"." },
+  { icon: "book", name: "BIAYA PENDIDIKAN TERJANGKAU", note: "Satu dari lima tuntutan #IndonesiaSadar (BEM UI bersama Komite SADAR), aksi di Bundaran HI, 28 Okt 2026." },
+  { icon: "gavel", name: "BERANTAS KKN", note: "Tuntutan #IndonesiaSadar: pemberantasan korupsi, kolusi, dan nepotisme, serta pengawasan penyelenggaraan negara." },
+  { icon: "civic", name: "HENTIKAN MILITERISASI RUANG SIPIL", note: "Tuntutan #IndonesiaSadar: hentikan penyempitan ruang sipil. Aksi 28 Okt ricuh sekitar pukul 20.00 (gas air mata); belasan orang ditangkap, termasuk seorang anak. Polda Metro Jaya minta maaf karena menghalangi wartawan." },
+  { icon: "chart", name: "PERBAIKI ANGGARAN & EKONOMI", note: "Tuntutan #IndonesiaSadar: pembenahan kebijakan ekonomi. Pada 12 Jun 2026 BEM UI sudah turun di Bundaran HI dengan tajuk \"Menuju Indonesia Bangkrut\" (APBN, harga kebutuhan pokok, MBG)." },
+  { icon: "tritura", name: "TRITURA TRISAKTI", note: "29 Okt 2026, Patung Kuda: pulihkan sektor nasional, hapus ketidakcakapan dan rangkap jabatan pejabat, tegakkan supremasi sipil. Massa juga menuntut Menteri Kehutanan dicopot; staf Istana menerima tuntutan dan berjanji meneruskannya." },
+];
+function buildDemands() {
+  $("dem-grid").innerHTML = DEMANDS.map((y, i) => `
+    <div class="sym"><canvas width="24" height="16" data-i="${i}"></canvas>
+      <div class="txt"><span data-px="0.11" data-color="#ffd60a">${y.name}</span><span data-px="0.08" data-color="#e0e0ee">${y.note}</span></div></div>`).join("");
+  $("dem-grid").querySelectorAll("canvas").forEach((c) => ICONS[DEMANDS[+c.dataset.i].icon](c.getContext("2d")));
+  hydrate($("dem-grid"));
+}
+
+// Protest symbols that appear in the arenas, with the context they come from (sources: QUOTES.md).
+const SYMBOLS = [
+  { icon: "jolly", name: "BENDERA ONE PIECE", note: "Bendera bajak laut Topi Jerami. Dikibarkan sebagai simbol kritik jelang HUT RI ke-80 (Agu 2025) dan terlihat di tengah bentrok di DPR." },
+  { icon: "pink", name: "BRAVE PINK", note: "Pink = keberanian, terinspirasi ibu berjilbab pink yang menghadapi aparat saat demo 28 Agu 2025." },
+  { icon: "green", name: "HERO GREEN", note: "Hijau jaket ojol: solidaritas untuk Affan Kurniawan, pengemudi ojol yang meninggal tertabrak kendaraan aparat saat demo." },
+  { icon: "plus", name: "17+8", note: "17 tuntutan jangka pendek dan 8 jangka panjang, dirangkum kolektif pada Sep 2025. Ferry Irwandi salah satu juru bicaranya." },
+  { icon: "gelap", name: "INDONESIA GELAP", note: "Slogan aksi mahasiswa dan warga sejak Feb 2025 untuk menyuarakan masalah di pemerintahan." },
+  { icon: "greenpeace", name: "SPANDUK GREENPEACE", note: "20 Okt 2026: 6 aktivis memanjat Monumen Selamat Datang di Bundaran HI dan membentang spanduk \"Hidup makin susah, apa kerja pemerintah?\". Dibawa ke Polda Metro Jaya lalu dibebaskan." },
+  { icon: "salute3", name: "SALAM TIGA JARI", note: "Dipakai massa dalam aksi akhir Okt 2026 sebagai simbol solidaritas, martabat, kebebasan, dan perlawanan terhadap tirani." },
+  { icon: "sadar", name: "INDONESIA SADAR", note: "Tema aksi BEM UI 28 Okt 2026 di Bundaran HI. Tuntutan: karhutla, ekonomi, ruang sipil, KKN, dan biaya pendidikan." },
+];
+function buildSymbols() {
+  $("sym-grid").innerHTML = SYMBOLS.map((y, i) => `
+    <div class="sym"><canvas width="24" height="16" data-i="${i}"></canvas>
+      <div class="txt"><span data-px="0.115" data-color="#ffd60a">${y.name}</span><span data-px="0.085" data-color="#e0e0ee">${y.note}</span></div></div>`).join("");
+  $("sym-grid").querySelectorAll("canvas").forEach((c) => ICONS[SYMBOLS[+c.dataset.i].icon](c.getContext("2d")));
+  hydrate($("sym-grid"));
+}
+
 let fromContinue = false;
-$("btn-campaign").onclick = () => { if (isTouch && fsRequest && !isFs() && !standalone) toggleFullscreen(); mode = "campaign"; fromContinue = false; show("select"); };
-$("btn-continue").onclick = () => { if (isTouch && fsRequest && !isFs() && !standalone) toggleFullscreen(); mode = "campaign"; fromContinue = true; show("select"); };
-$("btn-arcade").onclick = () => { if (isTouch && fsRequest && !isFs() && !standalone) toggleFullscreen(); mode = "arcade"; fromContinue = false; show("select"); };
+$("btn-campaign").onclick = () => { if (isTouch && fsRequest && !isFs() && !standalone) toggleFullscreen(); mode = "campaign"; fromContinue = false; buildCharGrid(); show("select"); };
+$("btn-continue").onclick = () => { if (isTouch && fsRequest && !isFs() && !standalone) toggleFullscreen(); mode = "campaign"; fromContinue = true; buildCharGrid(); show("select"); };
+$("btn-arcade").onclick = () => { if (isTouch && fsRequest && !isFs() && !standalone) toggleFullscreen(); mode = "arcade"; fromContinue = false; buildCharGrid(); show("select"); };
 document.querySelectorAll("[data-back]").forEach((b) => (b.onclick = () => (b.dataset.back === "menu" ? showMenu() : show(b.dataset.back))));
 $("btn-quit").onclick = showMenu;
 $("btn-quit2").onclick = showMenu;
@@ -251,6 +383,7 @@ function buildComboList() {
       <span data-px="0.1" data-color="#9ad1ff">DMG ${k.move.dmg}</span>
     </div>`).join("");
   $("combo-list").innerHTML = rows;
+  $("combo-list").classList.toggle("two", (c.combos ?? []).length > 5);
   hydrate($("combo-list"));
 }
 function pause(on) {
@@ -265,14 +398,16 @@ document.addEventListener("visibilitychange", () => { if (document.hidden && bat
 addEventListener("contextmenu", (e) => e.preventDefault());
 
 // ---- fight flow ----
-async function startFight(idx) {
-  stageIdx = idx;
-  const boss = mode === "training" ? TRAINING_DUMMY : BOSSES[idx];
+let lastOpp = null, lastStage = 1, curOpp = null;
+async function startFight(idx, opp = null, stageNo = idx + 1) {
+  stageIdx = idx; lastOpp = opp; lastStage = stageNo;
+  const boss = mode === "training" ? TRAINING_DUMMY : (opp ?? BOSSES[idx]);
+  curOpp = boss;
   show("loading");
   try {
-    const [pp, bp] = await Promise.all([loadPoses(chosen.sheet), loadPoses(boss.sheet)]);
+    const [pp, bp] = await Promise.all([loadPoses(chosen.sheet, chosen.fit), loadPoses(boss.sheet, boss.fit)]);
     input.clear();
-    battle = new Battle(chosen, boss, pp, bp, input, { stageNo: idx + 1, onEnd: onFightEnd, touch: isTouch, training: mode === "training" });
+    battle = new Battle(chosen, boss, pp, bp, input, { stageNo, onEnd: onFightEnd, touch: isTouch, training: mode === "training" });
     show();
     if (isTouch) $("touch").classList.remove("hidden");
   } catch (err) {
@@ -287,6 +422,15 @@ function onFightEnd(result) {
   const data = save.read();
   $("touch").classList.add("hidden");
   input.clear();
+  if (mode !== "campaign") { // arcade: free play, no progress saved
+    const win = result === "win";
+    setPx($("result-title"), win ? "MENANG!" : "KALAH...");
+    setPx($("result-copy"), win ? `${curOpp.name} tumbang.` : "Coba lagi, atau ganti karakter dan lawan.");
+    setPx($("btn-next"), win ? "MAIN LAGI" : "ULANGI");
+    $("btn-next").onclick = () => startFight(stageIdx, lastOpp, lastStage);
+    show("result");
+    return;
+  }
   if (result === "win") {
     data.cleared = Math.max(data.cleared ?? 0, stageIdx + 1);
     save.write(data);
@@ -312,7 +456,7 @@ const loop = new GameLoop(
   () => {
     ctx.clearRect(0, 0, W, H);
     if (battle) battle.render(ctx);
-    else { menuBg ??= makeBackground(5); ctx.drawImage(menuBg, 0, 0); } // city backdrop behind the menus
+    else { menuBg ??= makeBackground(1); ctx.drawImage(menuBg, 0, 0); } // city backdrop behind the menus
   },
 );
 
@@ -322,21 +466,35 @@ const loop = new GameLoop(
   hydrate();
   setupFullscreenUi();
   await loadManifest();
+  await probeAssets();
+  buildCharGrid();
   showMenu();
   loop.start();
   // dev hook: index.html#fight=<stage> jumps straight into a fight
-  const scr = location.hash.match(/screen=(select|opponents|tutorial|about)/);
+  const scr = location.hash.match(/screen=(select|opponents|tutorial|about|symbols|profiles|tuntutan)/);
   if (scr) {
     chosen = CHARACTERS[0]; mode = "arcade";
-    if (scr[1] === "opponents") buildBossGrid();
+    if (scr[1] === "opponents") buildOppGrid();
+    if (scr[1] === "profiles") profIdx = +(location.hash.match(/p=(\d+)/)?.[1] ?? 0);
+    if (location.hash.includes("tab=penguasa")) charTab = "penguasa";
+    if (scr[1] === "select") buildCharGrid();
     if (scr[1] === "tutorial") { tutPage = +(location.hash.match(/page=(\d)/)?.[1] ?? 0); renderTutorial(); }
-    show(scr[1]);
+    if (scr[1] === "symbols") openKonten("simbol");
+    else if (scr[1] === "tuntutan") openKonten("tuntutan");
+    else if (scr[1] === "profiles") openKonten("profil");
+    else show(scr[1]);
   }
   if (location.hash.includes("train")) { mode = "training"; chosen = CHARACTERS[0]; }
   const m = location.hash.match(/fight=(\d+)/);
   if (m) {
     chosen = CHARACTERS[0];
-    await startFight(Math.min(+m[1], BOSSES.length - 1));
+    const asBoss = location.hash.match(/as=(\d+)/); // dev: play as a boss, e.g. #fight=0&as=9
+    if (asBoss) { chosen = BOSSES[+asBoss[1]]; mode = "arcade"; }
+    const who = location.hash.match(/who=([a-z-]+)/), vs = location.hash.match(/vs=([a-z-]+)/); // dev: #fight=0&who=windah-basudara&vs=jokowi
+    const everyone = [...CHARACTERS, ...BOSSES, ...ARCADE_BOSSES];
+    if (who) { chosen = everyone.find((d) => d.id === who[1]) ?? chosen; mode = "arcade"; }
+    if (vs) { const o = everyone.find((d) => d.id === vs[1]); mode = "arcade"; await startFight(0, o, o.stage ?? (BOSSES.indexOf(o) + 1 || 1)); }
+    else await startFight(Math.min(+m[1], BOSSES.length - 1));
     // &sim=N runs N scripted ticks synchronously (headless screenshots can't advance rAF)
     const sim = location.hash.match(/sim=(\d+)/);
     if (sim && battle) {

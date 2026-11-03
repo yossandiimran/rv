@@ -1,4 +1,5 @@
 import { W, H } from "../data/config.js";
+import { flagPole, ribbon, banner, activist } from "../utils/symbols.js"; // real protest symbols, see ../utils/symbols.js
 
 // Stage -> venue. Each venue is drawn in code at 1/4 resolution (240x135) and upscaled with no smoothing.
 // The fighting floor always lies between lowres y 86..122 (ARENA.minY/maxY / 4), so every venue paints its ground there.
@@ -76,13 +77,15 @@ function drawStreet(g, stageNo) {
   [["#34343e", 86, 100], ["#2c2c36", 100, 114], ["#24242d", 114, LH]].forEach(([c, a, b]) => R(-X, a, LW, b - a, c));
   perspective(86, "#4b4b57");
   g.fillStyle = "#d9b840"; [96, 108, 122].forEach((y) => { for (let x = 6 - Math.ceil((X + 6) / 14) * 14; x < LW - X; x += 14) g.fillRect(x, y, 8, 1); });
-  const signs = [["DENGAR", "RAKYAT"], ["TURUNKAN", "HARGA"], ["BUBAR", "BUZZER"], ["KAMI BUKAN", "DATA"]];
+  const signs = [["INDONESIA", "GELAP"], ["PADAMKAN", "API"], ["17+8", "TUNTUTAN"], ["TURUNKAN", "BIAYA HIDUP"], ["INDONESIA", "SADAR"], ["PENDIDIKAN", "TERJANGKAU"], ["DENGAR", "RAKYAT"], ["BERANTAS", "KKN"]]; // demands of the 2025-2026 protests
   const cols = ["#f5f0e1", "#ffd60a", "#ff8a80", "#9ad1ff"];
   [26, 88, 150, 212].forEach((x, i) => {
     R(x - 1, 70, 2, 16, "#6b4a2b"); R(x - 17, 58, 34, 16, "#111"); R(x - 16, 59, 32, 14, cols[i]);
-    const [l1, l2] = signs[(i + stageNo) % 4];
+    const [l1, l2] = signs[(i * 2 + stageNo) % signs.length];
     g.fillStyle = "#111"; g.font = "bold 6px monospace"; g.textBaseline = "top"; g.textAlign = "center"; g.fillText(l1, x, 59); g.fillText(l2, x, 66);
+    ribbon(g, x - 2, 75, 8); // Brave Pink / Hero Green
   });
+  flagPole(g, 57, 36, 50); flagPole(g, 181, 40, 46); // One Piece (Jolly Roger) flags flown as protest symbols
 }
 
 // ---- 2. Bundaran HI (stages 4-6): fountain circle, welcome monument, Hotel Indonesia, towers ----
@@ -102,6 +105,11 @@ function drawHI(g, stageNo) {
   // Monumen Selamat Datang: tall pedestal, two figures waving
   R(114, 26, 12, 3, "#e0d8c6"); R(116, 29, 8, 46, "#cfc6b4"); R(118, 29, 1, 46, "#e6dfcf"); R(112, 68, 16, 10, "#b8ae9a"); R(108, 75, 24, 4, "#a39a86");
   R(116, 14, 3, 12, "#8b5a2b"); R(121, 14, 3, 12, "#a8693a"); R(115, 10, 1, 8, "#8b5a2b"); R(124, 10, 1, 8, "#a8693a"); R(116, 11, 3, 3, "#e2b48a"); R(121, 11, 3, 3, "#e2b48a");
+  // Greenpeace, 20 Oct 2026: six activists climbed the Welcome Monument and unfurled banners ("Hidup makin susah, apa kerja pemerintah?")
+  g.fillStyle = "#555"; for (let i = 0; i < 6; i++) { g.fillRect(116 - i * 4, 29 + i / 3 | 0, 1, 1); g.fillRect(124 + i * 4, 29 + i / 3 | 0, 1, 1); }
+  banner(g, 88, 31, 64, 25, ["HIDUP MAKIN", "SUSAH, APA KERJA", "PEMERINTAH?"], { edge: "#2faa4a" });
+  [[107, "#ff7a1a"], [111, "#ffd60a"], [129, "#ff7a1a"], [133, "#ff7a1a"]].forEach(([x, c]) => activist(g, x, 18, c));
+  g.fillStyle = "#e8e8e8"; g.fillRect(108, 27, 8, 1); g.fillRect(124, 27, 8, 1); // ledge they stand on
   // fountain basin
   for (let y = 77; y <= 86; y++) {
     const dy = (y - 82) / 4.5, half = Math.round(70 * Math.sqrt(Math.max(0, 1 - dy * dy)));
@@ -114,8 +122,11 @@ function drawHI(g, stageNo) {
   perspective(86, "#4b4b57", 22, 10);
   for (let x = 4 - Math.ceil((X + 4) / 10) * 10; x < LW - X; x += 10) R(x, 125, 6, 8, "#e8e8e8");
   g.fillStyle = "#d9b840"; for (let x = 8 - Math.ceil((X + 8) / 18) * 18; x < LW - X; x += 18) g.fillRect(x, 106, 8, 1);
+  flagPole(g, 60, 40, 46); flagPole(g, 186, 46, 40); // protest flags on the roundabout
+  banner(g, 10, 54, 46, 14, ["TURUNKAN", "BIAYA HIDUP"]);
+  banner(g, 158, 58, 54, 14, ["PADAMKAN", "KEBAKARAN!"]);
   // street lamps with glow
-  [34, 206].forEach((x) => { R(x, 44, 1, 42, "#1a1a22"); R(x - 3, 43, 8, 2, "#1a1a22"); R(x - 2, 45, 6, 2, "#ffe9a8"); g.fillStyle = "rgba(255,233,168,.15)"; g.fillRect(x - 8, 47, 18, 10); });
+  [34, 206].forEach((x) => { ribbon(g, x - 1, 56, 8); R(x, 44, 1, 42, "#1a1a22"); R(x - 3, 43, 8, 2, "#1a1a22"); R(x - 2, 45, 6, 2, "#ffe9a8"); g.fillStyle = "rgba(255,233,168,.15)"; g.fillRect(x - 8, 47, 18, 10); });
 }
 
 // ---- 3. Gedung MPR/DPR (stages 7-9): green dome, long white wings, protest barricade ----
@@ -142,9 +153,12 @@ function drawMPR(g, stageNo) {
   perspective(86, "#8b8883", 26, 10);
   for (let x = 0 - Math.ceil((X + 0) / 10) * 10; x < LW - X; x += 10) { R(x, 79, 5, 4, "#ff8a1f"); R(x + 5, 79, 5, 4, "#f5f5f5"); }
   R(-X, 83, LW, 1, "#444");
-  [30, 80, 160, 210].forEach((x) => R(x, 83, 1, 3, "#444"));
+  [30, 80, 160, 210].forEach((x) => { R(x, 83, 1, 3, "#444"); ribbon(g, x - 1, 80, 4); });
+  flagPole(g, 40, 50, 30); flagPole(g, 196, 50, 30); // One Piece flags among the crowd
   R(56, 72, 128, 9, "#111"); R(57, 73, 126, 7, "#f5f0e1");
-  g.fillStyle = "#b32d2d"; g.font = "bold 6px monospace"; g.textBaseline = "top"; g.textAlign = "center"; g.fillText("DENGARKAN RAKYAT!", 120, 74);
+  g.fillStyle = "#b32d2d"; g.font = "bold 6px monospace"; g.textBaseline = "top"; g.textAlign = "center"; g.fillText(["DENGARKAN RAKYAT!", "TURUNKAN BIAYA HIDUP!", "PADAMKAN KEBAKARAN!"][stageNo % 3], 120, 74);
+  banner(g, 3, 60, 56, 14, ["HUTAN BUKAN", "MILIK OLIGARKIS"]);      // banner carried on 29 Oct 2026
+  banner(g, 184, 60, 52, 14, ["STATUS BENCANA", "NASIONAL!"]);
 }
 
 // ---- 4. Istana Presiden (stage 10): white neoclassical palace, flag, fence, red carpet ----
@@ -171,6 +185,10 @@ function drawPalace(g, stageNo) {
   // iron fence with gold tips
   R(-X, 83, LW, 1, "#111"); R(-X, 85, LW, 1, "#111");
   for (let x = 1 - Math.ceil((X + 1) / 4) * 4; x < LW - X; x += 4) { R(x, 77, 1, 9, "#111"); R(x, 76, 1, 1, "#e6c34a"); }
+  [30, 74, 166, 210].forEach((x) => ribbon(g, x, 79, 5));
+  banner(g, 40, 68, 66, 8, ["BENCANA NASIONAL!"]);
+  banner(g, 140, 68, 54, 8, ["PADAMKAN API!"]);
+  flagPole(g, 50, 52, 26); flagPole(g, 190, 52, 26);
   // ground: pavers + red carpet in perspective
   R(-X, 86, LW, LH - 86, "#b9a98d");
   for (let y = 94; y < LH; y += 8) R(-X, y, LW, 1, "#a1906f");

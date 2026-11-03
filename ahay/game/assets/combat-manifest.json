@@ -351,6 +351,176 @@
           "balance": "placeholder"
         }
       ]
+    },
+    {
+      "id": "windah-basudara",
+      "name": "Windah Basudara",
+      "archetype": "streamer",
+      "facing": "right",
+      "sheet": "sheets/playable-windah-basudara-combat-v3.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Klik Cepat",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Smash Keyboard",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Headset Guard",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Alt-Tab Dash",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Charge Mic",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Bocil Kematian",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Rage Quit Besar",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Disconnect",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "ferry-irwandi",
+      "name": "Ferry Irwandi",
+      "archetype": "orator",
+      "facing": "right",
+      "sheet": "sheets/playable-ferry-irwandi-combat-v3.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Interupsi Tajam",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Lempar Spanduk",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Megafon Guard",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Mundur Teratur",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Tarik Napas Panjang",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Reformasi Total",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "17+8 Tuntutan",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Dibungkam",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
     }
   ],
   "enemies": [
@@ -1199,6 +1369,176 @@
           "row": 1,
           "state": "hit-ko",
           "attackName": "Tumbang",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "jokowi",
+      "name": "Jokowi",
+      "theme": "arcade-mantan-presiden",
+      "facing": "left",
+      "sheet": "sheets/enemy-jokowi-combat-v3.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Telunjuk Blusukan",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Gebrakan Kerja",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Senyum Defensif",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Ngeles Dash",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Wartawan Berkerumun",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Jawab Nanti",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Reshuffle Massal",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Mic Terlepas",
+          "function": "hit reaction / KO",
+          "balance": "placeholder"
+        }
+      ]
+    },
+    {
+      "id": "dedi-mulyadi",
+      "name": "Kang Dedi Mulyadi",
+      "theme": "arcade-gubernur",
+      "facing": "left",
+      "sheet": "sheets/enemy-dedi-mulyadi-combat-v3.png",
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "states": [
+        {
+          "index": 0,
+          "col": 0,
+          "row": 0,
+          "state": "light",
+          "attackName": "Tunjuk Konten",
+          "function": "normal attack cepat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 1,
+          "col": 1,
+          "row": 0,
+          "state": "heavy",
+          "attackName": "Tendangan Barak",
+          "function": "serangan berat, startup lambat",
+          "balance": "placeholder"
+        },
+        {
+          "index": 2,
+          "col": 2,
+          "row": 0,
+          "state": "guard-counter",
+          "attackName": "Iket Guard",
+          "function": "block lalu counter",
+          "balance": "placeholder"
+        },
+        {
+          "index": 3,
+          "col": 3,
+          "row": 0,
+          "state": "dodge",
+          "attackName": "Geser Gimbal",
+          "function": "evade / reposisi",
+          "balance": "placeholder"
+        },
+        {
+          "index": 4,
+          "col": 0,
+          "row": 1,
+          "state": "special-startup",
+          "attackName": "Rekam Dulu",
+          "function": "telegraph special",
+          "balance": "placeholder"
+        },
+        {
+          "index": 5,
+          "col": 1,
+          "row": 1,
+          "state": "special-active",
+          "attackName": "Konten Viral",
+          "function": "special aktif + VFX",
+          "balance": "placeholder"
+        },
+        {
+          "index": 6,
+          "col": 2,
+          "row": 1,
+          "state": "ultimate",
+          "attackName": "Barak Massal",
+          "function": "ultimate, meter penuh",
+          "balance": "placeholder"
+        },
+        {
+          "index": 7,
+          "col": 3,
+          "row": 1,
+          "state": "hit-ko",
+          "attackName": "Baterai Habis",
           "function": "hit reaction / KO",
           "balance": "placeholder"
         }

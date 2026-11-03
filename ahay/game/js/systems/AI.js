@@ -1,8 +1,11 @@
 // Boss brain: produces the same intent object a player would. Tuned only by data (boss.def.ai).
+// Used when the opponent is a playable character (arcade lets you fight anyone) and has no boss tuning of its own.
+const DEFAULT_AI = { reaction: 18, aggression: 0.55, block: 0.3, specialEvery: 190, dmg: 1 };
+
 export class BossAI {
   constructor(boss) {
     this.boss = boss;
-    this.cfg = boss.def.ai;
+    this.cfg = boss.def.ai ?? DEFAULT_AI;
     this.think = 45;      // frames until next decision
     this.specialCd = this.cfg.specialEvery * 0.6;
     this.blockT = 0;

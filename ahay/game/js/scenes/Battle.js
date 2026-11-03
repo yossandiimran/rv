@@ -500,7 +500,7 @@ export class Battle {
     const tx = Math.max(x + 20, Math.min(x + w - 20, Math.round(f.x / 4) * 4));                       // stepped tail pointing at the speaker
     ctx.fillStyle = "#000"; ctx.fillRect(tx - 12, y + h + 4, 24, 8); ctx.fillRect(tx - 8, y + h + 12, 16, 8); ctx.fillRect(tx - 4, y + h + 20, 8, 6);
     ctx.fillStyle = "#fff"; ctx.fillRect(tx - 8, y + h, 16, 4); ctx.fillRect(tx - 4, y + h + 4, 8, 8); ctx.fillRect(tx - 4, y + h + 12, 8, 4);
-    lines.forEach((l, i) => pixelText(ctx, l, x + w / 2, y + 12 + i * lh, { px: 2, size: 8, color: "#111", outline: "" }));
+    lines.forEach((l, i) => pixelText(ctx, l, x + w / 2, y + 12 + i * lh, { px: 2, size: 10, color: "#111", outline: "" }));
     ctx.globalAlpha = 1;
   }
 
@@ -566,9 +566,9 @@ export class Battle {
     const full = p.meter >= ULTIMATE_COST, sp = p.meter >= SPECIAL_COST;
     const blink = Math.floor(this.t / 4) % 2;
     bar(28, my, sw, sh, p.meter / 100, full ? (blink ? "#fff" : "#ffd60a") : sp ? "#ffd60a" : "#a07a00", false, false);
-    pixelText(ctx, "STAMINA", 28 + sw + 14, sy - 6, { size: 7, px: 2, align: "left", color: "#9ad1ff" });
-    if (full) pixelText(ctx, "ULTI SIAP!", 28 + sw + 14, my - 6, { size: 7, px: 2, align: "left", color: blink ? "#fff" : "#ffd60a" });
-    else pixelText(ctx, sp ? "SPESIAL SIAP" : "ENERGI", 28 + sw + 14, my - 6, { size: 7, px: 2, align: "left", color: sp ? "#ffd60a" : "#c9a227" });
+    pixelText(ctx, "STAMINA", 28 + sw + 14, sy - 6, { size: 9, px: 2, align: "left", color: "#9ad1ff" });
+    if (full) pixelText(ctx, "ULTI SIAP!", 28 + sw + 14, my - 6, { size: 9, px: 2, align: "left", color: blink ? "#fff" : "#ffd60a" });
+    else pixelText(ctx, sp ? "SPESIAL SIAP" : "ENERGI", 28 + sw + 14, my - 6, { size: 9, px: 2, align: "left", color: sp ? "#ffd60a" : "#c9a227" });
 
     pixelText(ctx, this.training ? "--" : String(Math.ceil(this.timeLeft / 60)).padStart(2, "0"), W / 2, 22, { px: 3, color: "#ffd60a" });
     pixelText(ctx, this.training ? "LATIHAN" : `STAGE ${this.stageNo}`, W / 2, 66, { px: 2, color: "#cfcfcf" });
@@ -595,7 +595,7 @@ export class Battle {
       p.combos.forEach((c, i) => {
         const on = p.chain && p.chainT > 0 && c.seq.startsWith(p.chain);
         const x = W / 2 + (i % 2 ? 190 : -190), y = H - 52 + Math.floor(i / 2) * 22;
-        pixelText(ctx, `${c.seq.split("").join(" ")}  ${c.name.toUpperCase()}`, x, y, { size: 7, px: 2, color: on ? "#ffd60a" : "#cfcfcf" });
+        pixelText(ctx, `${c.seq.split("").join(" ")}  ${c.name.toUpperCase()}`, x, y, { size: 9, px: 2, color: on ? "#ffd60a" : "#cfcfcf" });
       });
     }
     if (this.callout.t > 0) {
@@ -613,7 +613,7 @@ export class Battle {
       ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 170, W, 130);
       ctx.fillStyle = "#b32d2d"; ctx.fillRect(0, 166, W, 4); ctx.fillRect(0, 300, W, 4);
       const late = this.t > 100;
-      if (!late) pixelText(ctx, `LOKASI: ${venueFor(this.stageNo).name}`, W / 2, 132, { size: 7, px: 2, color: "#cfcfcf" });
+      if (!late) pixelText(ctx, `LOKASI: ${venueFor(this.stageNo).name}`, W / 2, 132, { size: 9, px: 2, color: "#cfcfcf" });
       pixelText(ctx, late ? "FIGHT!" : b.def.name.toUpperCase(), W / 2, 200, { size: 14, px: late ? 5 : 3, color: late ? "#ffd60a" : "#fff" });
       if (!late) pixelText(ctx, b.def.tauntQuote ? `"${b.def.taunt}"` : b.def.taunt, W / 2, 262, { px: 2, color: b.def.tauntQuote ? "#ffd60a" : "#cfcfcf" });
     }

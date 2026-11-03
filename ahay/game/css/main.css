@@ -6,7 +6,10 @@ html, body { margin: 0; height: 100%; background: #07050d; color: #fff; overflow
   overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none; }
 #app { position: fixed; inset: 0; display: grid; place-items: center;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-#stage { position: relative; width: min(100vw, calc(100dvh * 16 / 9)); aspect-ratio: 16 / 9; background: #000; overflow: hidden; }
+/* older iOS Safari lacks dvh and aspect-ratio: explicit vh fallbacks first, dvh overrides where supported */
+#stage { position: relative; width: min(100vw, calc(100vh * 16 / 9)); width: min(100vw, calc(100dvh * 16 / 9));
+  height: calc(min(100vw, 100vh * 16 / 9) * 0.5625); height: calc(min(100vw, 100dvh * 16 / 9) * 0.5625);
+  aspect-ratio: 16 / 9; background: #000; overflow: hidden; }
 canvas { image-rendering: pixelated; }
 #game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hidden { display: none !important; }
@@ -121,3 +124,15 @@ p, h1, h2 { margin: 0; }
   box-shadow: inset calc(var(--u) * .4) calc(var(--u) * .4) 0 var(--panel-hi), 0 calc(var(--u) * -.5) 0 0 #000, 0 calc(var(--u) * .5) 0 0 #000, calc(var(--u) * -.5) 0 0 0 #000, calc(var(--u) * .5) 0 0 0 #000; }
 .about-card .gap { margin-top: calc(var(--u) * 1.2); }
 .about-card span { display: grid; justify-items: center; }
+
+/* real HTML text for small UI copy (readable in Safari): heavy system font with a hard 1px outline */
+.ht { font-family: "Arial Black", "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 900; line-height: 1.25; letter-spacing: .02em;
+  text-align: center; -webkit-text-size-adjust: 100%;
+  text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+.tut-row .txt.ht { text-align: left; }
+.btn.ht, .tb.ht, .key.ht { text-shadow: 1px 1px 0 #000; }
+.tb.ht { line-height: 1.05; padding: 0 2px; }
+
+/* touch buttons: labels must fit the 10u squares */
+.tb.ht { font-size: max(8px, calc(var(--u) * 1.15)) !important; letter-spacing: 0; }
+.tb.fs.ht { font-size: max(7px, calc(var(--u) * 1.05)) !important; }

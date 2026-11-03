@@ -84,18 +84,29 @@ function wrapText(text, n) {
   if (cur) lines.push(cur);
   return lines.length ? lines : [""];
 }
+const PIXEL_TEXT_MIN = 0.19; // data-px below this renders as real HTML text: pixel canvases scaled to fractional sizes blur on phones
+function htmlText(el, text) {
+  const px = +el.dataset.px, wrap = +el.dataset.wrap;
+  el.classList.add("ht");
+  el.textContent = text;
+  el.style.color = el.dataset.color || "#fff";
+  el.style.fontSize = `max(11px, calc(var(--u) * ${(px * 11).toFixed(3)}))`;
+  if (wrap) el.style.maxWidth = `${Math.round(wrap * 0.8)}ch`;
+}
 function pixelize(el) {
   const text = el.dataset.text ?? el.textContent.trim();
   el.dataset.text = text; el.setAttribute("aria-label", text);
+  if (+el.dataset.px < PIXEL_TEXT_MIN) { htmlText(el, text); return; }
+  el.classList.remove("ht");
   const color = el.dataset.color || "#fff", outline = el.dataset.outline || "#000";
-  const parts = wrapText(text, +el.dataset.wrap || 999).map((l) => buildPixelText(l, 10, color, outline));
+  const parts = wrapText(text, +el.dataset.wrap || 999).map((l) => buildPixelText(l, 14, color, outline)); // 14px source = more detail, so big titles keep their letter gaps
   const w = Math.max(...parts.map((c) => c.width)), lh = parts[0].height - 2;
   const c = document.createElement("canvas");
   c.width = w; c.height = lh * parts.length + 2;
   const g = c.getContext("2d");
   parts.forEach((p, i) => g.drawImage(p, Math.round((w - p.width) / 2), i * lh));
   c.className = "pxt";
-  c.style.width = `calc(var(--u) * ${el.dataset.px} * ${w})`;
+  c.style.width = `calc(var(--u) * ${(el.dataset.px * 10 / 14).toFixed(4)} * ${w})`; // data-px was tuned for a 10px source
   el.replaceChildren(c);
 }
 function setPx(el, text) { el.dataset.text = text; pixelize(el); }

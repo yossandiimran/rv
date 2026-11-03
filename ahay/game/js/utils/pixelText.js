@@ -1,11 +1,25 @@
-// Pixel-style text without a font file: render small, hard-threshold the antialiasing, upscale with no smoothing.
+// Pixel-style text without a font file: render, thicken, hard-threshold the antialiasing, upscale with no smoothing.
+// Safari draws canvas text thinner than Chrome and has no "Arial Black" on iOS, so glyphs are thickened with a stroke
+// and the font stack falls back to Helvetica Neue / Arial at weight 900 (otherwise thin strokes vanish at the threshold).
 const cache = new Map();
+// Pick the font once: a naturally heavy face (Arial Black / Impact) if installed, otherwise Helvetica Neue / Arial,
+// which is lighter and needs the faux-bold below (that is the iPhone case).
+let fontInfo = null;
+function pickFont() {
+  if (fontInfo) return fontInfo;
+  const g = document.createElement("canvas").getContext("2d");
+  const width = (fam) => { g.font = `900 40px ${fam}`; return g.measureText("mmmmWWW").width; };
+  const base = width("monospace");
+  for (const f of ["'Arial Black'", "Impact"]) if (Math.abs(width(f + ", monospace") - base) > 1) return (fontInfo = { family: f + ", Arial, sans-serif", heavy: true });
+  return (fontInfo = { family: "'Helvetica Neue', Helvetica, Arial, sans-serif", heavy: false });
+}
 
-function layer(text, font, w, h, color, thr, offsets) {
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  const g = c.getContext('2d', { willReadFrequently: true });
-  g.font = font; g.textBaseline = 'top'; g.fillStyle = color;
-  for (const [dx, dy] of offsets) g.fillText(text, 2 + dx, 2 + dy);
+function layer(text, font, size, w, h, color, thr, offsets, bold = 0) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  g.font = font; g.textBaseline = "top"; g.fillStyle = color; g.strokeStyle = color;
+  g.lineJoin = "round"; g.lineWidth = Math.max(0.5, bold); // light faux-bold: same weight on every browser
+  for (const [dx, dy] of offsets) { g.fillText(text, 3 + dx, 3 + dy); if (bold) g.strokeText(text, 3 + dx, 3 + dy); }
   const d = g.getImageData(0, 0, w, h), p = d.data;
   for (let i = 3; i < p.length; i += 4) p[i] = p[i] > thr ? 255 : 0; // hard edge = pixel look
   g.putImageData(d, 0, 0);
@@ -13,14 +27,15 @@ function layer(text, font, w, h, color, thr, offsets) {
 }
 
 export function buildPixelText(text, size, color, outline) {
-  const font = `900 ${size}px 'Arial Black', Impact, Arial, sans-serif`;
-  const probe = document.createElement('canvas').getContext('2d');
+  const { family, heavy } = pickFont();
+  const font = `900 ${size}px ${family}`;
+  const probe = document.createElement("canvas").getContext("2d");
   probe.font = font;
-  const w = Math.ceil(probe.measureText(text).width) + 6, h = size + 7;
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  const g = c.getContext('2d');
-  if (outline) g.drawImage(layer(text, font, w, h, outline, 40, [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1], [0, 2], [1, 2], [-1, 2]]), 0, 0);
-  g.drawImage(layer(text, font, w, h, color, 150, [[0, 0]]), 0, 0);
+  const w = Math.ceil(probe.measureText(text).width) + 10, h = size + 9;
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  if (outline) g.drawImage(layer(text, font, size, w, h, outline, 40, [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1], [0, 2], [1, 2], [-1, 2]]), 0, 0);
+  g.drawImage(layer(text, font, size, w, h, color, heavy ? 150 : 120, [[0, 0]], heavy ? 0 : size * 0.07), 0, 0);
   return c;
 }
 

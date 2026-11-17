@@ -363,6 +363,39 @@
         font-weight: 700;
       }
 
+      .hero-specialty {
+        position: relative;
+        display: inline-flex;
+        padding: 1px 5px 2px;
+        cursor: pointer;
+        border: 0;
+        border-bottom: 1px solid var(--accent);
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+        font-weight: 750;
+        line-height: inherit;
+        transition: color 160ms ease, background-color 160ms ease;
+      }
+
+      .hero-specialty:hover,
+      .hero-specialty:focus-visible {
+        outline: none;
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+
+      .hero-specialty-icon {
+        display: inline-block;
+        margin-left: 7px;
+        font-size: 0.8em;
+        transition: transform 220ms ease;
+      }
+
+      .hero-specialty:hover .hero-specialty-icon {
+        transform: rotate(120deg);
+      }
+
       .button-row {
         display: flex;
         flex-wrap: wrap;
@@ -674,9 +707,304 @@
         font-size: 0.93rem;
       }
 
-      .work {
+      .capability-lab {
         background: color-mix(in srgb, var(--bg-soft) 74%, transparent);
         border-block: 1px solid var(--line);
+      }
+
+      .lab-intro {
+        display: flex;
+        margin-bottom: 34px;
+        align-items: end;
+        justify-content: space-between;
+        gap: 30px;
+      }
+
+      .lab-intro h2 {
+        max-width: 830px;
+        margin: 0;
+        font-size: clamp(3rem, 6vw, 6.2rem);
+        letter-spacing: -0.065em;
+      }
+
+      .lab-intro-note {
+        max-width: 300px;
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .lab-grid {
+        display: grid;
+        grid-template-columns: minmax(270px, 0.38fr) minmax(0, 0.62fr);
+        gap: 16px;
+      }
+
+      .scenario-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .scenario-button {
+        display: grid;
+        min-height: 108px;
+        padding: 20px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--muted);
+        text-align: left;
+        grid-template-columns: 32px minmax(0, 1fr) 24px;
+        align-items: center;
+        gap: 12px;
+        transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, transform 180ms ease;
+      }
+
+      .scenario-button:hover {
+        border-color: color-mix(in srgb, var(--scenario-color, var(--accent)) 60%, var(--line));
+        color: var(--text);
+        transform: translateX(5px);
+      }
+
+      .scenario-button.active {
+        border-color: var(--scenario-color, var(--accent));
+        background: color-mix(in srgb, var(--scenario-color, var(--accent)) 11%, var(--surface-solid));
+        color: var(--text);
+      }
+
+      .scenario-number {
+        align-self: start;
+        color: var(--scenario-color, var(--accent));
+        font-family: var(--font-display);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+      }
+
+      .scenario-copy strong {
+        display: block;
+        margin-bottom: 4px;
+        color: inherit;
+        font-size: 0.93rem;
+        line-height: 1.3;
+      }
+
+      .scenario-copy small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.74rem;
+        line-height: 1.4;
+      }
+
+      .scenario-arrow {
+        color: var(--scenario-color, var(--accent));
+        font-size: 1.1rem;
+        transition: transform 180ms ease;
+      }
+
+      .scenario-button.active .scenario-arrow,
+      .scenario-button:hover .scenario-arrow {
+        transform: translateX(4px);
+      }
+
+      .lab-console {
+        position: relative;
+        min-height: 462px;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--lab-color, var(--accent)) 45%, var(--line));
+        border-radius: var(--radius-md);
+        background:
+          radial-gradient(
+            circle at 82% 18%,
+            color-mix(in srgb, var(--lab-color, var(--accent)) 13%, transparent),
+            transparent 35%
+          ),
+          var(--surface-solid);
+        box-shadow: var(--shadow);
+        transition: border-color 240ms ease, background-color 240ms ease;
+      }
+
+      .lab-console-bar {
+        display: flex;
+        min-height: 52px;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--line);
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.7rem;
+      }
+
+      .console-dots {
+        display: flex;
+        gap: 6px;
+      }
+
+      .console-dots i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--line);
+      }
+
+      .console-dots i:first-child {
+        background: var(--lab-color, var(--accent));
+      }
+
+      .lab-position {
+        color: var(--lab-color, var(--accent));
+        font-weight: 800;
+      }
+
+      .lab-result {
+        display: grid;
+        padding: clamp(28px, 5vw, 50px);
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 0.62fr);
+        align-items: center;
+        gap: clamp(28px, 5vw, 58px);
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 160ms ease, transform 160ms ease;
+      }
+
+      .lab-result.is-updating {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      .lab-kicker {
+        display: block;
+        margin-bottom: 16px;
+        color: var(--lab-color, var(--accent));
+        font-size: 0.74rem;
+        font-weight: 850;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .lab-result h3 {
+        margin-bottom: 20px;
+        font-size: clamp(2rem, 4vw, 3.6rem);
+        line-height: 1.02;
+        letter-spacing: -0.055em;
+      }
+
+      .lab-description {
+        margin-bottom: 24px;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .lab-tags {
+        display: flex;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+
+      .lab-tag {
+        padding: 6px 9px;
+        border: 1px solid color-mix(in srgb, var(--lab-color, var(--accent)) 35%, var(--line));
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 0.69rem;
+        font-weight: 750;
+      }
+
+      .lab-project-button {
+        display: inline-flex;
+        min-height: 44px;
+        padding: 0 15px;
+        cursor: pointer;
+        border: 1px solid var(--lab-color, var(--accent));
+        border-radius: 12px;
+        background: var(--lab-color, var(--accent));
+        color: #11150d;
+        align-items: center;
+        gap: 9px;
+        font-size: 0.8rem;
+        font-weight: 850;
+        transition: transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      .lab-project-button:hover {
+        box-shadow: 0 14px 34px color-mix(in srgb, var(--lab-color, var(--accent)) 20%, transparent);
+        transform: translateY(-3px);
+      }
+
+      .lab-flow {
+        position: relative;
+        display: grid;
+        gap: 32px;
+      }
+
+      .lab-flow::before {
+        position: absolute;
+        top: 34px;
+        bottom: 34px;
+        left: 19px;
+        width: 1px;
+        background: linear-gradient(var(--lab-color, var(--accent)), var(--line));
+        content: "";
+      }
+
+      .flow-pulse {
+        position: absolute;
+        z-index: 2;
+        top: 30px;
+        left: 15px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--lab-color, var(--accent));
+        box-shadow: 0 0 0 5px color-mix(in srgb, var(--lab-color, var(--accent)) 12%, transparent);
+        animation: flowSignal 2.6s ease-in-out infinite;
+      }
+
+      .flow-node {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        min-height: 68px;
+        padding: 13px 15px 13px 54px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+        align-content: center;
+      }
+
+      .flow-node::before {
+        position: absolute;
+        top: 25px;
+        left: 14px;
+        width: 10px;
+        height: 10px;
+        border: 2px solid var(--lab-color, var(--accent));
+        border-radius: 50%;
+        background: var(--surface-solid);
+        content: "";
+      }
+
+      .flow-node small {
+        display: block;
+        margin-bottom: 2px;
+        color: var(--muted);
+        font-size: 0.61rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .flow-node strong {
+        font-size: 0.8rem;
+        line-height: 1.3;
+      }
+
+      .work {
+        background: var(--bg);
       }
 
       .work-toolbar {
@@ -1261,6 +1589,27 @@
         }
       }
 
+      @keyframes flowSignal {
+        0%,
+        100% {
+          top: 30px;
+          opacity: 0.25;
+        }
+
+        15% {
+          opacity: 1;
+        }
+
+        85% {
+          opacity: 1;
+        }
+
+        90% {
+          top: calc(100% - 38px);
+          opacity: 0.25;
+        }
+      }
+
       @media (max-width: 900px) {
         .nav-links {
           position: fixed;
@@ -1291,6 +1640,23 @@
         .section-heading,
         .about-grid {
           grid-template-columns: 1fr;
+        }
+
+        .lab-intro {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .lab-intro-note {
+          max-width: 540px;
+        }
+
+        .lab-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .scenario-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .hero {
@@ -1372,6 +1738,11 @@
           min-height: 360px;
         }
 
+        .hero-specialty {
+          padding-inline: 2px;
+          text-align: left;
+        }
+
         .capability-card p {
           margin-left: 0;
         }
@@ -1410,6 +1781,27 @@
 
         .education-grid {
           grid-template-columns: 1fr;
+        }
+
+        .scenario-list,
+        .lab-result {
+          grid-template-columns: 1fr;
+        }
+
+        .scenario-button {
+          min-height: 96px;
+        }
+
+        .lab-console {
+          min-height: 0;
+        }
+
+        .lab-console-bar {
+          padding-inline: 14px;
+        }
+
+        .lab-result {
+          gap: 38px;
         }
 
         .skills-stage {
@@ -1472,6 +1864,7 @@
 
         <div class="nav-links" id="nav-links">
           <a href="#about">About</a>
+          <a href="#capabilities">Capabilities</a>
           <a href="#work">Work</a>
           <a href="#experience">Experience</a>
           <a href="#contact">Contact</a>
@@ -1506,11 +1899,15 @@
                 <span class="outline">Engineer.</span>
               </h1>
               <p class="hero-copy">
-                I build <strong>web, mobile, and SAP-connected systems</strong> that turn complex business
-                operations into practical software.
+                I turn complex operations into
+                <button class="hero-specialty" id="hero-specialty" type="button" aria-label="Show another capability">
+                  <span id="hero-specialty-text" aria-live="polite">SAP-connected systems</span>
+                  <span class="hero-specialty-icon" aria-hidden="true">↻</span>
+                </button>
+                that people can actually use.
               </p>
               <div class="button-row">
-                <a class="button primary" href="#work">Explore selected work <span class="arrow">↗</span></a>
+                <a class="button primary" href="#capabilities">Give me a problem <span class="arrow">↓</span></a>
                 <a
                   class="button"
                   href="https://www.linkedin.com/in/yossandi-imran-98a45a222/"
@@ -1600,11 +1997,65 @@
         </div>
       </section>
 
+      <section class="capability-lab" id="capabilities">
+        <div class="shell">
+          <div class="lab-intro reveal">
+            <div>
+              <p class="eyebrow">02 · Capability lab</p>
+              <h2>Give me a problem.</h2>
+            </div>
+            <p class="lab-intro-note">Pick a real-world challenge. I’ll show you how my experience maps to it.</p>
+          </div>
+
+          <div class="lab-grid reveal">
+            <div class="scenario-list" id="scenario-list" role="tablist" aria-label="Choose a business challenge"></div>
+
+            <article class="lab-console" id="lab-console" style="--lab-color: #68d5ff">
+              <div class="lab-console-bar">
+                <span class="console-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>capability-explorer.exe</span>
+                <span class="lab-position" id="lab-position">01 / 04</span>
+              </div>
+
+              <div class="lab-result" id="lab-result" role="tabpanel" tabindex="0" aria-live="polite">
+                <div>
+                  <span class="lab-kicker" id="lab-kicker">Connect the business</span>
+                  <h3 id="lab-title">I connect daily operations to SAP.</h3>
+                  <p class="lab-description" id="lab-description">
+                    I use BAPI, OData, APIs, and middleware to connect business workflows with enterprise data.
+                  </p>
+                  <div class="lab-tags" id="lab-tags"></div>
+                  <button class="lab-project-button" id="lab-project-button" type="button">
+                    Inspect the proof <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
+
+                <div class="lab-flow" aria-label="Solution flow">
+                  <span class="flow-pulse" aria-hidden="true"></span>
+                  <div class="flow-node">
+                    <small>Input</small>
+                    <strong id="flow-input">Business workflow</strong>
+                  </div>
+                  <div class="flow-node">
+                    <small>Build</small>
+                    <strong id="flow-build">Integration layer</strong>
+                  </div>
+                  <div class="flow-node">
+                    <small>Result</small>
+                    <strong id="flow-result">Connected SAP data</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section class="work" id="work">
         <div class="shell">
           <div class="section-heading reveal">
             <div>
-              <p class="eyebrow">02 · Selected work</p>
+              <p class="eyebrow">03 · Selected work</p>
               <h2>Systems in<br />the wild.</h2>
             </div>
             <p>
@@ -1632,7 +2083,7 @@
         <div class="shell">
           <div class="section-heading reveal">
             <div>
-              <p class="eyebrow">03 · Experience</p>
+              <p class="eyebrow">04 · Experience</p>
               <h2>The road<br />so far.</h2>
             </div>
             <p>
@@ -1649,7 +2100,7 @@
         <div class="shell">
           <div class="section-heading reveal">
             <div>
-              <p class="eyebrow">04 · Toolkit & learning</p>
+              <p class="eyebrow">05 · Toolkit & learning</p>
               <h2>Across the<br />stack.</h2>
             </div>
             <p>
@@ -1673,7 +2124,7 @@
       <section class="contact" id="contact">
         <div class="shell">
           <div class="contact-card reveal">
-            <p class="eyebrow">05 · Connect</p>
+            <p class="eyebrow">06 · Connect</p>
             <h2>Let’s build something useful.</h2>
             <div class="button-row">
               <a
@@ -1716,6 +2167,56 @@
       // object when the profile changes; the page renders projects, experience, and education from it.
       const portfolioData = {
         linkedIn: "https://www.linkedin.com/in/yossandi-imran-98a45a222/",
+        capabilityScenarios: [
+          {
+            label: "Connect the business",
+            prompt: "Our workflow needs reliable SAP data.",
+            title: "I connect daily operations to SAP.",
+            description:
+              "I use BAPI, OData, APIs, and middleware to connect business workflows with enterprise data—across web and mobile interfaces.",
+            tags: ["SAP BAPI", "OData", "Middleware", "API Integration"],
+            flow: ["Business workflow", "Integration layer", "Connected SAP data"],
+            projectIndex: 1,
+            color: "#68d5ff",
+            specialty: "SAP-connected systems",
+          },
+          {
+            label: "See the warehouse",
+            prompt: "Manual product inspection can’t keep up.",
+            title: "I turn camera feeds into operational data.",
+            description:
+              "Using CCTV, Python, and YOLO segmentation, I built a workflow that detects overlapping products and validates quantities against SAP data.",
+            tags: ["Python", "YOLO Segmentation", "CCTV", "SAP Validation"],
+            flow: ["Live CCTV feed", "Vision detection", "SAP validation"],
+            projectIndex: 0,
+            color: "#caff5a",
+            specialty: "computer-vision workflows",
+          },
+          {
+            label: "Mobilize the workflow",
+            prompt: "The process needs to move with the team.",
+            title: "I put business workflows in people’s pockets.",
+            description:
+              "I build Flutter applications backed by Laravel, Firebase, and PostgreSQL for operational workflows such as goods receiving, leave requests, and reporting.",
+            tags: ["Flutter", "Laravel", "Firebase", "PostgreSQL"],
+            flow: ["Operational need", "Mobile + backend", "Usable field workflow"],
+            projectIndex: 2,
+            color: "#ff8b5c",
+            specialty: "mobile business apps",
+          },
+          {
+            label: "Make the field visible",
+            prompt: "Supervisors need clearer field information.",
+            title: "I make field activity easier to capture and monitor.",
+            description:
+              "My published work includes mining inspection, location-aware attendance, fuel reporting, and smartwatch-based activity and health monitoring.",
+            tags: ["Mobile", "Location", "Firebase", "Android Java"],
+            flow: ["People in the field", "Connected application", "Visible operations"],
+            projectIndex: 4,
+            color: "#bb9cff",
+            specialty: "connected field tools",
+          },
+        ],
         projects: [
           {
             title: "Warehouse Vision Inspection",
@@ -1871,6 +2372,12 @@
       const draggableInitials = document.getElementById("draggable-initials");
       const reducedMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
       const finePointerQuery = matchMedia("(pointer: fine)");
+      const heroSpecialty = document.getElementById("hero-specialty");
+      const heroSpecialtyText = document.getElementById("hero-specialty-text");
+      const scenarioList = document.getElementById("scenario-list");
+      const labConsole = document.getElementById("lab-console");
+      const labResult = document.getElementById("lab-result");
+      const labProjectButton = document.getElementById("lab-project-button");
 
       let storedTheme = null;
       try {
@@ -1986,9 +2493,134 @@
           .join("");
       }
 
+      let scenarioUpdateTimer = 0;
+
+      function applyScenarioContent(index) {
+        const scenario = portfolioData.capabilityScenarios[index];
+        const project = portfolioData.projects[scenario.projectIndex];
+
+        labConsole.style.setProperty("--lab-color", scenario.color);
+        document.getElementById("lab-position").textContent = `${String(index + 1).padStart(2, "0")} / ${String(
+          portfolioData.capabilityScenarios.length,
+        ).padStart(2, "0")}`;
+        document.getElementById("lab-kicker").textContent = scenario.label;
+        document.getElementById("lab-title").textContent = scenario.title;
+        document.getElementById("lab-description").textContent = scenario.description;
+        document.getElementById("lab-tags").innerHTML = scenario.tags
+          .map((tag) => `<span class="lab-tag">${tag}</span>`)
+          .join("");
+        document.getElementById("flow-input").textContent = scenario.flow[0];
+        document.getElementById("flow-build").textContent = scenario.flow[1];
+        document.getElementById("flow-result").textContent = scenario.flow[2];
+        labProjectButton.dataset.project = String(scenario.projectIndex);
+        labProjectButton.innerHTML = `Inspect ${project.title} <span aria-hidden="true">↗</span>`;
+      }
+
+      function selectScenario(index, { animate = true, focus = false } = {}) {
+        const buttons = [...scenarioList.querySelectorAll(".scenario-button")];
+        buttons.forEach((button, buttonIndex) => {
+          const isActive = buttonIndex === index;
+          button.classList.toggle("active", isActive);
+          button.setAttribute("aria-selected", String(isActive));
+          button.tabIndex = isActive ? 0 : -1;
+          if (isActive && focus) button.focus();
+        });
+
+        clearTimeout(scenarioUpdateTimer);
+        if (!animate || reducedMotionQuery.matches) {
+          applyScenarioContent(index);
+          return;
+        }
+
+        labResult.classList.add("is-updating");
+        scenarioUpdateTimer = setTimeout(() => {
+          applyScenarioContent(index);
+          labResult.classList.remove("is-updating");
+        }, 150);
+      }
+
+      function renderCapabilityLab() {
+        scenarioList.innerHTML = portfolioData.capabilityScenarios
+          .map(
+            (scenario, index) => `
+              <button
+                class="scenario-button${index === 0 ? " active" : ""}"
+                type="button"
+                role="tab"
+                aria-selected="${index === 0}"
+                aria-controls="lab-result"
+                tabindex="${index === 0 ? 0 : -1}"
+                style="--scenario-color: ${scenario.color}"
+                data-scenario="${index}"
+              >
+                <span class="scenario-number">${String(index + 1).padStart(2, "0")}</span>
+                <span class="scenario-copy">
+                  <strong>${scenario.label}</strong>
+                  <small>${scenario.prompt}</small>
+                </span>
+                <span class="scenario-arrow" aria-hidden="true">→</span>
+              </button>
+            `,
+          )
+          .join("");
+        applyScenarioContent(0);
+      }
+
       renderProjects();
       renderExperience();
       renderToolkit();
+      renderCapabilityLab();
+
+      scenarioList.addEventListener("click", (event) => {
+        const button = event.target.closest(".scenario-button");
+        if (!button) return;
+        selectScenario(Number(button.dataset.scenario));
+      });
+
+      scenarioList.addEventListener("keydown", (event) => {
+        if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const activeIndex = Number(scenarioList.querySelector(".scenario-button.active")?.dataset.scenario || 0);
+        let nextIndex = activeIndex;
+        if (event.key === "Home") nextIndex = 0;
+        else if (event.key === "End") nextIndex = portfolioData.capabilityScenarios.length - 1;
+        else if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+          nextIndex = (activeIndex + 1) % portfolioData.capabilityScenarios.length;
+        } else {
+          nextIndex = (activeIndex - 1 + portfolioData.capabilityScenarios.length) % portfolioData.capabilityScenarios.length;
+        }
+        selectScenario(nextIndex, { focus: true });
+      });
+
+      let heroSpecialtyIndex = 0;
+      let specialtyAnimation = 0;
+      heroSpecialty.addEventListener("click", () => {
+        heroSpecialtyIndex = (heroSpecialtyIndex + 1) % portfolioData.capabilityScenarios.length;
+        const nextText = portfolioData.capabilityScenarios[heroSpecialtyIndex].specialty;
+
+        cancelAnimationFrame(specialtyAnimation);
+        if (reducedMotionQuery.matches) {
+          heroSpecialtyText.textContent = nextText;
+          return;
+        }
+
+        const glyphs = "01<>/{}[]";
+        const start = performance.now();
+        const duration = 380;
+        const animateSpecialty = (now) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const revealed = Math.floor(progress * nextText.length);
+          heroSpecialtyText.textContent = [...nextText]
+            .map((character, index) => {
+              if (character === " ") return " ";
+              if (index < revealed || progress === 1) return character;
+              return glyphs[Math.floor(Math.random() * glyphs.length)];
+            })
+            .join("");
+          if (progress < 1) specialtyAnimation = requestAnimationFrame(animateSpecialty);
+        };
+        specialtyAnimation = requestAnimationFrame(animateSpecialty);
+      });
 
       let glowFrame = 0;
       addEventListener(
@@ -2184,11 +2816,7 @@
         });
       });
 
-      projectsGrid.addEventListener("click", (event) => {
-        const card = event.target.closest(".project-card");
-        if (!card) return;
-
-        const index = Number(card.dataset.project);
+      function openProjectDialog(index) {
         const project = portfolioData.projects[index];
         document.getElementById("dialog-index").textContent = `PROJECT ${String(index + 1).padStart(2, "0")}`;
         document.getElementById("dialog-title").textContent = project.title;
@@ -2197,7 +2825,15 @@
           .map((tag) => `<span class="tag">${tag}</span>`)
           .join("");
         projectDialog.showModal();
+      }
+
+      projectsGrid.addEventListener("click", (event) => {
+        const card = event.target.closest(".project-card");
+        if (!card) return;
+        openProjectDialog(Number(card.dataset.project));
       });
+
+      labProjectButton.addEventListener("click", () => openProjectDialog(Number(labProjectButton.dataset.project)));
 
       document.getElementById("dialog-close").addEventListener("click", () => projectDialog.close());
       projectDialog.addEventListener("click", (event) => {

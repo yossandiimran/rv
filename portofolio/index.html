@@ -1577,6 +1577,414 @@
         transform: translateY(0);
       }
 
+      .project-main {
+        display: block;
+      }
+
+      .project-hook {
+        position: relative;
+        display: block;
+        max-width: 360px;
+        margin-top: -6px;
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.5;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 220ms ease, transform 220ms ease;
+      }
+
+      .project-hook::before {
+        color: var(--card-accent, var(--accent));
+        font-weight: 900;
+        content: "→ ";
+      }
+
+      .project-card:hover .project-hook,
+      .project-card:focus-visible .project-hook {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (hover: none) {
+        .project-hook {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .local-time {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .dialog-actions {
+        margin-top: 32px;
+      }
+
+      .topic-block {
+        position: relative;
+        margin-top: 36px;
+        padding-top: 26px;
+        border-top: 1px solid color-mix(in srgb, var(--accent-ink) 22%, transparent);
+      }
+
+      .topic-label {
+        margin: 0 0 14px;
+        color: color-mix(in srgb, var(--accent-ink) 78%, transparent);
+        font-size: 0.88rem;
+        font-weight: 750;
+      }
+
+      .topic-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .topic-chip {
+        min-height: 40px;
+        padding: 0 15px;
+        cursor: pointer;
+        border: 1px solid var(--accent-ink);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--accent-ink);
+        font-size: 0.82rem;
+        font-weight: 800;
+        transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+      }
+
+      .topic-chip:hover,
+      .topic-chip:focus-visible {
+        outline: none;
+        background: var(--accent-ink);
+        color: var(--accent);
+        transform: translateY(-2px);
+      }
+
+      .contact-card.spotlight {
+        animation: spotlight 1.4s ease 2;
+      }
+
+      dialog.terminal {
+        width: min(calc(100% - 24px), 760px);
+        max-height: none;
+        overflow: hidden;
+        border-color: rgba(202, 255, 90, 0.3);
+        background: #0b0e0c;
+        color: #d9e8cf;
+      }
+
+      .term {
+        display: flex;
+        height: min(80svh, 560px);
+        flex-direction: column;
+      }
+
+      .term-bar {
+        display: flex;
+        min-height: 46px;
+        padding: 0 10px 0 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: #8fa086;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.72rem;
+      }
+
+      .term-bar .console-dots i {
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .term-bar .console-dots i:first-child {
+        background: #caff5a;
+      }
+
+      .term-close {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 50%;
+        background: transparent;
+        color: #d9e8cf;
+        place-items: center;
+      }
+
+      .term-body {
+        flex: 1;
+        padding: 18px 20px 8px;
+        overflow-y: auto;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.84rem;
+        line-height: 1.65;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .term-cmd {
+        color: #caff5a;
+      }
+
+      .term-body a {
+        color: #68d5ff;
+        text-decoration: underline;
+      }
+
+      .term-chips {
+        display: flex;
+        padding: 6px 20px 12px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .term-chip {
+        padding: 5px 10px;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 999px;
+        background: transparent;
+        color: #a9b8a0;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.72rem;
+        transition: border-color 160ms ease, color 160ms ease;
+      }
+
+      .term-chip:hover,
+      .term-chip:focus-visible {
+        outline: none;
+        border-color: #caff5a;
+        color: #caff5a;
+      }
+
+      .term-form {
+        display: flex;
+        padding: 12px 20px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        align-items: center;
+        gap: 10px;
+      }
+
+      .term-prompt {
+        color: #caff5a;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+
+      .term-form input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        caret-color: #caff5a;
+        color: #f3f1e8;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.92rem;
+      }
+
+      .quest {
+        position: fixed;
+        z-index: 90;
+        bottom: 20px;
+        left: 20px;
+        display: grid;
+        justify-items: start;
+        gap: 10px;
+      }
+
+      .quest-toggle {
+        display: inline-flex;
+        padding: 7px 16px 7px 7px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface-solid);
+        box-shadow: var(--shadow);
+        align-items: center;
+        gap: 10px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        transition: border-color 160ms ease, transform 160ms ease;
+      }
+
+      .quest-toggle:hover,
+      .quest-toggle:focus-visible {
+        outline: none;
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
+
+      .quest-ring {
+        position: relative;
+        display: grid;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: conic-gradient(var(--accent) calc(var(--quest-progress, 0) * 1%), var(--line) 0);
+        place-items: center;
+      }
+
+      .quest-ring::before {
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: var(--surface-solid);
+        content: "";
+      }
+
+      .quest-ring b {
+        position: relative;
+        font-size: 0.66rem;
+      }
+
+      .quest-panel {
+        width: min(330px, calc(100vw - 40px));
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: var(--surface-solid);
+        box-shadow: var(--shadow);
+      }
+
+      .quest-panel[hidden] {
+        display: none;
+      }
+
+      .quest-title {
+        margin: 0 0 14px;
+        font-family: var(--font-display);
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+      }
+
+      .quest-panel ul {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        gap: 11px;
+        list-style: none;
+      }
+
+      .quest-panel li {
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr);
+        align-items: start;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+
+      .quest-panel li i {
+        display: grid;
+        width: 20px;
+        height: 20px;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        font-size: 0.7rem;
+        font-style: normal;
+        place-items: center;
+      }
+
+      .quest-panel li small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 500;
+      }
+
+      .quest-panel li.done {
+        color: var(--text);
+      }
+
+      .quest-panel li.done i {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+
+      .quest-panel li.done small {
+        display: none;
+      }
+
+      .quest-final {
+        margin: 18px 0 0;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        font-size: 0.88rem;
+      }
+
+      .quest-final[hidden] {
+        display: none;
+      }
+
+      .quest-final p {
+        margin-bottom: 12px;
+      }
+
+      .confetti {
+        position: fixed;
+        z-index: 2000;
+        width: 8px;
+        height: 12px;
+        border-radius: 2px;
+        pointer-events: none;
+        animation: confetti 1.3s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+      }
+
+      .party .brand-mark,
+      .party .initials {
+        animation: partySpin 0.9s linear 4;
+      }
+
+      @keyframes confetti {
+        from {
+          opacity: 1;
+          transform: translate(0, 0) rotate(0deg);
+        }
+
+        to {
+          opacity: 0;
+          transform: translate(var(--dx), calc(var(--dy) + 260px)) rotate(var(--rot));
+        }
+      }
+
+      @keyframes partySpin {
+        to {
+          transform: rotate(353deg);
+        }
+      }
+
+      @keyframes spotlight {
+        50% {
+          box-shadow: 0 0 0 14px color-mix(in srgb, var(--accent) 30%, transparent);
+        }
+      }
+
+      @media (max-width: 620px) {
+        .quest {
+          bottom: 14px;
+          left: 14px;
+        }
+
+        .quest-label {
+          display: none;
+        }
+
+        .quest-toggle {
+          padding-right: 7px;
+        }
+
+        .term {
+          height: min(86svh, 560px);
+        }
+      }
+
       @keyframes orbit {
         to {
           transform: rotate(360deg);
@@ -1871,6 +2279,15 @@
         </div>
 
         <div class="nav-actions">
+          <button
+            class="icon-button"
+            id="terminal-toggle"
+            type="button"
+            aria-label="Open terminal (press /)"
+            title="Terminal — press /"
+          >
+            <span aria-hidden="true">›_</span>
+          </button>
           <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch to light theme">
             <span id="theme-icon" aria-hidden="true">☼</span>
           </button>
@@ -1893,7 +2310,10 @@
         <div class="shell">
           <div class="hero-grid">
             <div class="hero-content">
-              <p class="eyebrow"><span class="availability-dot" aria-hidden="true"></span> Bandung, Indonesia</p>
+              <p class="eyebrow">
+                <span class="availability-dot" aria-hidden="true"></span> Bandung, Indonesia ·
+                <span class="local-time" id="local-time"></span>
+              </p>
               <h1>
                 Software<br />
                 <span class="outline">Engineer.</span>
@@ -1916,6 +2336,9 @@
                 >
                   LinkedIn <span class="arrow">↗</span>
                 </a>
+                <button class="button" id="terminal-open-hero" type="button">
+                  Open terminal <span aria-hidden="true">›_</span>
+                </button>
               </div>
             </div>
 
@@ -1940,15 +2363,15 @@
 
           <div class="hero-stats reveal" aria-label="Career highlights">
             <div class="stat">
-              <strong>2019</strong>
+              <strong data-count="2019" data-from="2000">2019</strong>
               <span>Started building professionally</span>
             </div>
             <div class="stat">
-              <strong>10+</strong>
+              <strong data-count="10" data-from="0">10</strong>
               <span>Projects listed on LinkedIn</span>
             </div>
             <div class="stat">
-              <strong>3</strong>
+              <strong data-count="3" data-from="0">3</strong>
               <span>Professional experience tracks</span>
             </div>
           </div>
@@ -2137,6 +2560,11 @@
               </a>
               <button class="button secondary" id="copy-link" type="button">Copy profile link</button>
             </div>
+
+            <div class="topic-block">
+              <p class="topic-label">Not sure what to say? Pick a topic. I’ll copy an opener and open LinkedIn for you.</p>
+              <div class="topic-chips" id="topic-chips"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -2157,8 +2585,50 @@
         <p class="dialog-description" id="dialog-description"></p>
         <span class="dialog-label">Tools & technologies</span>
         <div class="tag-list" id="dialog-tags"></div>
+        <div class="dialog-actions">
+          <button class="button primary" id="dialog-ask" type="button">
+            Ask me how I built this <span class="arrow">↗</span>
+          </button>
+        </div>
       </div>
     </dialog>
+
+    <dialog class="terminal" id="terminal-dialog" aria-label="Terminal">
+      <div class="term">
+        <div class="term-bar">
+          <span class="console-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>yossandi@portfolio ~</span>
+          <button class="term-close" id="term-close" type="button" aria-label="Close terminal">×</button>
+        </div>
+        <div class="term-body" id="term-body" aria-live="polite"></div>
+        <div class="term-chips" id="term-chips"></div>
+        <form class="term-form" id="term-form" autocomplete="off">
+          <label class="term-prompt" for="term-input">$</label>
+          <input id="term-input" type="text" spellcheck="false" autocapitalize="off" aria-label="Type a command" />
+        </form>
+      </div>
+    </dialog>
+
+    <aside class="quest" aria-label="Exploration progress">
+      <div class="quest-panel" id="quest-panel" hidden>
+        <p class="quest-title">Curious? Find all six.</p>
+        <ul id="quest-list"></ul>
+        <div class="quest-final" id="quest-final" hidden>
+          <p>You found everything. Now you know how I think. Let’s talk.</p>
+          <button class="button primary" id="quest-contact" type="button">Take me to the contact</button>
+        </div>
+      </div>
+      <button
+        class="quest-toggle"
+        id="quest-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="quest-panel"
+      >
+        <span class="quest-ring" id="quest-ring"><b id="quest-count">0/6</b></span>
+        <span class="quest-label">Explore me</span>
+      </button>
+    </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite">Profile link copied.</div>
 
@@ -2356,6 +2826,23 @@
         ],
       };
 
+      // One-line teasers shown when a project card is hovered. They only restate the project descriptions.
+      const projectHooks = [
+        "Cameras count the stacks so nobody has to count by hand.",
+        "Goods received on a phone, checked against SAP.",
+        "Leave and permission requests, without the paperwork chase.",
+        "Fuel purchases reported by drivers, straight into SAP.",
+        "A wrist-worn view of where students are and how they’re doing.",
+        "Attendance proven with a selfie and a location.",
+        "Mine inspections, carried by the supervisor.",
+        "Indonesian export products, showcased on mobile.",
+        "A salon’s web presence, managed through its own CMS.",
+        "Details on request. Ask me.",
+      ];
+      portfolioData.projects.forEach((project, index) => {
+        project.hook = projectHooks[index] || "";
+      });
+
       const html = document.documentElement;
       const header = document.getElementById("site-header");
       const progress = document.querySelector(".scroll-progress");
@@ -2399,6 +2886,7 @@
       themeToggle.addEventListener("click", () => {
         const nextTheme = html.dataset.theme === "dark" ? "light" : "dark";
         setTheme(nextTheme);
+        markQuest("theme");
         try {
           localStorage.setItem("portfolio-theme", nextTheme);
         } catch {
@@ -2432,7 +2920,10 @@
                 aria-label="View details for ${project.title}"
               >
                 <span class="project-index">${String(index + 1).padStart(2, "0")}</span>
-                <h3>${project.title}</h3>
+                <span class="project-main">
+                  <h3>${project.title}</h3>
+                  <span class="project-hook">${project.hook || ""}</span>
+                </span>
                 <span class="project-footer">
                   <span class="tag-list">
                     ${project.tags
@@ -2575,6 +3066,7 @@
         const button = event.target.closest(".scenario-button");
         if (!button) return;
         selectScenario(Number(button.dataset.scenario));
+        markQuest("lab");
       });
 
       scenarioList.addEventListener("keydown", (event) => {
@@ -2590,6 +3082,7 @@
           nextIndex = (activeIndex - 1 + portfolioData.capabilityScenarios.length) % portfolioData.capabilityScenarios.length;
         }
         selectScenario(nextIndex, { focus: true });
+        markQuest("lab");
       });
 
       let heroSpecialtyIndex = 0;
@@ -2715,6 +3208,7 @@
 
         element.addEventListener("pointermove", (event) => {
           if (event.pointerId !== activePointer) return;
+          markQuest("drag");
           const next = keepInside(
             element,
             container,
@@ -2824,7 +3318,9 @@
         document.getElementById("dialog-tags").innerHTML = project.tags
           .map((tag) => `<span class="tag">${tag}</span>`)
           .join("");
+        document.getElementById("dialog-ask").dataset.project = String(index);
         projectDialog.showModal();
+        markQuest("project");
       }
 
       projectsGrid.addEventListener("click", (event) => {
@@ -2840,13 +3336,13 @@
         if (event.target === projectDialog) projectDialog.close();
       });
 
-      document.getElementById("copy-link").addEventListener("click", async () => {
+      async function copyText(text) {
         try {
           if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(portfolioData.linkedIn);
+            await navigator.clipboard.writeText(text);
           } else {
             const textArea = document.createElement("textarea");
-            textArea.value = portfolioData.linkedIn;
+            textArea.value = text;
             textArea.style.position = "fixed";
             textArea.style.opacity = "0";
             document.body.appendChild(textArea);
@@ -2854,10 +3350,39 @@
             document.execCommand("copy");
             textArea.remove();
           }
-          showToast("Profile link copied.");
+          return true;
         } catch {
-          showToast("Copy failed — open LinkedIn instead.");
+          return false;
         }
+      }
+
+      document.getElementById("copy-link").addEventListener("click", async () => {
+        const copied = await copyText(portfolioData.linkedIn);
+        showToast(copied ? "Profile link copied." : "Copy failed — open LinkedIn instead.");
+      });
+
+      document.getElementById("dialog-ask").addEventListener("click", async (event) => {
+        const project = portfolioData.projects[Number(event.currentTarget.dataset.project)];
+        const copied = await copyText(
+          `Hi Yossandi — I saw ${project.title} in your portfolio and I’d like to know more about how you built it.`,
+        );
+        showToast(copied ? "Opener copied — paste it in LinkedIn." : "Couldn’t copy — open LinkedIn and say hi.");
+        window.open(portfolioData.linkedIn, "_blank", "noopener");
+      });
+
+      const topicChips = document.getElementById("topic-chips");
+      topicChips.innerHTML = portfolioData.capabilityScenarios
+        .map((scenario, index) => `<button class="topic-chip" type="button" data-topic="${index}">${scenario.label}</button>`)
+        .join("");
+      topicChips.addEventListener("click", async (event) => {
+        const chip = event.target.closest(".topic-chip");
+        if (!chip) return;
+        const scenario = portfolioData.capabilityScenarios[Number(chip.dataset.topic)];
+        const copied = await copyText(
+          `Hi Yossandi — I came across your portfolio. ${scenario.prompt} Could we talk about it?`,
+        );
+        showToast(copied ? "Opener copied — paste it in LinkedIn." : "Couldn’t copy — open LinkedIn and say hi.");
+        window.open(portfolioData.linkedIn, "_blank", "noopener");
       });
 
       let toastTimer;
@@ -2867,6 +3392,355 @@
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
       }
+
+      /* ---------- Local time and animated stats ---------- */
+      function bandungTime() {
+        return new Intl.DateTimeFormat("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: "Asia/Jakarta",
+        }).format(new Date());
+      }
+
+      const localTimeEl = document.getElementById("local-time");
+      function updateLocalTime() {
+        localTimeEl.textContent = `${bandungTime()} WIB`;
+      }
+      updateLocalTime();
+      setInterval(updateLocalTime, 30000);
+
+      const countObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            countObserver.unobserve(entry.target);
+            const el = entry.target;
+            const from = Number(el.dataset.from);
+            const to = Number(el.dataset.count);
+            const start = performance.now();
+            const tick = (now) => {
+              const t = Math.min((now - start) / 1100, 1);
+              el.textContent = String(Math.round(from + (to - from) * (1 - Math.pow(1 - t, 3))));
+              if (t < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          });
+        },
+        { threshold: 0.6 },
+      );
+
+      if (!reducedMotionQuery.matches) {
+        document.querySelectorAll("[data-count]").forEach((el) => {
+          el.textContent = el.dataset.from;
+          countObserver.observe(el);
+        });
+      }
+
+      /* ---------- Confetti ---------- */
+      function burst(x, y, count = 24) {
+        if (reducedMotionQuery.matches) return;
+        const colors = ["#caff5a", "#ff8b5c", "#68d5ff", "#bb9cff", "#ffd35c"];
+        for (let i = 0; i < count; i += 1) {
+          const piece = document.createElement("i");
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 90 + Math.random() * 220;
+          piece.className = "confetti";
+          piece.style.left = `${x}px`;
+          piece.style.top = `${y}px`;
+          piece.style.background = colors[i % colors.length];
+          piece.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
+          piece.style.setProperty("--dy", `${Math.sin(angle) * distance - 80}px`);
+          piece.style.setProperty("--rot", `${Math.random() * 720 - 360}deg`);
+          piece.addEventListener("animationend", () => piece.remove());
+          document.body.appendChild(piece);
+        }
+      }
+
+      /* ---------- Exploration quest ---------- */
+      const questItems = [
+        { id: "project", label: "Open a project", doneLabel: "Opened a project", hint: "Click any card in Selected work." },
+        { id: "lab", label: "Give me a problem", doneLabel: "Gave me a problem", hint: "Pick a scenario in the capability lab." },
+        { id: "drag", label: "Play with the stack", doneLabel: "Played with the stack", hint: "Drag a skill chip or the YI tile." },
+        { id: "theme", label: "Switch the lights", doneLabel: "Switched the lights", hint: "Toggle dark and light." },
+        { id: "terminal", label: "Talk to the terminal", doneLabel: "Talked to the terminal", hint: "Press / or Ctrl+K, then run a command." },
+        { id: "secret", label: "???", doneLabel: "Found the secret", hint: "Not listed anywhere. Try the terminal, or an old cheat code." },
+      ];
+      const questToggle = document.getElementById("quest-toggle");
+      const questPanel = document.getElementById("quest-panel");
+      const questRing = document.getElementById("quest-ring");
+      const questCount = document.getElementById("quest-count");
+      const questList = document.getElementById("quest-list");
+      const questFinal = document.getElementById("quest-final");
+      const questDone = new Set();
+
+      try {
+        JSON.parse(localStorage.getItem("portfolio-quest") || "[]").forEach((id) => {
+          if (questItems.some((item) => item.id === id)) questDone.add(id);
+        });
+      } catch {
+        // Progress simply starts fresh when storage is unavailable.
+      }
+
+      function renderQuest() {
+        const total = questItems.length;
+        questRing.style.setProperty("--quest-progress", String(Math.round((questDone.size / total) * 100)));
+        questCount.textContent = `${questDone.size}/${total}`;
+        questList.innerHTML = questItems
+          .map((item) => {
+            const done = questDone.has(item.id);
+            return `<li class="${done ? "done" : ""}"><i aria-hidden="true">${done ? "✓" : ""}</i><span>${
+              done ? item.doneLabel : item.label
+            }<small>${item.hint}</small></span></li>`;
+          })
+          .join("");
+        questFinal.hidden = questDone.size < total;
+      }
+
+      function setQuestPanel(open) {
+        questPanel.hidden = !open;
+        questToggle.setAttribute("aria-expanded", String(open));
+      }
+
+      function markQuest(id) {
+        if (questDone.has(id)) return;
+        const item = questItems.find((entry) => entry.id === id);
+        if (!item) return;
+        questDone.add(id);
+        try {
+          localStorage.setItem("portfolio-quest", JSON.stringify([...questDone]));
+        } catch {
+          // Progress lasts for this visit when storage is unavailable.
+        }
+        renderQuest();
+
+        if (questDone.size === questItems.length) {
+          setQuestPanel(true);
+          burst(innerWidth / 2, innerHeight / 2.4, 90);
+          showToast("All six found. Now you know where to find me.");
+        } else {
+          const rect = questToggle.getBoundingClientRect();
+          burst(rect.left + 24, rect.top + 20, 18);
+          showToast(`${item.doneLabel} · ${questDone.size}/${questItems.length}`);
+        }
+      }
+
+      questToggle.addEventListener("click", () => setQuestPanel(questPanel.hidden));
+
+      document.getElementById("quest-contact").addEventListener("click", () => {
+        setQuestPanel(false);
+        const card = document.querySelector(".contact-card");
+        card.scrollIntoView({ behavior: reducedMotionQuery.matches ? "auto" : "smooth", block: "center" });
+        card.classList.remove("spotlight");
+        void card.offsetWidth;
+        card.classList.add("spotlight");
+      });
+
+      renderQuest();
+
+      function unlockSecret() {
+        const alreadyFound = questDone.has("secret");
+        markQuest("secret");
+        if (alreadyFound) showToast("You already found it. Still glowing.");
+        document.body.classList.add("party");
+        setTimeout(() => document.body.classList.remove("party"), 3800);
+        burst(innerWidth / 2, innerHeight / 3, 70);
+      }
+
+      const konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+      let konamiIndex = 0;
+      addEventListener("keydown", (event) => {
+        const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+        if (key === konamiCode[konamiIndex]) {
+          konamiIndex += 1;
+          if (konamiIndex === konamiCode.length) {
+            konamiIndex = 0;
+            unlockSecret();
+          }
+        } else {
+          konamiIndex = key === konamiCode[0] ? 1 : 0;
+        }
+      });
+
+      /* ---------- Terminal ---------- */
+      const termDialog = document.getElementById("terminal-dialog");
+      const termBody = document.getElementById("term-body");
+      const termForm = document.getElementById("term-form");
+      const termInput = document.getElementById("term-input");
+      const termChips = document.getElementById("term-chips");
+      const termHistory = [];
+      let termHistoryIndex = 0;
+      let termQueue = Promise.resolve();
+      let termBooted = false;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      function termAppend(line, className = "") {
+        const row = document.createElement("div");
+        row.className = `term-line ${className}`.trim();
+        if (line && typeof line === "object") {
+          const link = document.createElement("a");
+          link.href = line.href;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = line.text;
+          row.append(link);
+        } else {
+          row.textContent = line || " ";
+        }
+        termBody.append(row);
+        termBody.scrollTop = termBody.scrollHeight;
+      }
+
+      function termPrint(lines, className = "") {
+        termQueue = termQueue.then(async () => {
+          for (const line of lines) {
+            termAppend(line, className);
+            if (!reducedMotionQuery.matches) await sleep(22);
+          }
+        });
+      }
+
+      const termCommands = {
+        help: () => [
+          "Commands:",
+          "  whoami       who I am",
+          "  about        the one-line story",
+          "  projects     list my work, then: open <number>",
+          "  skills       what I build with",
+          "  experience   where I've worked",
+          "  education    where I studied",
+          "  contact      how to reach me",
+          "  time         local time in Bandung",
+          "  theme        switch dark / light",
+          "  clear        clear the screen",
+          "",
+          "Not everything is listed here. Curious people find the rest.",
+        ],
+        whoami: () => ["Yossandi Imran", portfolioData.experience[0].role, "Bandung, Indonesia"],
+        about: () => ["“Just a full-stack programmer, working for the pleasure of Allah.”", "— from my LinkedIn"],
+        projects: () => [
+          ...portfolioData.projects.map((project, index) => `  ${String(index + 1).padStart(2, "0")}  ${project.title}`),
+          "",
+          "Type: open <number> for details",
+        ],
+        skills: () => [portfolioData.skills.join(" · ")],
+        experience: () => portfolioData.experience.map((item) => `${item.date}\n  ${item.role} @ ${item.company}`),
+        education: () => portfolioData.education.map((item) => `${item.type}: ${item.title} — ${item.meta}`),
+        contact: () => ["LinkedIn is the best way to reach me:", { href: portfolioData.linkedIn, text: portfolioData.linkedIn }],
+        time: () => [`It's ${bandungTime()} in Bandung right now.`],
+        theme: () => {
+          themeToggle.click();
+          return [`Theme switched to ${html.dataset.theme}.`];
+        },
+        coffee: () => ["Brewing...", "Done. Fuel for the next commit."],
+        hello: () => ['Hello! Type "help" to see what I can do.'],
+      };
+      termCommands.hi = termCommands.hello;
+
+      function runTerminalCommand(raw) {
+        const input = raw.trim();
+        if (!input) return;
+        termHistory.push(input);
+        termHistoryIndex = termHistory.length;
+        const lower = input.toLowerCase();
+        const [name, ...args] = lower.split(/\s+/);
+
+        if (name === "clear") {
+          termQueue = termQueue.then(() => {
+            termBody.innerHTML = "";
+          });
+          markQuest("terminal");
+          return;
+        }
+
+        termPrint([`$ ${input}`], "term-cmd");
+        markQuest("terminal");
+
+        if (lower === "sudo hire me") {
+          termPrint(["[sudo] permission granted.", "Opening LinkedIn. Looking forward to hearing from you."]);
+          window.open(portfolioData.linkedIn, "_blank", "noopener");
+        } else if (name === "secret") {
+          termPrint(["Decrypting...", "Access granted."]);
+          unlockSecret();
+        } else if (name === "open") {
+          const number = Number(args[0]);
+          if (!Number.isInteger(number) || number < 1 || number > portfolioData.projects.length) {
+            termPrint([`Usage: open <1-${portfolioData.projects.length}>`]);
+          } else {
+            termPrint([`Opening ${portfolioData.projects[number - 1].title}...`]);
+            termQueue = termQueue.then(() => {
+              termDialog.close();
+              openProjectDialog(number - 1);
+            });
+          }
+        } else if (termCommands[name]) {
+          termPrint(termCommands[name]());
+        } else {
+          termPrint([`command not found: ${name}. Type "help".`]);
+        }
+      }
+
+      function openTerminal() {
+        if (!termDialog.open) termDialog.showModal();
+        if (!termBooted) {
+          termBooted = true;
+          termPrint(["Yossandi Imran — portfolio shell", 'Type "help" to see what I can do.', ""]);
+        }
+        termInput.focus();
+      }
+
+      termChips.innerHTML = ["help", "whoami", "projects", "skills", "contact"]
+        .map((command) => `<button class="term-chip" type="button" data-command="${command}">${command}</button>`)
+        .join("");
+
+      termChips.addEventListener("click", (event) => {
+        const chip = event.target.closest(".term-chip");
+        if (!chip) return;
+        runTerminalCommand(chip.dataset.command);
+        termInput.focus();
+      });
+
+      termForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        runTerminalCommand(termInput.value);
+        termInput.value = "";
+      });
+
+      termInput.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          if (termHistoryIndex > 0) {
+            termHistoryIndex -= 1;
+            termInput.value = termHistory[termHistoryIndex];
+          }
+        } else if (event.key === "ArrowDown") {
+          event.preventDefault();
+          if (termHistoryIndex < termHistory.length - 1) {
+            termHistoryIndex += 1;
+            termInput.value = termHistory[termHistoryIndex];
+          } else {
+            termHistoryIndex = termHistory.length;
+            termInput.value = "";
+          }
+        }
+      });
+
+      document.getElementById("term-close").addEventListener("click", () => termDialog.close());
+      termDialog.addEventListener("click", (event) => {
+        if (event.target === termDialog) termDialog.close();
+      });
+      document.getElementById("terminal-toggle").addEventListener("click", openTerminal);
+      document.getElementById("terminal-open-hero").addEventListener("click", openTerminal);
+
+      addEventListener("keydown", (event) => {
+        const typing = event.target.closest?.("input, textarea, select, [contenteditable]");
+        const isCtrlK = event.key.toLowerCase() === "k" && (event.ctrlKey || event.metaKey);
+        const isSlash = event.key === "/" && !typing && !event.ctrlKey && !event.metaKey && !event.altKey;
+        if (!isCtrlK && !isSlash) return;
+        if (projectDialog.open) return;
+        event.preventDefault();
+        openTerminal();
+      });
 
       const revealObserver = new IntersectionObserver(
         (entries) => {

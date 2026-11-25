@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#08090f">
   <title>YOSS ARCADE — Katalog Game</title>
+  <!-- Mode aplikasi saat ditambahkan ke Layar Utama (Safari iPhone & Android) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="YOSS ARCADE">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='8' width='28' height='17' rx='8' fill='%237c5cff'/%3E%3Cpath d='M9 13h3v3h3v3h-3v3H9v-3H6v-3h3z' fill='white'/%3E%3Ccircle cx='22' cy='15' r='2' fill='%2335e0c8'/%3E%3Ccircle cx='24' cy='20' r='2' fill='%23ff5c7a'/%3E%3C/svg%3E">
   <style>
     :root {
@@ -108,7 +115,7 @@
       height: 100%;
       display: grid;
       grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 12px;
       padding: 14px 20px 10px;
       border-radius: 14px;
@@ -125,6 +132,47 @@
     .status { display: flex; align-items: center; gap: 14px; font: 13px var(--mono); color: var(--muted); }
     .status button { padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; }
     .status button:hover { color: var(--text); background: var(--panel); }
+    .brand-group { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .back { padding: 4px 12px; border: 1px solid var(--line); border-radius: 99px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .back:hover { background: var(--panel); }
+
+    /* ---------- menu utama ---------- */
+    .home { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+    .home-title { margin: auto 0 0; text-align: center; font-size: clamp(18px, 2.4vw, 28px); font-weight: 900; }
+    .menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: min(860px, 100%); height: min(420px, 100%); min-height: 0; margin: 0 auto auto; padding: 8px; }
+    .card {
+      position: relative;
+      display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 4px;
+      min-height: 0;
+      padding: 22px;
+      overflow: hidden;
+      isolation: isolate;
+      text-align: left;
+      border-radius: 18px;
+      border: 3px solid transparent;
+      background: #181a28;
+      opacity: .65;
+      transition: transform 160ms, opacity 160ms, box-shadow 160ms;
+    }
+    .card[aria-current="true"] { opacity: 1; border-color: #fff; transform: translateY(-6px); box-shadow: 0 0 0 4px var(--accent), 0 18px 36px rgba(0,0,0,.5); }
+    .card strong { font-size: clamp(20px, 2.6vw, 32px); font-weight: 900; letter-spacing: .08em; text-shadow: 0 2px 8px rgba(0,0,0,.7); }
+    .card > span { font-size: 13px; color: #e4e6f5; text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+    .card > .card-art { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
+    .card-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 40%, rgba(5,6,12,.92)); }
+    .card > .collage { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 3px; }
+    .collage img { width: 100%; height: 100%; min-height: 0; object-fit: cover; }
+    .card > .bubbles { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 20px 24px 80px; background: linear-gradient(150deg, #14b8a6, #0b4f6c); }
+    .bubbles i { align-self: flex-start; padding: 9px 14px; border-radius: 16px 16px 16px 4px; background: #fff; color: #10121d; font-style: normal; font-weight: 700; font-size: 14px; text-shadow: none; box-shadow: 0 6px 14px rgba(0,0,0,.22); animation: float 3s ease-in-out infinite; }
+    .bubbles i:nth-child(2) { align-self: flex-end; border-radius: 16px 16px 4px 16px; background: #0f172a; color: #fff; animation-delay: .5s; }
+    .bubbles i:nth-child(3) { animation-delay: 1s; letter-spacing: .2em; }
+    @keyframes float { 50% { transform: translateY(-5px); } }
+
+    /* ---------- arcade & chat ---------- */
+    .arcade { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 12px; min-height: 0; }
+    .chat { min-height: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #141726; }
+    .chat iframe { display: block; width: 100%; height: 100%; border: 0; }
+    /* Chat yang disembunyikan tetap punya ukuran, supaya koneksi & posisi scroll-nya terjaga. */
+    .chat.off { position: absolute; inset: 0; z-index: -1; visibility: hidden; pointer-events: none; }
 
     .filters { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 4px; margin: -4px; }
     .filters button {
@@ -249,49 +297,153 @@
 
     /* ---------- layar pendek (HP landscape) ---------- */
     @media (max-height: 620px) and (min-width: 761px) {
-      body { padding: 6px; }
-      .console { height: calc(100dvh - 12px); min-height: 340px; grid-template-columns: 96px minmax(0, 1fr) 96px; }
-      .pad { padding: 8px 0 10px; }
-      .stick { width: 46px; height: 46px; }
-      .stick i { width: 32px; height: 32px; }
-      .cluster { transform: scale(.84); margin: -8px 0; }
-      .bezel { padding: 7px; }
-      .screen { gap: 7px; padding: 8px 14px 6px; }
-      .tile { flex-basis: 92px; }
-      .brand { font-size: 14px; }
-      .status { font-size: 11px; }
-      .status button { padding: 2px 8px; }
-      .filters button { padding: 3px 11px; font-size: 12px; }
-      .keys { display: none; }
-      .info, .info-scroll { gap: 6px; }
-      .hints { display: none; }
-      .title { font-size: 24px; }
-      .desc { font-size: 13px; }
-      .play { padding: 8px 22px; }
+      html:not(.land) body { padding: 6px; }
+      html:not(.land) .console { height: calc(100dvh - 12px); min-height: 340px; grid-template-columns: 96px minmax(0, 1fr) 96px; }
+      html:not(.land) .pad { padding: 8px 0 10px; }
+      html:not(.land) .stick { width: 46px; height: 46px; }
+      html:not(.land) .stick i { width: 32px; height: 32px; }
+      html:not(.land) .cluster { transform: scale(.84); margin: -8px 0; }
+      html:not(.land) .bezel { padding: 7px; }
+      html:not(.land) .screen { gap: 7px; padding: 8px 14px 6px; }
+      html:not(.land) .arcade { gap: 7px; }
+      html:not(.land) .back { padding: 2px 9px; font-size: 11px; }
+      html:not(.land) .home { gap: 6px; }
+      html:not(.land) .home-title { font-size: 16px; }
+      html:not(.land) .card { padding: 14px; }
+      html:not(.land) .card > .bubbles { gap: 6px; padding: 8px 16px 60px; }
+      html:not(.land) .bubbles i { font-size: 12px; padding: 5px 10px; }
+      html:not(.land) .tile { flex-basis: 92px; }
+      html:not(.land) .brand { font-size: 14px; }
+      html:not(.land) .status { font-size: 11px; }
+      html:not(.land) .status button { padding: 2px 8px; }
+      html:not(.land) .filters button { padding: 3px 11px; font-size: 12px; }
+      html:not(.land) .keys { display: none; }
+      html:not(.land) .info, html:not(.land) .info-scroll { gap: 6px; }
+      html:not(.land) .hints { display: none; }
+      html:not(.land) .title { font-size: 24px; }
+      html:not(.land) .desc { font-size: 13px; }
+      html:not(.land) .play { padding: 8px 22px; }
     }
 
     /* ---------- layar sempit: tanpa stik samping, halaman bisa discroll ---------- */
     @media (max-width: 760px) {
-      body { display: block; padding: 0; background: var(--screen); }
-      .console { display: block; width: 100%; height: auto; min-height: 100dvh; filter: none; }
-      .pad { display: none; }
-      .bezel { padding: 0; border: 0; background: none; }
-      .screen {
+      html:not(.land) body { display: block; padding: 0; background: var(--screen); }
+      html:not(.land) .console { display: block; width: 100%; height: auto; min-height: 100dvh; filter: none; }
+      html:not(.land) .pad { display: none; }
+      html:not(.land) .bezel { padding: 0; border: 0; background: none; }
+      html:not(.land) .screen {
         min-height: 100dvh;
         border-radius: 0;
-        grid-template-rows: auto auto auto auto 1fr;
-        padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+        padding: calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
       }
-      .hero { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-      .art { order: -1; }
-      .info-scroll { overflow: visible; }
-      .play { align-self: stretch; justify-content: center; }
-      .tile { flex-basis: 128px; }
-      .hints { display: none; }
-      .brand { font-size: 15px; }
-      #clock { display: none; }
-      .overlay { position: fixed; }
+      html:not(.land) .screen[data-view="chat"] { height: 100dvh; padding-inline: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+      html:not(.land) .screen[data-view="chat"] .status { display: none; }
+      html:not(.land) .back span { display: none; }
+      html:not(.land) .brand-group { gap: 8px; }
+      html:not(.land) .menu { grid-template-columns: minmax(0, 1fr); height: auto; }
+      html:not(.land) .card { height: 240px; }
+      html:not(.land) .arcade { grid-template-rows: none; align-content: start; }
+      html:not(.land) .hero { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      html:not(.land) .art { order: -1; }
+      html:not(.land) .info-scroll { overflow: visible; }
+      html:not(.land) .play { align-self: stretch; justify-content: center; }
+      html:not(.land) .tile { flex-basis: 128px; }
+      html:not(.land) .hints { display: none; }
+      html:not(.land) .brand { font-size: 15px; letter-spacing: .08em; }
+      html:not(.land) .status { gap: 6px; font-size: 11px; }
+      html:not(.land) .status button { padding: 4px 8px; white-space: nowrap; }
+      html:not(.land) #clock { display: none; }
+      html:not(.land) .overlay { position: fixed; }
     }
+
+    /* ---------- HP (class .phone, .land, .rotated dipasang lewat JS) ---------- */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    .phone body { touch-action: manipulation; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    .phone .bezel { position: relative; z-index: 1; } /* overlay boot di atas stik samping */
+    .phone #boot { position: fixed; }
+    .tap { color: var(--text) !important; font-size: 15px !important; font-weight: 800; letter-spacing: .12em; animation: blink 1.2s steps(2, start) infinite; }
+    @keyframes blink { 50% { opacity: .25; } }
+    .ios-hint { margin: 0; text-align: center; font-size: 11px; color: #ffd166; }
+
+    /* Chat mengikuti tinggi layar yang terlihat, jadi kolom pesan tidak ketutup keyboard. */
+    html.phone:not(.land)[data-view="chat"] .console,
+    html.phone:not(.land)[data-view="chat"] .screen { height: var(--vvh, 100dvh); min-height: 0; }
+
+    .land {
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-r: env(safe-area-inset-right, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-l: env(safe-area-inset-left, 0px);
+      --side-l: max(0px, calc(var(--safe-l) - 18px));
+      --side-r: max(0px, calc(var(--safe-r) - 18px));
+    }
+    /* Diputar 90°: sisi kiri konsol jatuh di bagian atas HP, dan seterusnya. */
+    .rotated {
+      --safe-t: env(safe-area-inset-right, 0px);
+      --safe-r: env(safe-area-inset-bottom, 0px);
+      --safe-b: env(safe-area-inset-left, 0px);
+      --safe-l: env(safe-area-inset-top, 0px);
+    }
+    html.land, .land body { height: 100%; overflow: hidden; }
+    .land body { position: fixed; inset: 0; display: block; width: 100%; min-height: 0; padding: 0; }
+    .land .console {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100vh; height: 100dvh; min-height: 0;
+      grid-template-columns: calc(72px + var(--side-l)) minmax(0, 1fr) calc(72px + var(--side-r));
+      filter: none;
+    }
+    .rotated .console {
+      left: 100vw;
+      width: 100vh; width: 100dvh;
+      height: 100vw; height: 100dvw;
+      transform-origin: 0 0;
+      transform: rotate(90deg);
+    }
+    .land .pad { min-height: 0; padding-block: 8px calc(8px + var(--safe-b)); }
+    .land .pad.left { padding-left: var(--side-l); border-radius: 30px 0 0 30px; }
+    .land .pad.right { padding-right: var(--side-r); border-radius: 0 30px 30px 0; }
+    .land .shoulder { width: 52px; height: 24px; }
+    .land .small-btn { width: 28px; height: 28px; }
+    .land .stick { width: 42px; height: 42px; }
+    .land .stick i { width: 30px; height: 30px; }
+    .land .cluster { width: 70px; height: 70px; }
+    .land .cluster .ctl { width: 25px; height: 25px; font-size: 11px; }
+    .land .cluster .n, .land .cluster .s { left: 22.5px; }
+    .land .cluster .w, .land .cluster .e { top: 22.5px; }
+    .land .bezel { padding: calc(4px + var(--safe-t)) 4px calc(4px + var(--safe-b)); border: 0; }
+    .land .screen { gap: 6px; padding: 7px 10px 6px; border-radius: 12px; }
+    .land .brand-group { gap: 8px; }
+    .land .brand { font-size: 13px; letter-spacing: .1em; }
+    .land .back { padding: 2px 9px; font-size: 11px; }
+    .land .status { gap: 6px; font-size: 10px; }
+    .land .status button { padding: 2px 7px; white-space: nowrap; }
+    .land .hints { display: none; }
+    .land .home { gap: 5px; }
+    .land .home-title { font-size: 15px; }
+    .land .menu { gap: 12px; height: 100%; padding: 6px; margin-block: 0 auto; }
+    .land .card { padding: 12px; border-radius: 14px; }
+    .land .card strong { font-size: 18px; }
+    .land .card > span { font-size: 11px; }
+    .land .card > .bubbles { gap: 5px; padding: 6px 14px 48px; }
+    .land .bubbles i { font-size: 11px; padding: 4px 9px; }
+    .land .arcade { gap: 6px; }
+    .land .filters button { padding: 3px 10px; font-size: 11px; }
+    .land .hero { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 10px; }
+    .land .info, .land .info-scroll { gap: 5px; }
+    .land .genre { font-size: 10px; }
+    .land .title { font-size: 19px; }
+    .land .desc { font-size: 12px; line-height: 1.4; }
+    .land .tags li { padding: 2px 7px; font-size: 10px; }
+    .land .keys { display: none; }
+    .land .note { font-size: 10px; }
+    .land .play { padding: 7px 18px; font-size: 13px; }
+    .land .art { touch-action: none !important; }
+    .land .shelf { gap: 9px; padding: 6px 5px; margin: 0 -5px; }
+    .land .tile { flex-basis: 78px; }
+    .land .tile span { padding: 10px 5px 3px; font-size: 9px; }
+    .land[data-view="chat"] .console { height: var(--vvh, 100dvh); grid-template-columns: minmax(0, 1fr); }
+    .land[data-view="chat"] .pad { display: none; }
+    .land[data-view="chat"] .bezel { padding-left: calc(4px + var(--safe-l)); padding-right: calc(4px + var(--safe-r)); }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
@@ -315,7 +467,10 @@
     <div class="bezel">
       <div class="screen">
         <header class="topbar">
-          <h1 class="brand">YOSS <span>ARCADE</span></h1>
+          <div class="brand-group">
+            <button id="backBtn" class="back" type="button" data-cmd="home" aria-label="Kembali ke menu utama" hidden>‹<span> Menu</span></button>
+            <h1 class="brand">YOSS <span>ARCADE</span></h1>
+          </div>
           <div class="status">
             <button id="soundBtn" type="button" data-cmd="sound">Suara: ON</button>
             <button id="fsBtn" type="button" data-cmd="fullscreen">Layar penuh</button>
@@ -323,6 +478,36 @@
           </div>
         </header>
 
+        <section id="viewHome" class="home" hidden>
+          <h2 class="home-title">Mau ngapain hari ini?</h2>
+          <p id="iosHint" class="ios-hint" hidden>Biar layar penuh: tombol Bagikan, lalu "Tambah ke Layar Utama"</p>
+          <div class="menu">
+            <button class="card" type="button" data-menu="chat">
+              <span class="card-art bubbles" aria-hidden="true">
+                <i>Mabar kuy? 🎮</i>
+                <i>Gasss wkwk 🔥</i>
+                <i>•••</i>
+              </span>
+              <strong>ONLINE CHAT</strong>
+              <span>Ngobrol bareng pemain lain</span>
+            </button>
+            <button class="card" type="button" data-menu="arcade">
+              <span id="collage" class="card-art collage" aria-hidden="true"></span>
+              <strong>ARCADE</strong>
+              <span id="gameTotal"></span>
+            </button>
+          </div>
+          <footer class="hints">
+            <span><kbd>←</kbd><kbd>→</kbd> pilih menu</span>
+            <span><kbd>Enter</kbd> buka</span>
+            <span><kbd>M</kbd> suara</span>
+            <span><kbd>F</kbd> layar penuh</span>
+          </footer>
+        </section>
+
+        <section id="viewChat" class="chat off" aria-label="Online chat"></section>
+
+        <div id="viewArcade" class="arcade" hidden>
         <nav id="filters" class="filters" aria-label="Kategori game"></nav>
 
         <section class="hero" aria-live="polite">
@@ -352,7 +537,9 @@
           <span><kbd>R</kbd> acak</span>
           <span><kbd>M</kbd> suara</span>
           <span><kbd>F</kbd> layar penuh</span>
+          <span><kbd>Esc</kbd> menu</span>
         </footer>
+        </div>
 
         <div id="loading" class="overlay" hidden>
           <strong id="loadingTitle"></strong>
@@ -363,7 +550,7 @@
         <div id="boot" class="overlay">
           <strong>YOSS ARCADE</strong>
           <div class="bar"><i></i></div>
-          <small>Ketuk atau tekan tombol apa saja untuk lewati</small>
+          <small id="bootHint">Ketuk atau tekan tombol apa saja untuk lewati</small>
         </div>
       </div>
     </div>
@@ -377,7 +564,7 @@
         <button class="ctl e" data-cmd="play" title="A: mainkan" aria-label="A: mainkan">A</button>
         <button class="ctl s" data-cmd="random" title="B: pilih acak" aria-label="B: pilih game acak">B</button>
       </div>
-      <button class="ctl small-btn" data-cmd="home" aria-label="Kembali ke game pertama">⌂</button>
+      <button class="ctl small-btn" data-cmd="home" aria-label="Kembali ke menu utama">⌂</button>
     </aside>
   </main>
 
@@ -446,6 +633,18 @@
         keys: "WASD atau panah gerak · Spasi lompat · Shift lari"
       },
       {
+        id: "suara",
+        title: "Suara Rakyat",
+        genre: "Simulasi aksi massa 3D",
+        cats: ["Aksi"],
+        href: "../zgm05/index.html",
+        cover: "covers/suara-rakyat.jpg",
+        color: "#d9622b",
+        desc: "Pimpin massa dari kampus menuju gedung MPR. Dobrak gerbang atau menyelinap lewat Gang Senyap, tahan gas air mata, dan hindari patroli Kopassus. Fiksi satir; isu dan pihak di dalamnya rekaan.",
+        tags: ["3 tujuan", "Stealth", "Kustomisasi karakter", "HP & PC"],
+        keys: "WASD gerak · Mouse arah · Klik lempar/pakai · E interaksi · C jongkok · F masker · Shift lari"
+      },
+      {
         id: "kampung",
         title: "Serbuan Kampung",
         genre: "Sumpah Merdeka · Demo kombat",
@@ -473,6 +672,9 @@
       }
     ];
 
+    // Room chat untuk pengunjung arcade. Terpisah dari room default di ../index.html.
+    const CHAT_ROOM = "arcade";
+
     const ALL = "Semua";
     const CATS = [ALL, ...new Set(GAMES.flatMap((g) => g.cats))];
     const $ = (id) => document.getElementById(id);
@@ -482,6 +684,17 @@
       get(key) { try { return localStorage.getItem("yoss-arcade-" + key); } catch { return null; } },
       set(key, value) { try { localStorage.setItem("yoss-arcade-" + key, value); } catch { /* abaikan */ } }
     };
+
+    // ---------- perangkat ----------
+    const root = document.documentElement;
+    // HP = layar sentuh dengan sisi terpendek kecil. Tablet & desktop memakai tampilan biasa.
+    const phone = matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) < 600;
+    const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches;
+    const requestFs = root.requestFullscreen || root.webkitRequestFullscreen; // tidak ada di Safari iPhone
+    const portrait = matchMedia("(orientation: portrait)");
+    const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+    let fsOptOut = false; // true kalau pengguna keluar sendiri dari layar penuh
+    root.classList.toggle("phone", phone);
 
     let cat = ALL;
     let list = GAMES;
@@ -613,14 +826,137 @@
     }
 
     function toggleFullscreen() {
-      if (document.fullscreenElement) document.exitFullscreen();
-      else document.documentElement.requestFullscreen?.().catch(() => {});
+      if (isFs()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else if (requestFs) {
+        fsOptOut = false;
+        enterFullscreen();
+      }
+    }
+
+    async function enterFullscreen() {
+      try {
+        if (!isFs()) await requestFs.call(root, { navigationUI: "hide" });
+      } catch { return; } // ditolak browser
+      syncOrientation();
+    }
+
+    // Kunci landscape (Android). Safari tidak mendukung, di sana dipakai putaran CSS.
+    function syncOrientation() {
+      if (!phone || !(isFs() || standalone)) return;
+      try {
+        if (view === "chat") screen.orientation?.unlock?.();
+        else screen.orientation?.lock?.("landscape").catch(() => {});
+      } catch { /* tidak didukung */ }
+    }
+
+    // Di HP semua tampilan dipaksa landscape, kecuali chat yang mengikuti posisi HP supaya enak mengetik.
+    function layout() {
+      const land = phone && (view !== "chat" || !portrait.matches);
+      root.classList.toggle("land", land);
+      root.classList.toggle("rotated", land && portrait.matches);
+    }
+
+    function fitViewport() {
+      if (!phone || !window.visualViewport) return;
+      root.style.setProperty("--vvh", visualViewport.height + "px");
+      if (view === "chat") scrollTo(0, 0);
     }
 
     function nudgeStick(x) {
       $("stick").style.transform = `translateX(${x}px)`;
       setTimeout(() => ($("stick").style.transform = ""), 130);
     }
+
+    // ---------- tampilan: menu utama, arcade, chat ----------
+    const MENU = [...document.querySelectorAll("[data-menu]")];
+    const VIEWS = ["home", "arcade", "chat"];
+    let view = "home";
+    let menuIndex = store.get("menu") === "arcade" ? 1 : 0;
+    let chatFrame = null;
+
+    function pickMenu(i, silent = false) {
+      menuIndex = (i + MENU.length) % MENU.length;
+      MENU.forEach((card, n) => card.setAttribute("aria-current", String(n === menuIndex)));
+      document.documentElement.style.setProperty("--accent", MENU[menuIndex].dataset.menu === "chat" ? "#14b8a6" : "#7c5cff");
+      if (!silent) beep(520);
+    }
+
+    function render() {
+      const hash = location.hash.slice(1);
+      view = VIEWS.includes(hash) ? hash : "home";
+      cancelLaunch();
+      document.querySelector(".screen").dataset.view = view;
+      root.dataset.view = view;
+      layout();
+      syncOrientation();
+      $("viewHome").hidden = view !== "home";
+      $("viewArcade").hidden = view !== "arcade";
+      $("viewChat").classList.toggle("off", view !== "chat");
+      $("backBtn").hidden = view === "home";
+
+      // Lepas fokus dari chat supaya ketikan tidak masuk ke kolom pesan yang tersembunyi.
+      if (view !== "chat" && chatFrame && document.activeElement === chatFrame) {
+        chatFrame.blur();
+        window.focus();
+      }
+
+      if (view === "home") pickMenu(menuIndex, true);
+      else if (view === "arcade") select(index, true); // dihitung ulang setelah tampil supaya posisi rak pas
+      else {
+        document.documentElement.style.setProperty("--accent", "#14b8a6");
+        // Chat baru dimuat saat pertama kali dibuka, lalu dibiarkan hidup.
+        if (!chatFrame) {
+          chatFrame = document.createElement("iframe");
+          chatFrame.title = "Online chat";
+          chatFrame.allow = "notifications";
+          chatFrame.src = "../index.html?embed=1&room=" + encodeURIComponent(CHAT_ROOM);
+          $("viewChat").append(chatFrame);
+        }
+      }
+    }
+
+    function openView(name) {
+      store.set("menu", name);
+      menuIndex = MENU.findIndex((card) => card.dataset.menu === name);
+      history.pushState({ fromHome: true }, "", "#" + name);
+      beep(660, 0.09);
+      render();
+    }
+
+    function goHome() {
+      if (view === "home") return;
+      beep(380);
+      if (history.state?.fromHome) history.back();
+      else {
+        history.replaceState(null, "", location.pathname + location.search);
+        render();
+      }
+    }
+
+    function run(cmd) {
+      if (cmd === "sound" || cmd === "fullscreen" || view === "arcade") return commands[cmd]();
+      if (view === "chat") {
+        if (cmd === "home" || cmd === "random") goHome(); // tombol B = kembali
+        return;
+      }
+      if (cmd === "prev" || cmd === "prevCat") pickMenu(menuIndex - 1);
+      else if (cmd === "next" || cmd === "nextCat") pickMenu(menuIndex + 1);
+      else if (cmd === "play") openView(MENU[menuIndex].dataset.menu);
+    }
+
+    MENU.forEach((card, i) => {
+      card.addEventListener("click", () => openView(card.dataset.menu));
+      card.addEventListener("pointerenter", () => { if (i !== menuIndex) pickMenu(i); });
+      card.addEventListener("focus", () => pickMenu(i, true));
+    });
+    $("collage").replaceChildren(...GAMES.slice(0, 4).map((game) => {
+      const img = new Image();
+      img.src = game.cover;
+      img.alt = "";
+      return img;
+    }));
+    $("gameTotal").textContent = GAMES.length + " game siap dimainkan";
+    addEventListener("popstate", render);
 
     const commands = {
       prev: () => { nudgeStick(-8); select(index - 1); },
@@ -629,7 +965,7 @@
       nextCat: () => stepCategory(1),
       play: launch,
       random: () => { if (list.length > 1) select(index + 1 + Math.floor(Math.random() * (list.length - 1))); },
-      home: () => { setCategory(ALL); select(0); },
+      home: goHome,
       sound: toggleSound,
       fullscreen: toggleFullscreen
     };
@@ -647,13 +983,37 @@
     let booted = false;
     try { booted = !!sessionStorage.getItem("yoss-arcade-booted"); } catch { /* abaikan */ }
     if (booted) { booting = false; boot.hidden = true; }
-    else setTimeout(endBoot, 1500);
+    else if (phone && !standalone) {
+      // Browser hanya mengizinkan layar penuh setelah disentuh, jadi HP menunggu ketukan.
+      $("bootHint").textContent = "KETUK UNTUK MULAI";
+      $("bootHint").className = "tap";
+    } else setTimeout(endBoot, 1500);
     boot.addEventListener("click", endBoot);
+
+    // ---------- layar penuh otomatis & orientasi (HP) ----------
+    if (phone && requestFs && !standalone) {
+      document.addEventListener("click", (event) => {
+        if (fsOptOut || isFs() || event.target.closest('[data-cmd="fullscreen"]')) return;
+        enterFullscreen();
+      }, true);
+    }
+    for (const type of ["fullscreenchange", "webkitfullscreenchange"]) {
+      document.addEventListener(type, () => {
+        if (isFs()) syncOrientation();
+        else if (document.visibilityState === "visible") fsOptOut = true;
+      });
+    }
+    portrait.addEventListener?.("change", () => {
+      layout();
+      if (view === "arcade") select(index, true);
+    });
+    window.visualViewport?.addEventListener("resize", fitViewport);
+    $("iosHint").hidden = !(phone && !requestFs && !standalone);
 
     // ---------- input ----------
     document.addEventListener("click", (event) => {
       const button = event.target.closest("[data-cmd]");
-      if (button) commands[button.dataset.cmd]();
+      if (button) run(button.dataset.cmd);
     });
 
     $("play").addEventListener("click", (event) => {
@@ -674,7 +1034,12 @@
     document.addEventListener("keydown", (event) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (booting) { event.preventDefault(); endBoot(); return; }
-      if (event.key === "Escape") { cancelLaunch(); return; }
+      if (event.key === "Escape") {
+        if (launchTimer) cancelLaunch();
+        else goHome();
+        return;
+      }
+      if (view === "chat") return;
       // Enter/Spasi pada tombol atau link yang sedang fokus dibiarkan jalan sendiri.
       if ((event.key === "Enter" || event.key === " ") && event.target.closest("button, a")) return;
       const cmd = KEYMAP[event.key.length === 1 ? event.key.toLowerCase() : event.key];
@@ -683,25 +1048,27 @@
       if (event.repeat && cmd !== "prev" && cmd !== "next") return;
       // Pindahkan fokus supaya Enter berikutnya selalu menjalankan game yang terpilih.
       document.activeElement?.blur();
-      commands[cmd]();
+      run(cmd);
     });
 
     // Geser (swipe) pada gambar cover
     const art = document.querySelector(".art");
     let swipeX = null;
     art.style.touchAction = "pan-y";
-    art.addEventListener("pointerdown", (event) => (swipeX = event.clientX));
+    // Saat layar diputar CSS, geser "horizontal" terbaca di sumbu Y.
+    const swipePos = (event) => (root.classList.contains("rotated") ? event.clientY : event.clientX);
+    art.addEventListener("pointerdown", (event) => (swipeX = swipePos(event)));
     art.addEventListener("pointercancel", () => (swipeX = null));
     art.addEventListener("pointerup", (event) => {
       if (swipeX === null) return;
-      const dx = event.clientX - swipeX;
+      const dx = swipePos(event) - swipeX;
       swipeX = null;
       if (Math.abs(dx) > 40) select(index + (dx < 0 ? 1 : -1));
     });
     art.addEventListener("dragstart", (event) => event.preventDefault());
 
     // Gamepad fisik (layout standar)
-    const PAD_MAP = { 0: "play", 1: "random", 2: "sound", 3: "fullscreen", 4: "prevCat", 5: "nextCat", 8: "sound", 9: "play", 12: "prevCat", 13: "nextCat", 14: "prev", 15: "next", 16: "home" };
+    const PAD_MAP = { 0: "play", 1: "random", 2: "sound", 3: "fullscreen", 4: "prevCat", 5: "nextCat", 8: "home", 9: "play", 12: "prevCat", 13: "nextCat", 14: "prev", 15: "next", 16: "home" };
     let held = null; // null = belum dibaca; tombol yang sudah tertekan saat mulai tidak dihitung
     let polling = false;
     function pollPad() {
@@ -715,7 +1082,7 @@
         for (const cmd of now) {
           if (held.has(cmd)) continue;
           if (booting) endBoot();
-          else commands[cmd]();
+          else run(cmd);
         }
       }
       held = now;
@@ -728,7 +1095,10 @@
     });
 
     // Saat kembali dari game pakai tombol Back, tutup layar loading.
-    addEventListener("pageshow", cancelLaunch);
+    addEventListener("pageshow", () => {
+      fsOptOut = false;
+      cancelLaunch();
+    });
 
     function tick() {
       $("clock").textContent = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
@@ -736,11 +1106,13 @@
     tick();
     setInterval(tick, 10000);
 
-    if (!document.documentElement.requestFullscreen) $("fsBtn").hidden = true;
+    if (!requestFs || (phone && standalone)) $("fsBtn").hidden = true;
     $("soundBtn").textContent = "Suara: " + (soundOn ? "ON" : "OFF");
     renderFilters();
     renderShelf();
     select(index, true);
+    render();
+    fitViewport();
   </script>
 </body>
 </html>

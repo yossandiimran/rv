@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08090f">
+  <title>YOSS ARCADE — Katalog Game</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='8' width='28' height='17' rx='8' fill='%237c5cff'/%3E%3Cpath d='M9 13h3v3h3v3h-3v3H9v-3H6v-3h3z' fill='white'/%3E%3Ccircle cx='22' cy='15' r='2' fill='%2335e0c8'/%3E%3Ccircle cx='24' cy='20' r='2' fill='%23ff5c7a'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --accent: #7c5cff;
+      --text: #f3f4fb;
+      --muted: #a3a7c2;
+      --screen: #0d0f1a;
+      --panel: rgba(255, 255, 255, 0.055);
+      --line: rgba(255, 255, 255, 0.11);
+      --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { margin: 0; min-height: 100%; }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 50% 45%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 65%),
+        #05060a;
+      transition: background-color 400ms;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
+    :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+    /* ---------- body konsol ---------- */
+    .console {
+      width: min(1360px, 100%);
+      height: min(800px, calc(100dvh - 32px));
+      min-height: 520px;
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr) 118px;
+      filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.65));
+    }
+
+    .pad {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0 22px;
+      user-select: none;
+    }
+    .pad.left {
+      background: linear-gradient(160deg, #27d3f0, #0b86b8);
+      border-radius: 56px 0 0 56px;
+      box-shadow: inset 3px 3px 0 rgba(255,255,255,.28), inset -4px 0 0 rgba(0,0,0,.28);
+    }
+    .pad.right {
+      background: linear-gradient(200deg, #ff6b7f, #c9213f);
+      border-radius: 0 56px 56px 0;
+      box-shadow: inset -3px 3px 0 rgba(255,255,255,.28), inset 4px 0 0 rgba(0,0,0,.28);
+    }
+
+    .ctl {
+      background: radial-gradient(circle at 35% 30%, #4a4d5c, #14151c 75%);
+      box-shadow: 0 4px 0 rgba(0,0,0,.4), inset 0 1px 1px rgba(255,255,255,.25);
+      color: #e9eaf5;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      transition: transform 80ms, box-shadow 80ms;
+    }
+    .ctl:active, .ctl.pressed { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.4), inset 0 1px 1px rgba(255,255,255,.25); }
+    .shoulder { width: 74px; height: 28px; border-radius: 14px; font-size: 13px; }
+    .small-btn { width: 30px; height: 30px; border-radius: 50%; font-size: 18px; line-height: 1; }
+
+    .stick {
+      width: 62px; height: 62px; border-radius: 50%;
+      background: #0e0f15;
+      display: grid; place-items: center;
+      box-shadow: 0 5px 10px rgba(0,0,0,.35);
+    }
+    .stick i {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #555969, #1b1c25 70%);
+      transition: transform 120ms;
+    }
+
+    .cluster { position: relative; width: 102px; height: 102px; }
+    .cluster .ctl { position: absolute; width: 34px; height: 34px; border-radius: 50%; font-size: 13px; }
+    .cluster .n { left: 34px; top: 0; }
+    .cluster .w { left: 0; top: 34px; }
+    .cluster .e { right: 0; top: 34px; }
+    .cluster .s { left: 34px; bottom: 0; }
+
+    /* ---------- layar ---------- */
+    .bezel { background: #07080c; padding: 14px; border-block: 2px solid #232634; min-width: 0; min-height: 0; }
+    .screen {
+      position: relative;
+      height: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+      gap: 12px;
+      padding: 14px 20px 10px;
+      border-radius: 14px;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 85% 0%, color-mix(in srgb, var(--accent) 34%, transparent), transparent 55%),
+        var(--screen);
+      isolation: isolate;
+    }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { margin: 0; font-size: 18px; font-weight: 900; letter-spacing: .18em; white-space: nowrap; }
+    .brand span { color: var(--accent); filter: brightness(1.35); }
+    .status { display: flex; align-items: center; gap: 14px; font: 13px var(--mono); color: var(--muted); }
+    .status button { padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; }
+    .status button:hover { color: var(--text); background: var(--panel); }
+
+    .filters { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 4px; margin: -4px; }
+    .filters button {
+      flex: 0 0 auto;
+      padding: 6px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .filters button[aria-pressed="true"] { background: var(--text); color: #10121d; border-color: var(--text); }
+
+    .hero { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 22px; min-height: 0; }
+    .info { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+    .info-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 10px; }
+    .genre { margin: 0; font: 700 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); filter: brightness(1.45); }
+    .title { margin: 0; font-size: clamp(24px, 3.2vw, 42px); line-height: 1.05; font-weight: 900; text-wrap: balance; }
+    .desc { margin: 0; color: #cfd2e6; line-height: 1.55; font-size: 14.5px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .tags li { padding: 4px 9px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); font-size: 12px; }
+    .keys { margin: 0; font: 12px/1.7 var(--mono); color: var(--muted); }
+    .keys b { color: var(--text); font-weight: 700; }
+    .note { margin: 0; font-size: 12px; color: #ffd166; }
+    .play {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 30px;
+      border-radius: 99px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      text-shadow: 0 1px 3px rgba(0,0,0,.55);
+      font-weight: 900;
+      letter-spacing: .08em;
+      box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 -3px 0 rgba(0,0,0,.25);
+      transition: transform 120ms, filter 120ms;
+    }
+    .play:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+    .art {
+      position: relative;
+      display: block;
+      align-self: center;
+      width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--line);
+    }
+    .art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: fade 300ms ease; }
+    .art::after {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        repeating-linear-gradient(transparent 0 3px, rgba(0,0,0,.13) 3px 4px),
+        linear-gradient(transparent 70%, rgba(0,0,0,.55));
+      pointer-events: none;
+    }
+    .count { position: absolute; right: 12px; bottom: 9px; z-index: 1; font: 700 12px var(--mono); }
+    @keyframes fade { from { opacity: 0; transform: scale(1.04); } }
+
+    .shelf {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 8px 6px;
+      margin: 0 -6px;
+      scrollbar-width: none;
+      scroll-padding-inline: 40px;
+    }
+    .tile {
+      position: relative;
+      flex: 0 0 148px;
+      aspect-ratio: 16 / 10;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      background: #181a28;
+      opacity: .6;
+      transition: transform 160ms, opacity 160ms, box-shadow 160ms;
+    }
+    .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .tile span {
+      position: absolute; inset: auto 0 0;
+      padding: 16px 7px 5px;
+      font-size: 11px; font-weight: 800; text-align: left;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      background: linear-gradient(transparent, rgba(0,0,0,.9));
+    }
+    .tile:hover { opacity: .9; }
+    .tile[aria-current="true"] {
+      opacity: 1;
+      border-color: #fff;
+      transform: translateY(-5px);
+      box-shadow: 0 0 0 3px var(--accent), 0 10px 22px rgba(0,0,0,.5);
+    }
+
+    .hints { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 18px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+    kbd { display: inline-block; min-width: 20px; margin-right: 3px; padding: 1px 6px; border-radius: 5px; background: var(--text); color: #10121d; font: 800 11px var(--mono); text-align: center; }
+
+    /* ---------- overlay boot & loading ---------- */
+    .overlay {
+      position: absolute; inset: 0; z-index: 10;
+      display: grid; place-content: center; justify-items: center; gap: 18px;
+      background: #06070c;
+      text-align: center;
+      padding: 20px;
+    }
+    .overlay strong { font-size: clamp(22px, 4vw, 40px); letter-spacing: .22em; }
+    .overlay small { color: var(--muted); font: 12px var(--mono); }
+    .bar { width: 220px; height: 5px; border-radius: 9px; background: #1d2030; overflow: hidden; }
+    .bar i { display: block; height: 100%; background: var(--accent); animation: load var(--dur, 1.3s) ease-in-out forwards; }
+    #boot { transition: opacity 300ms; }
+    #boot.done { opacity: 0; pointer-events: none; }
+    @keyframes load { from { width: 0; } to { width: 100%; } }
+
+    /* ---------- layar pendek (HP landscape) ---------- */
+    @media (max-height: 620px) and (min-width: 761px) {
+      body { padding: 6px; }
+      .console { height: calc(100dvh - 12px); min-height: 340px; grid-template-columns: 96px minmax(0, 1fr) 96px; }
+      .pad { padding: 8px 0 10px; }
+      .stick { width: 46px; height: 46px; }
+      .stick i { width: 32px; height: 32px; }
+      .cluster { transform: scale(.84); margin: -8px 0; }
+      .bezel { padding: 7px; }
+      .screen { gap: 7px; padding: 8px 14px 6px; }
+      .tile { flex-basis: 92px; }
+      .brand { font-size: 14px; }
+      .status { font-size: 11px; }
+      .status button { padding: 2px 8px; }
+      .filters button { padding: 3px 11px; font-size: 12px; }
+      .keys { display: none; }
+      .info, .info-scroll { gap: 6px; }
+      .hints { display: none; }
+      .title { font-size: 24px; }
+      .desc { font-size: 13px; }
+      .play { padding: 8px 22px; }
+    }
+
+    /* ---------- layar sempit: tanpa stik samping, halaman bisa discroll ---------- */
+    @media (max-width: 760px) {
+      body { display: block; padding: 0; background: var(--screen); }
+      .console { display: block; width: 100%; height: auto; min-height: 100dvh; filter: none; }
+      .pad { display: none; }
+      .bezel { padding: 0; border: 0; background: none; }
+      .screen {
+        min-height: 100dvh;
+        border-radius: 0;
+        grid-template-rows: auto auto auto auto 1fr;
+        padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+      }
+      .hero { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      .art { order: -1; }
+      .info-scroll { overflow: visible; }
+      .play { align-self: stretch; justify-content: center; }
+      .tile { flex-basis: 128px; }
+      .hints { display: none; }
+      .brand { font-size: 15px; }
+      #clock { display: none; }
+      .overlay { position: fixed; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="console">
+    <aside class="pad left" aria-label="Stik kiri">
+      <button class="ctl shoulder" data-cmd="prevCat" aria-label="Kategori sebelumnya">L</button>
+      <button class="ctl small-btn" data-cmd="sound" aria-label="Suara hidup atau mati">−</button>
+      <div class="stick" aria-hidden="true"><i id="stick"></i></div>
+      <div class="cluster">
+        <button class="ctl n" data-cmd="prevCat" aria-label="Atas: kategori sebelumnya">▲</button>
+        <button class="ctl w" data-cmd="prev" aria-label="Game sebelumnya">◀</button>
+        <button class="ctl e" data-cmd="next" aria-label="Game berikutnya">▶</button>
+        <button class="ctl s" data-cmd="nextCat" aria-label="Bawah: kategori berikutnya">▼</button>
+      </div>
+    </aside>
+
+    <div class="bezel">
+      <div class="screen">
+        <header class="topbar">
+          <h1 class="brand">YOSS <span>ARCADE</span></h1>
+          <div class="status">
+            <button id="soundBtn" type="button" data-cmd="sound">Suara: ON</button>
+            <button id="fsBtn" type="button" data-cmd="fullscreen">Layar penuh</button>
+            <time id="clock">--:--</time>
+          </div>
+        </header>
+
+        <nav id="filters" class="filters" aria-label="Kategori game"></nav>
+
+        <section class="hero" aria-live="polite">
+          <div class="info">
+            <div class="info-scroll">
+              <p id="genre" class="genre"></p>
+              <h2 id="title" class="title"></h2>
+              <p id="desc" class="desc"></p>
+              <ul id="tags" class="tags"></ul>
+              <p class="keys"><b>Kontrol PC:</b> <span id="keys"></span></p>
+              <p id="note" class="note" hidden></p>
+            </div>
+            <a id="play" class="play" href="#">▶ MAINKAN</a>
+          </div>
+          <div class="art">
+            <img id="cover" alt="">
+            <span id="count" class="count"></span>
+          </div>
+        </section>
+
+        <div id="shelf" class="shelf" aria-label="Daftar game"></div>
+
+        <footer class="hints">
+          <span><kbd>←</kbd><kbd>→</kbd> pilih game</span>
+          <span><kbd>↑</kbd><kbd>↓</kbd> kategori</span>
+          <span><kbd>Enter</kbd> main</span>
+          <span><kbd>R</kbd> acak</span>
+          <span><kbd>M</kbd> suara</span>
+          <span><kbd>F</kbd> layar penuh</span>
+        </footer>
+
+        <div id="loading" class="overlay" hidden>
+          <strong id="loadingTitle"></strong>
+          <div class="bar" style="--dur: .7s"><i></i></div>
+          <small>Memuat kartrid…</small>
+        </div>
+
+        <div id="boot" class="overlay">
+          <strong>YOSS ARCADE</strong>
+          <div class="bar"><i></i></div>
+          <small>Ketuk atau tekan tombol apa saja untuk lewati</small>
+        </div>
+      </div>
+    </div>
+
+    <aside class="pad right" aria-label="Stik kanan">
+      <button class="ctl shoulder" data-cmd="nextCat" aria-label="Kategori berikutnya">R</button>
+      <button class="ctl small-btn" data-cmd="play" aria-label="Mulai">+</button>
+      <div class="cluster">
+        <button class="ctl n" data-cmd="sound" title="X: suara" aria-label="X: suara">X</button>
+        <button class="ctl w" data-cmd="fullscreen" title="Y: layar penuh" aria-label="Y: layar penuh">Y</button>
+        <button class="ctl e" data-cmd="play" title="A: mainkan" aria-label="A: mainkan">A</button>
+        <button class="ctl s" data-cmd="random" title="B: pilih acak" aria-label="B: pilih game acak">B</button>
+      </div>
+      <button class="ctl small-btn" data-cmd="home" aria-label="Kembali ke game pertama">⌂</button>
+    </aside>
+  </main>
+
+  <script>
+    // Tambah game baru: cukup tambah satu objek di sini + gambar cover 16:9 di folder covers/.
+    const GAMES = [
+      {
+        id: "rakyat",
+        title: "Rakyat: Last Stand",
+        genre: "Fighting satir",
+        cats: ["Aksi"],
+        href: "../ahay/game/index.html",
+        cover: "covers/rakyat-last-stand.jpg",
+        color: "#e0433a",
+        desc: "Game fighting satir: rakyat biasa melawan para penguasa. Rangkai kombo, isi meter, lalu lepaskan Ultimate. Fiksi satir, serangannya cuma metafora arcade.",
+        tags: ["Campaign", "Arcade", "Tutorial", "HP & PC"],
+        keys: "WASD gerak · J pukul · K tendang · L spesial · Shift tahan · Spasi hindar",
+        needsServer: true
+      },
+      {
+        id: "aetherfall",
+        title: "Aetherfall",
+        genre: "Shooter fantasi 3D",
+        cats: ["Aksi", "Tembak"],
+        href: "../zgm01/index.html",
+        cover: "covers/aetherfall.jpg",
+        color: "#c98a1e",
+        desc: "Perang Tiga Kerajaan. Orc Kegelapan merebut Obelisk Kristal, dan kamu Penjaga Aether terakhir yang bersenjata sihir-mesiu. Rebut kembali lembah atau bertahan di arena.",
+        tags: ["Kampanye", "Dunia Terbuka", "Arena", "HP & PC"],
+        keys: "WASD gerak · Mouse bidik & tembak · R isi ulang · Q gelombang kejut · V ganti kamera"
+      },
+      {
+        id: "aspal",
+        title: "Aspal Rush",
+        genre: "Balap jalanan 3D",
+        cats: ["Balap"],
+        href: "../zgm02/index.html",
+        cover: "covers/aspal-rush.jpg",
+        color: "#2f7df6",
+        desc: "Balapan mobil dan motor di empat lintasan. Salip tipis-tipis buat isi nitro, kumpulkan uang, lalu upgrade kendaraanmu di garasi.",
+        tags: ["4 lintasan", "Mobil & motor", "Garasi", "HP & PC"],
+        keys: "A/D atau ←→ belok · S rem · Spasi nitro · P jeda"
+      },
+      {
+        id: "garuda",
+        title: "Operasi Garuda",
+        genre: "FPS taktis",
+        cats: ["Tembak"],
+        href: "../zgm03/index.html",
+        cover: "covers/operasi-garuda.jpg",
+        color: "#3f9c52",
+        desc: "Satuan anti-teror dalam empat misi: lumpuhkan teroris, bebaskan sandera, dan jinakkan bom sebelum waktunya habis. Sandera jangan sampai kena tembak.",
+        tags: ["4 misi", "3 senjata", "Orang pertama", "HP & PC"],
+        keys: "WASD gerak · Mouse lihat · Klik tembak · R isi ulang · Q ganti senjata · F jinakkan bom"
+      },
+      {
+        id: "raka",
+        title: "Petualangan Raka",
+        genre: "Platformer retro",
+        cats: ["Platformer"],
+        href: "../zgm04/index.html",
+        cover: "covers/petualangan-raka.jpg",
+        color: "#3d86e8",
+        desc: "Kristal Fajar dicuri Raja Kegelapan. Bantu Raka lompat melewati tiga dunia, dari Padang Fajar sampai Benteng Gelap, untuk merebutnya kembali.",
+        tags: ["3 dunia", "Skor rekor", "HP & PC"],
+        keys: "WASD atau panah gerak · Spasi lompat · Shift lari"
+      },
+      {
+        id: "kampung",
+        title: "Serbuan Kampung",
+        genre: "Sumpah Merdeka · Demo kombat",
+        cats: ["Aksi", "Tembak"],
+        href: "../random_game/index.html",
+        cover: "covers/serbuan-kampung.jpg",
+        color: "#b5652b",
+        desc: "Akhir 1945. Sutrisno harus menahan tiga gelombang pasukan supaya Darma sempat membuka jalur evakuasi warga, lalu mundur lewat jembatan selatan.",
+        tags: ["Demo", "3 gelombang", "Pixel art", "HP & PC"],
+        keys: "WASD gerak · Mouse bidik · Klik tembak · E pukul · R isi · F perban · Shift hindar"
+      },
+      {
+        id: "benteng",
+        title: "Benteng Enam Bendera",
+        genre: "Sumpah Merdeka · Multiplayer 2v2",
+        cats: ["Multiplayer", "Tembak"],
+        href: "../random_game/multiplayer-demo/index.html",
+        cover: "covers/benteng-enam-bendera.png",
+        color: "#a8392c",
+        desc: "Dua Pejuang Republik lawan dua Pasukan Kolonial berebut enam titik bendera. Cari lawan otomatis atau bikin room privat; slot kosong diisi bot.",
+        tags: ["Online", "Room privat", "Bot", "HP & PC"],
+        keys: "WASD gerak · Mouse bidik · Klik tembak · E pukul · R isi · F perban · C bendera",
+        needsServer: true,
+        online: true
+      }
+    ];
+
+    const ALL = "Semua";
+    const CATS = [ALL, ...new Set(GAMES.flatMap((g) => g.cats))];
+    const $ = (id) => document.getElementById(id);
+
+    // localStorage bisa diblokir browser, jadi aksesnya selalu dijaga.
+    const store = {
+      get(key) { try { return localStorage.getItem("yoss-arcade-" + key); } catch { return null; } },
+      set(key, value) { try { localStorage.setItem("yoss-arcade-" + key, value); } catch { /* abaikan */ } }
+    };
+
+    let cat = ALL;
+    let list = GAMES;
+    let index = Math.max(0, GAMES.findIndex((g) => g.id === store.get("last")));
+    let soundOn = store.get("sound") !== "off";
+    let launchTimer = 0;
+    let audio = null;
+
+    function beep(freq, length = 0.06) {
+      if (!soundOn) return;
+      // Browser baru mengizinkan audio setelah ada interaksi pengguna.
+      if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audio ||= new Ctx();
+      if (audio.state === "suspended") audio.resume();
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = "square";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.045, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + length);
+      osc.connect(gain).connect(audio.destination);
+      osc.start();
+      osc.stop(audio.currentTime + length);
+    }
+
+    function renderFilters() {
+      $("filters").replaceChildren(...CATS.map((name) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = name;
+        button.setAttribute("aria-pressed", String(name === cat));
+        button.onclick = () => setCategory(name);
+        return button;
+      }));
+    }
+
+    function renderShelf() {
+      $("shelf").replaceChildren(...list.map((game, i) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tile";
+        const img = new Image();
+        img.src = game.cover;
+        img.alt = "";
+        const label = document.createElement("span");
+        label.textContent = game.title;
+        button.append(img, label);
+        // Klik sekali untuk memilih, klik lagi pada game terpilih untuk main.
+        button.onclick = () => (i === index ? launch() : select(i));
+        return button;
+      }));
+    }
+
+    function select(i, silent = false) {
+      index = (i + list.length) % list.length;
+      const game = list[index];
+      store.set("last", game.id);
+      document.documentElement.style.setProperty("--accent", game.color);
+
+      $("genre").textContent = game.genre;
+      $("title").textContent = game.title;
+      $("desc").textContent = game.desc;
+      $("keys").textContent = game.keys;
+      $("play").href = game.href;
+      $("play").setAttribute("aria-label", "Mainkan " + game.title);
+      $("tags").replaceChildren(...game.tags.map((tag) => {
+        const li = document.createElement("li");
+        li.textContent = tag;
+        return li;
+      }));
+
+      let note = "";
+      if (game.needsServer && location.protocol === "file:") note = "Game ini perlu dibuka lewat server lokal atau hosting, tidak bisa dari file://.";
+      else if (game.online) note = "Perlu koneksi internet untuk matchmaking.";
+      $("note").textContent = note;
+      $("note").hidden = !note;
+
+      // Ganti node gambar supaya animasi transisinya terulang.
+      const cover = $("cover").cloneNode();
+      cover.src = game.cover;
+      cover.alt = "Cuplikan " + game.title;
+      $("cover").replaceWith(cover);
+      $("count").textContent = `${index + 1} / ${list.length}`;
+
+      const shelf = $("shelf");
+      [...shelf.children].forEach((tile, n) => tile.setAttribute("aria-current", String(n === index)));
+      const tile = shelf.children[index];
+      shelf.scrollTo({ left: tile.offsetLeft - shelf.offsetLeft - (shelf.clientWidth - tile.offsetWidth) / 2, behavior: silent ? "auto" : "smooth" });
+      document.querySelector(".info-scroll").scrollTop = 0;
+      if (!silent) beep(520);
+    }
+
+    function setCategory(name) {
+      const currentId = list[index].id;
+      cat = name;
+      list = name === ALL ? GAMES : GAMES.filter((g) => g.cats.includes(name));
+      renderFilters();
+      renderShelf();
+      select(Math.max(0, list.findIndex((g) => g.id === currentId)), true);
+      $("filters").querySelector('[aria-pressed="true"]').scrollIntoView({ block: "nearest", inline: "nearest" });
+      beep(380);
+    }
+
+    const stepCategory = (step) => setCategory(CATS[(CATS.indexOf(cat) + step + CATS.length) % CATS.length]);
+
+    function launch() {
+      if (launchTimer) return;
+      const game = list[index];
+      $("loadingTitle").textContent = game.title.toUpperCase();
+      $("loading").hidden = false;
+      beep(660, 0.09);
+      setTimeout(() => beep(990, 0.14), 90);
+      launchTimer = setTimeout(() => location.assign(game.href), 750);
+    }
+
+    function cancelLaunch() {
+      clearTimeout(launchTimer);
+      launchTimer = 0;
+      $("loading").hidden = true;
+    }
+
+    function toggleSound() {
+      soundOn = !soundOn;
+      store.set("sound", soundOn ? "on" : "off");
+      $("soundBtn").textContent = "Suara: " + (soundOn ? "ON" : "OFF");
+      beep(700);
+    }
+
+    function toggleFullscreen() {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+
+    function nudgeStick(x) {
+      $("stick").style.transform = `translateX(${x}px)`;
+      setTimeout(() => ($("stick").style.transform = ""), 130);
+    }
+
+    const commands = {
+      prev: () => { nudgeStick(-8); select(index - 1); },
+      next: () => { nudgeStick(8); select(index + 1); },
+      prevCat: () => stepCategory(-1),
+      nextCat: () => stepCategory(1),
+      play: launch,
+      random: () => { if (list.length > 1) select(index + 1 + Math.floor(Math.random() * (list.length - 1))); },
+      home: () => { setCategory(ALL); select(0); },
+      sound: toggleSound,
+      fullscreen: toggleFullscreen
+    };
+
+    // ---------- layar boot (sekali per sesi) ----------
+    const boot = $("boot");
+    let booting = true;
+    function endBoot() {
+      if (!booting) return;
+      booting = false;
+      boot.classList.add("done");
+      setTimeout(() => (boot.hidden = true), 320);
+      try { sessionStorage.setItem("yoss-arcade-booted", "1"); } catch { /* abaikan */ }
+    }
+    let booted = false;
+    try { booted = !!sessionStorage.getItem("yoss-arcade-booted"); } catch { /* abaikan */ }
+    if (booted) { booting = false; boot.hidden = true; }
+    else setTimeout(endBoot, 1500);
+    boot.addEventListener("click", endBoot);
+
+    // ---------- input ----------
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-cmd]");
+      if (button) commands[button.dataset.cmd]();
+    });
+
+    $("play").addEventListener("click", (event) => {
+      if (event.ctrlKey || event.metaKey || event.shiftKey) return; // biarkan "buka di tab baru"
+      event.preventDefault();
+      launch();
+    });
+
+    const KEYMAP = {
+      ArrowLeft: "prev", a: "prev",
+      ArrowRight: "next", d: "next",
+      ArrowUp: "prevCat", q: "prevCat",
+      ArrowDown: "nextCat", e: "nextCat",
+      Enter: "play", " ": "play",
+      r: "random", m: "sound", f: "fullscreen", Home: "home"
+    };
+
+    document.addEventListener("keydown", (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (booting) { event.preventDefault(); endBoot(); return; }
+      if (event.key === "Escape") { cancelLaunch(); return; }
+      // Enter/Spasi pada tombol atau link yang sedang fokus dibiarkan jalan sendiri.
+      if ((event.key === "Enter" || event.key === " ") && event.target.closest("button, a")) return;
+      const cmd = KEYMAP[event.key.length === 1 ? event.key.toLowerCase() : event.key];
+      if (!cmd || launchTimer) return;
+      event.preventDefault();
+      if (event.repeat && cmd !== "prev" && cmd !== "next") return;
+      // Pindahkan fokus supaya Enter berikutnya selalu menjalankan game yang terpilih.
+      document.activeElement?.blur();
+      commands[cmd]();
+    });
+
+    // Geser (swipe) pada gambar cover
+    const art = document.querySelector(".art");
+    let swipeX = null;
+    art.style.touchAction = "pan-y";
+    art.addEventListener("pointerdown", (event) => (swipeX = event.clientX));
+    art.addEventListener("pointercancel", () => (swipeX = null));
+    art.addEventListener("pointerup", (event) => {
+      if (swipeX === null) return;
+      const dx = event.clientX - swipeX;
+      swipeX = null;
+      if (Math.abs(dx) > 40) select(index + (dx < 0 ? 1 : -1));
+    });
+    art.addEventListener("dragstart", (event) => event.preventDefault());
+
+    // Gamepad fisik (layout standar)
+    const PAD_MAP = { 0: "play", 1: "random", 2: "sound", 3: "fullscreen", 4: "prevCat", 5: "nextCat", 8: "sound", 9: "play", 12: "prevCat", 13: "nextCat", 14: "prev", 15: "next", 16: "home" };
+    let held = null; // null = belum dibaca; tombol yang sudah tertekan saat mulai tidak dihitung
+    let polling = false;
+    function pollPad() {
+      const pad = [...navigator.getGamepads()].find(Boolean);
+      if (!pad) { polling = false; held = null; return; }
+      const now = new Set();
+      pad.buttons.forEach((b, i) => { if (b.pressed && PAD_MAP[i]) now.add(PAD_MAP[i]); });
+      if (pad.axes[0] < -0.6) now.add("prev");
+      if (pad.axes[0] > 0.6) now.add("next");
+      if (held && document.hasFocus() && !launchTimer) {
+        for (const cmd of now) {
+          if (held.has(cmd)) continue;
+          if (booting) endBoot();
+          else commands[cmd]();
+        }
+      }
+      held = now;
+      requestAnimationFrame(pollPad);
+    }
+    addEventListener("gamepadconnected", () => {
+      if (polling) return;
+      polling = true;
+      pollPad();
+    });
+
+    // Saat kembali dari game pakai tombol Back, tutup layar loading.
+    addEventListener("pageshow", cancelLaunch);
+
+    function tick() {
+      $("clock").textContent = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    }
+    tick();
+    setInterval(tick, 10000);
+
+    if (!document.documentElement.requestFullscreen) $("fsBtn").hidden = true;
+    $("soundBtn").textContent = "Suara: " + (soundOn ? "ON" : "OFF");
+    renderFilters();
+    renderShelf();
+    select(index, true);
+  </script>
+</body>
+</html>

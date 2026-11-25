@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="lock-zoom.js"></script>
   <title>Chat Room</title>
   <style>
     :root {
@@ -489,7 +490,7 @@
       </div>
     </header>
 
-    <section id="messages" class="messages hidden" aria-live="polite"></section>
+    <section id="messages" data-selectable class="messages hidden" aria-live="polite"></section>
 
     <form id="chatForm" class="composer hidden" autocomplete="off">
       <div class="emoji-wrap">
